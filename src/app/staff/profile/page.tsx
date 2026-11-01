@@ -1,0 +1,75 @@
+import { requireStaffPage } from "@/lib/auth";
+import { getI18n } from "@/i18n/server";
+import { formatDate } from "@/lib/dates";
+import { LanguageSwitch } from "@/components/language-switch";
+import { LogoutButton } from "@/components/logout-button";
+import { PushToggle } from "@/components/settings/push-toggle";
+import { InstallButton } from "@/components/settings/install-button";
+import { Avatar } from "@/components/ui";
+import { StatusSwitch } from "./status-switch";
+import { RequestForm } from "./request-form";
+
+export default async function ProfilePage() {
+  const ctx = await requireStaffPage();
+  const { t, locale } = await getI18n();
+  const { data: requests } = await ctx.supabase
+    .from("task_requests")
+    .select("*")
+    .eq("created_by", ctx.member.id)
+    .order("created_at", { ascending: false })
+    .limit(20);
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-3">
+        <Avatar name={ctx.member.full_name} className="size-14 text-lg" />
+        <div>
+          <div className="text-xl font-semibold">{ctx.member.full_name}</div>
+          <div className="text-muted">{ctx.member.email}</div>
+        </div>
+      </div>
+
+      <section className="card-white space-y-3 p-4">
+        <h2 className="font-semibold">{t("staff.myStatus")}</h2>
+        <StatusSwitch initial={ctx.member.status} />
+        <p className="text-sm text-muted">{t("staff.statusHint")}</p>
+      </section>
+
+      <section className="card-white space-y-3 p-4">
+        <h2 className="font-semibold">{t("requests.new")}</h2>
+        <p className="text-sm text-muted">{t("requests.newHint")}</p>
+        <RequestForm />
+        {(requests ?? []).length > 0 && (
+          <div className="border-t border-line/70 pt-3">
+            <div className="mb-2 text-sm font-medium text-muted">{t("requests.mine")}</div>
+            <ul className="space-y-1.5">
+              {(requests ?? []).map((r) => (
+                <li key={r.id} className="flex min-h-12 items-center justify-between gap-2 rounded-[12px] bg-card px-3">
+                  <span className="min-w-0 truncate">{r.title} <span className="text-sm text-muted">· {formatDate(r.created_at.slice(0, 10), locale, { day: "2-digit", month: "2-digit" })}</span></span>
+                  <span className={r.status === "approved" ? "chip bg-ok-soft text-ok" : r.status === "rejected" ? "chip bg-danger-soft text-danger" : "chip bg-accent-soft text-accent"}>
+                    {t(`requests.${r.status}`)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </section>
+
+      <section className="card-white space-y-3 p-4">
+        <h2 className="font-semibold">{t("settings.notifications")}</h2>
+        <PushToggle />
+      </section>
+
+      <section className="card-white space-y-3 p-4">
+        <h2 className="font-semibold">{t("settings.language")}</h2>
+        <LanguageSwitch persist large />
+        <InstallButton />
+      </section>
+
+      <div className="card-white p-2">
+        <LogoutButton />
+      </div>
+    </div>
+  );
+}

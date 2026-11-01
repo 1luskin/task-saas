@@ -1,0 +1,204 @@
+/**
+ * Datenbanktypen (entspricht supabase/migrations).
+ * Kann später durch `supabase gen types typescript` ersetzt werden.
+ */
+
+type Table<Row, Required extends keyof Row = never> = {
+  Row: Row;
+  Insert: Partial<Row> & Pick<Row, Required>;
+  Update: Partial<Row>;
+  Relationships: [];
+};
+
+export type Role = "boss" | "employee";
+export type MemberStatus = "active" | "vacation" | "sick";
+export type PayMode = "hourly" | "fixed" | "both";
+export type TaskStatus = "new" | "in_progress" | "done";
+export type Priority = "normal" | "urgent";
+export type Recurrence = "daily" | "weekly" | "monthly";
+export type RequestStatus = "pending" | "approved" | "rejected";
+export type Locale = "de" | "ru";
+
+export type Firm = {
+  id: string;
+  name: string;
+  timezone: string;
+  created_at: string;
+};
+export type Group = {
+  id: string;
+  firm_id: string;
+  name: string;
+  created_at: string;
+};
+export type Member = {
+  id: string;
+  firm_id: string;
+  user_id: string | null;
+  role: Role;
+  full_name: string;
+  email: string | null;
+  phone: string | null;
+  group_id: string | null;
+  status: MemberStatus;
+  pay_mode: PayMode;
+  hourly_rate_cents: number;
+  locale: Locale;
+  notify_overdue: boolean;
+  notify_done: boolean;
+  archived_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+export type Invite = {
+  id: string;
+  firm_id: string;
+  token: string;
+  role: Role;
+  group_id: string | null;
+  created_by: string | null;
+  expires_at: string;
+  max_uses: number;
+  used_count: number;
+  revoked: boolean;
+  created_at: string;
+};
+export type TaskTemplate = {
+  id: string;
+  firm_id: string;
+  title: string;
+  description: string | null;
+  address: string | null;
+  assignee_id: string | null;
+  priority: Priority;
+  recurrence: Recurrence;
+  weekdays: number[];
+  month_day: number | null;
+  client_price_cents: number | null;
+  fixed_pay_cents: number | null;
+  checklist: string[];
+  active: boolean;
+  last_run_on: string | null;
+  created_at: string;
+};
+export type Task = {
+  id: string;
+  firm_id: string;
+  title: string;
+  description: string | null;
+  address: string | null;
+  assignee_id: string | null;
+  due_date: string | null;
+  due_time: string | null;
+  status: TaskStatus;
+  priority: Priority;
+  fixed_pay_cents: number | null;
+  template_id: string | null;
+  created_by: string | null;
+  completed_at: string | null;
+  overdue_notified_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+export type TaskFinance = {
+  task_id: string;
+  firm_id: string;
+  client_price_cents: number;
+  updated_at: string;
+};
+export type ChecklistItem = {
+  id: string;
+  task_id: string;
+  firm_id: string;
+  text: string;
+  done: boolean;
+  position: number;
+  updated_at: string;
+};
+export type TaskComment = {
+  id: string;
+  task_id: string;
+  firm_id: string;
+  author_id: string | null;
+  author_name: string;
+  body: string;
+  created_at: string;
+};
+export type TaskPhoto = {
+  id: string;
+  task_id: string;
+  firm_id: string;
+  storage_path: string;
+  uploaded_by: string | null;
+  created_at: string;
+};
+export type TimeEntry = {
+  id: string;
+  task_id: string;
+  firm_id: string;
+  member_id: string;
+  started_at: string;
+  ended_at: string | null;
+  rate_cents: number;
+  created_at: string;
+};
+export type TaskRequest = {
+  id: string;
+  firm_id: string;
+  created_by: string;
+  title: string;
+  description: string | null;
+  address: string | null;
+  due_date: string | null;
+  status: RequestStatus;
+  task_id: string | null;
+  decided_by: string | null;
+  decided_at: string | null;
+  created_at: string;
+};
+export type PushSubscriptionRow = {
+  id: string;
+  user_id: string;
+  member_id: string;
+  endpoint: string;
+  p256dh: string;
+  auth: string;
+  created_at: string;
+};
+
+export interface Database {
+  public: {
+    Tables: {
+      firms: Table<Firm, "name">;
+      groups: Table<Group, "firm_id" | "name">;
+      members: Table<Member, "firm_id" | "role" | "full_name">;
+      invites: Table<Invite, "firm_id">;
+      task_templates: Table<TaskTemplate, "firm_id" | "title" | "recurrence">;
+      tasks: Table<Task, "firm_id" | "title">;
+      task_finance: Table<TaskFinance, "task_id">;
+      checklist_items: Table<ChecklistItem, "task_id" | "text">;
+      task_comments: Table<TaskComment, "task_id" | "author_name" | "body">;
+      task_photos: Table<TaskPhoto, "task_id" | "storage_path">;
+      time_entries: Table<TimeEntry, "task_id" | "member_id" | "started_at">;
+      task_requests: Table<TaskRequest, "firm_id" | "created_by" | "title">;
+      push_subscriptions: Table<PushSubscriptionRow, "user_id" | "member_id" | "endpoint" | "p256dh" | "auth">;
+    };
+    Views: { [_ in never]: never };
+    Functions: {
+      create_firm: {
+        Args: { p_firm_name: string; p_full_name: string; p_locale?: string };
+        Returns: string;
+      };
+      accept_invite: {
+        Args: { p_token: string; p_full_name: string; p_locale?: string };
+        Returns: string;
+      };
+      invite_info: {
+        Args: { p_token: string };
+        Returns: { firm_name: string; role: Role; valid: boolean }[];
+      };
+    };
+    Enums: { [_ in never]: never };
+    CompositeTypes: { [_ in never]: never };
+  };
+}
