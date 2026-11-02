@@ -5,6 +5,7 @@ import { useI18n } from "@/i18n/client";
 import { createClient } from "@/lib/supabase/client";
 import { deletePhoto, registerPhoto } from "@/server/actions/tasks";
 import { IconCamera, IconTrash } from "../icons";
+import { isDemo } from "@/lib/demo/mode";
 
 /** Bild im Browser verkleinern (spart mobile Daten): max. 1600px, JPEG 0.82 */
 async function compress(file: File): Promise<Blob> {
@@ -79,6 +80,9 @@ export function Photos({
             )}
           </div>
         ))}
+        {isDemo() ? (
+          <div className="col-span-2 flex items-center rounded-[12px] bg-card p-3 text-sm text-muted">{t("demo.photosDisabled")}</div>
+        ) : (
         <button
           type="button"
           onClick={() => input.current?.click()}
@@ -88,6 +92,7 @@ export function Photos({
           <IconCamera />
           {busy ? t("task.uploading") : t("task.addPhoto")}
         </button>
+        )}
       </div>
       <input ref={input} type="file" accept="image/*" multiple hidden onChange={(e) => upload(e.target.files)} />
       {error && <p className="mt-1 text-sm text-danger">{error}</p>}

@@ -1,5 +1,6 @@
 import "server-only";
 import { z } from "zod";
+import { isDemo } from "./demo/mode";
 
 /** Serverseitige Umgebungsvariablen – werden erst beim Zugriff geprüft. */
 const serverSchema = z.object({
@@ -16,6 +17,17 @@ const serverSchema = z.object({
 let cached: z.infer<typeof serverSchema> | null = null;
 
 export function serverEnv() {
-  if (!cached) cached = serverSchema.parse(process.env);
+  if (!cached) {
+    // Demo-Modus: Platzhalter statt echter Schlüssel (werden nie benutzt)
+    const src = isDemo()
+      ? {
+          NEXT_PUBLIC_SUPABASE_URL: "http://demo.invalid",
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: "demo-anon-key",
+          SUPABASE_SERVICE_ROLE_KEY: "demo-service-key",
+          ...Object.fromEntries(Object.entries(process.env).filter(([, v]) => v)),
+        }
+      : process.env;
+    cached = serverSchema.parse(src);
+  }
   return cached;
 }

@@ -1,6 +1,7 @@
 import { getI18n } from "@/i18n/server";
 import { NavLink } from "./nav-link";
 import { OfflineBanner } from "./offline-banner";
+import { DemoBanner } from "./demo-banner";
 import { IconSun, IconTasks, IconUser, IconWallet } from "../icons";
 
 export async function StaffShell({ firmName, children }: { firmName: string; children: React.ReactNode }) {
@@ -13,7 +14,8 @@ export async function StaffShell({ firmName, children }: { firmName: string; chi
   ];
   return (
     <div className="min-h-dvh">
-      <OfflineBanner />
+      <DemoBanner />
+        <OfflineBanner />
       <header className="pt-safe sticky top-0 z-30 border-b border-line/70 bg-bg/90 backdrop-blur">
         <div className="mx-auto flex max-w-3xl items-center gap-3 px-4 py-2">
           <img src="/icons/icon.svg" alt="" className="size-8 rounded-[9px]" />

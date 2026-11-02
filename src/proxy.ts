@@ -7,7 +7,8 @@ export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!url || !key) return response; // noch keine Schlüssel konfiguriert
+  // Ohne Schlüssel bzw. im Demo-Modus: Seiten prüfen den Login selbst
+  if (!url || !key || process.env.NEXT_PUBLIC_DEMO_MODE === "1") return response;
 
   const supabase = createServerClient(url, key, {
     cookies: {

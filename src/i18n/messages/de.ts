@@ -282,6 +282,14 @@ const de = {
     overdueBody: "{n} Aufgaben sind überfällig",
     doneBody: "{name}: {title}",
   },
+  demo: {
+    title: "Demo-Modus",
+    intro: "Keine Supabase-Schlüssel gesetzt – die App läuft mit Testdaten im Speicher. Wähle, als wer du dich ansehen willst:",
+    banner: "Demo-Modus · Testdaten",
+    switchRole: "Rolle wechseln",
+    reset: "Testdaten zurücksetzen",
+    photosDisabled: "Foto-Upload ist im Demo-Modus deaktiviert.",
+  },
   export: {
     sheetSummary: "Übersicht",
     sheetTasks: "Aufgaben",

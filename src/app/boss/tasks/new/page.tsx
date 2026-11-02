@@ -1,7 +1,8 @@
 import { requireBossPage } from "@/lib/auth";
 import { getI18n } from "@/i18n/server";
 import { getMembers } from "@/server/queries";
-import { TaskForm, emptyTaskForm } from "@/components/tasks/task-form";
+import { TaskForm } from "@/components/tasks/task-form";
+import { emptyTaskForm } from "@/components/tasks/task-form-values";
 import { PageTitle } from "@/components/ui";
 
 export default async function NewTaskPage({ searchParams }: { searchParams: Promise<{ date?: string }> }) {

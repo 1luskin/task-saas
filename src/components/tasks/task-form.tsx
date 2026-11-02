@@ -5,7 +5,9 @@ import { useI18n } from "@/i18n/client";
 import { Field, Input, Select, Textarea, cx } from "../ui";
 import { ErrorText, useAction } from "../use-action";
 import { createTask, updateTask, type TaskInput } from "@/server/actions/tasks";
-import type { MemberStatus, PayMode, Priority, TaskStatus } from "@/lib/supabase/types";
+import type { MemberStatus, PayMode, TaskStatus } from "@/lib/supabase/types";
+import type { TaskFormValues } from "./task-form-values";
+export type { TaskFormValues } from "./task-form-values";
 
 export interface MemberOption {
   id: string;
@@ -14,19 +16,6 @@ export interface MemberOption {
   pay_mode: PayMode;
 }
 
-export interface TaskFormValues {
-  title: string;
-  description: string;
-  assignee_id: string;
-  due_date: string;
-  due_time: string;
-  priority: Priority;
-  status: TaskStatus;
-  address: string;
-  client_price: string;
-  fixed_pay: string;
-  checklist: string;
-}
 
 export function TaskForm({
   taskId, initial, members, onDone,
@@ -159,7 +148,3 @@ export function TaskForm({
   );
 }
 
-export const emptyTaskForm: TaskFormValues = {
-  title: "", description: "", assignee_id: "", due_date: "", due_time: "", priority: "normal",
-  status: "new", address: "", client_price: "", fixed_pay: "", checklist: "",
-};

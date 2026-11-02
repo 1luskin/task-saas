@@ -1,5 +1,7 @@
 import { AuthShell } from "@/components/auth-shell";
 import { LoginForm } from "./login-form";
+import { DemoLogin } from "./demo-login";
+import { isDemo } from "@/lib/demo/mode";
 
 export const metadata = { title: "Login" };
 
@@ -9,7 +11,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
   const safeNext = next && next.startsWith("/") && !next.startsWith("//") ? next : "/";
   return (
     <AuthShell>
-      <LoginForm next={safeNext} />
+      {isDemo() ? <DemoLogin /> : <LoginForm next={safeNext} />}
     </AuthShell>
   );
 }

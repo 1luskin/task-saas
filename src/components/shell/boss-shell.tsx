@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getI18n } from "@/i18n/server";
 import { NavLink } from "./nav-link";
 import { OfflineBanner } from "./offline-banner";
+import { DemoBanner } from "./demo-banner";
 import { LogoutButton } from "../logout-button";
 import { Avatar } from "../ui";
 import {
@@ -61,6 +62,7 @@ export async function BossShell({
       </aside>
 
       <div className="min-w-0 flex-1">
+        <DemoBanner />
         <OfflineBanner />
         {/* Kopfzeile (Handy) */}
         <header className="pt-safe sticky top-0 z-30 flex items-center justify-between border-b border-line/70 bg-bg/90 px-4 py-2 backdrop-blur lg:hidden">

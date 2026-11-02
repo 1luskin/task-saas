@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 import { runAction } from "@/lib/action";
 import { LOCALE_COOKIE, isLocale } from "@/i18n/config";
 import { getLocale } from "@/i18n/server";
+import { DEMO_COOKIE, isDemo } from "@/lib/demo/mode";
 
 export async function createFirm(raw: { firmName: string; fullName: string }) {
   const res = await runAction(async () => {
@@ -45,6 +46,7 @@ export async function acceptInvite(raw: { token: string; fullName: string }) {
 export async function logout() {
   const supabase = await createClient();
   await supabase.auth.signOut();
+  if (isDemo()) (await cookies()).delete(DEMO_COOKIE);
   redirect("/login");
 }
 

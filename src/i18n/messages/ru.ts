@@ -284,6 +284,14 @@ const ru: Messages = {
     overdueBody: "Просрочено задач: {n}",
     doneBody: "{name}: {title}",
   },
+  demo: {
+    title: "Демо-режим",
+    intro: "Ключи Supabase не заданы — приложение работает на тестовых данных в памяти. Выберите, кем войти:",
+    banner: "Демо-режим · тестовые данные",
+    switchRole: "Сменить роль",
+    reset: "Сбросить тестовые данные",
+    photosDisabled: "Загрузка фото в демо-режиме отключена.",
+  },
   export: {
     sheetSummary: "Итоги",
     sheetTasks: "Задачи",
