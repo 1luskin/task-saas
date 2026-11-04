@@ -3,7 +3,8 @@ import { getI18n } from "@/i18n/server";
 import { PageTitle } from "@/components/ui";
 import { LanguageSwitch } from "@/components/language-switch";
 import { PushToggle } from "@/components/settings/push-toggle";
-import { ProfileToggle } from "@/components/settings/toggle";
+import { NotifyPrefs } from "@/components/settings/notify-prefs";
+import { NOTIFY_TYPES } from "@/lib/notify-types";
 import { InstallHint } from "@/components/settings/install-hint";
 import { TrialCard } from "@/components/trial/trial";
 import { FirmForm } from "./firm-form";
@@ -27,6 +28,7 @@ export default async function SettingsPage() {
     ctx.supabase.from("data_requests").select("*").eq("firm_id", ctx.firm.id).eq("status", "open"),
     ctx.supabase.from("members").select("id, full_name").eq("firm_id", ctx.firm.id),
   ]);
+  const { data: prefs } = await ctx.supabase.from("notification_prefs").select("*").eq("member_id", ctx.member.id);
   const features = [...(await loadFeatures(ctx)).values()].filter((f) => f.key !== "demo_firm");
   const { data: logins } = await ctx.supabase.from("login_events").select("*").eq("user_id", ctx.userId).order("created_at", { ascending: false }).limit(10);
   return (
@@ -58,10 +60,7 @@ export default async function SettingsPage() {
       </section>
       <section className="card-white overflow-hidden">
         <h2 className="px-4 pt-4 font-semibold">{t("settings.notifications")}</h2>
-        <div className="divide-y divide-line/70">
-          <ProfileToggle field="notify_overdue" initial={ctx.member.notify_overdue} label={t("settings.notifyOverdue")} />
-          <ProfileToggle field="notify_done" initial={ctx.member.notify_done} label={t("settings.notifyDone")} />
-        </div>
+        <NotifyPrefs types={NOTIFY_TYPES.boss} off={(prefs ?? []).filter((p) => !p.enabled).map((p) => p.type)} />
         <div className="border-t border-line/70 p-4">
           <div className="mb-2 text-sm font-medium text-muted">{t("settings.push")}</div>
           <PushToggle />

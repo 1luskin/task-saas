@@ -5,8 +5,8 @@ import { formatDateTime, berlinStartOfDay, addDays } from "@/lib/dates";
 import { formatMoney } from "@/lib/money";
 
 /** Ereignis-Feed für Chefs: wer hat was getan; Filter Mitarbeiter/Datum über Suchparameter */
-export async function ActivityFeed({ ctx, t, locale, member, date, names }: { ctx: Ctx; t: TFunction; locale: string; member?: string; date?: string; names: Map<string, string> }) {
-  let q = ctx.supabase.from("activity").select("*").eq("firm_id", ctx.firm.id).order("created_at", { ascending: false }).limit(25);
+export async function ActivityFeed({ ctx, t, locale, member, date, names, limit = 25 }: { ctx: Ctx; t: TFunction; locale: string; member?: string; date?: string; names: Map<string, string>; limit?: number }) {
+  let q = ctx.supabase.from("activity").select("*").eq("firm_id", ctx.firm.id).order("created_at", { ascending: false }).limit(limit);
   if (member && /^[0-9a-f-]{36}$/.test(member)) q = q.eq("member_id", member);
   if (date && /^\d{4}-\d{2}-\d{2}$/.test(date)) q = q.gte("created_at", berlinStartOfDay(date).toISOString()).lt("created_at", berlinStartOfDay(addDays(date, 1)).toISOString());
   const { data } = await q;
@@ -42,6 +42,9 @@ export async function ActivityFeed({ ctx, t, locale, member, date, names }: { ct
         ))}
         {!data?.length && <li className="text-muted">—</li>}
       </ul>
+      {(data ?? []).length >= limit && (
+        <Link href={`/boss?feedLimit=${limit + 25}${member ? `&feedMember=${member}` : ""}${date ? `&feedDate=${date}` : ""}`} scroll={false} className="mt-2 inline-block text-sm text-link">{t("common.loadMore")}</Link>
+      )}
     </div>
   );
 }

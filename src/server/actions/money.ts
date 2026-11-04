@@ -8,6 +8,8 @@ import { assertFeature } from "@/lib/features";
 import { isoDate, moneyInput, optUuid, uuid } from "@/lib/validation";
 import { pickAssignee } from "@/lib/shifts";
 import { hit } from "@/lib/rate-limit";
+import { after } from "next/server";
+import { notifyBosses } from "@/server/notify";
 
 const refresh = () => {
   revalidatePath("/boss", "layout");
@@ -42,6 +44,10 @@ export async function createExpense(raw: { taskId: string; amount: string; descr
         receipt_path: input.receiptPath ?? null,
       }),
     );
+    if (ctx.member.role !== "boss") {
+      const firmId = ctx.firm.id, who = ctx.member.full_name, what = input.description, taskId = input.taskId;
+      after(() => notifyBosses(firmId, (t) => ({ title: t("push.expensePending"), body: `${who}: ${what}`, url: `/boss/tasks/${taskId}`, tag: `expense-${taskId}` }), "expense_pending"));
+    }
     refresh();
   });
 }

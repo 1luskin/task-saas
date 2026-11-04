@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useI18n } from "@/i18n/client";
-import { createInvite, revokeInvite } from "@/server/actions/members";
+import { createInvite, revokeInvite, sendInviteEmail } from "@/server/actions/members";
 import { formatDate } from "@/lib/dates";
 import { Select } from "../ui";
 import { useAction, ErrorText } from "../use-action";
@@ -14,6 +14,8 @@ export function InvitePanel({
   const [role, setRole] = useState<"employee" | "boss">("employee");
   const [group, setGroup] = useState("");
   const [copied, setCopied] = useState<string | null>(null);
+  const [mail, setMail] = useState("");
+  const [mailed, setMailed] = useState(false);
   const url = (token: string) => `${appUrl}/join/${token}`;
   const wa = (token: string) => `https://wa.me/?text=${encodeURIComponent(t("employees.inviteMessage", { firm: firmName, url: url(token) }))}`;
 
@@ -52,6 +54,10 @@ export function InvitePanel({
                 <button className="hover:text-danger" onClick={() => run(() => revokeInvite(i.id))}>{t("employees.revoke")}</button>
               </div>
               <div className="truncate rounded-[10px] bg-surface px-2 py-1.5 font-mono text-xs">{url(i.token)}</div>
+              <form className="flex gap-2" onSubmit={(e) => { e.preventDefault(); run(() => sendInviteEmail(i.token, mail), { onOk: () => { setMail(""); setMailed(true); } }); }}>
+                <input type="email" required className="input !min-h-11 text-sm" placeholder={t("employees.email")} value={mail} onChange={(e) => { setMail(e.target.value); setMailed(false); }} />
+                <button className="btn-secondary !min-h-11 text-sm" disabled={pending}>{mailed ? t("common.saved") : t("task.send")}</button>
+              </form>
               <div className="grid grid-cols-2 gap-2">
                 <a href={wa(i.token)} target="_blank" rel="noreferrer" className="btn-primary !min-h-11 text-sm">
                   {t("employees.shareWhatsApp")}

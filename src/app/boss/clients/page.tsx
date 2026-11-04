@@ -6,15 +6,17 @@ import { isEnabled } from "@/lib/features";
 import { formatMoney } from "@/lib/money";
 import { clientStats } from "@/server/client-stats";
 import { ClientForm } from "@/components/clients/client-form";
+import { LoadMore, parseLimit } from "@/components/load-more";
 import { EmptyState, PageTitle } from "@/components/ui";
 import { IconUsers } from "@/components/icons";
 
-export default async function ClientsPage() {
+export default async function ClientsPage({ searchParams }: { searchParams: Promise<{ limit?: string }> }) {
+  const limit = parseLimit((await searchParams).limit);
   const ctx = await requireBossPage();
   if (!(await isEnabled(ctx, "clients"))) notFound();
   const { t, locale } = await getI18n();
   const [{ data: clients }, stats] = await Promise.all([
-    ctx.supabase.from("clients").select("*").eq("firm_id", ctx.firm.id).order("name").limit(500),
+    ctx.supabase.from("clients").select("*").eq("firm_id", ctx.firm.id).order("name").limit(limit),
     clientStats(ctx),
   ]);
   return (
@@ -38,6 +40,7 @@ export default async function ClientsPage() {
             );
           })}
           {!clients?.length && <EmptyState icon={<IconUsers />}>{t("clients.none")}</EmptyState>}
+          <LoadMore shown={(clients ?? []).length} limit={limit} href={(n) => `/boss/clients?limit=${n}`} />
         </div>
         <section className="card-white space-y-3 p-4">
           <h2 className="font-semibold">{t("clients.new")}</h2>

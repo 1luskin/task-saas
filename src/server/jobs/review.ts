@@ -46,7 +46,7 @@ export async function runReviewJobs(now = Date.now()) {
       body: t("push.reviewReminderBody", { n: ids.length }),
       url: "/boss?status=review",
       tag: "review-reminder",
-    }));
+    }), "task_review");
     await admin.from("tasks").update({ review_reminded_at: nowIso }).in("id", ids);
     reminded += ids.length;
   }

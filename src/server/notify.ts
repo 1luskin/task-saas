@@ -1,6 +1,7 @@
 import "server-only";
 import { createAdminClient } from "@/lib/supabase/server";
 import { sendPushToMembers } from "@/lib/push";
+import type { NotifyType } from "@/lib/notify-types";
 
 /** Mitarbeiter bekommt IMMER eine Benachrichtigung über eine neue Aufgabe. */
 export async function notifyNewTask(assigneeId: string, task: { id: string; title: string; priority: string }) {
@@ -9,7 +10,7 @@ export async function notifyNewTask(assigneeId: string, task: { id: string; titl
     body: task.title,
     url: `/staff/tasks/${task.id}`,
     tag: `task-${task.id}`,
-  }));
+  }), "new_task");
 }
 
 /** Chefs mit aktivierter Option informieren: Aufgabe liegt zur Prüfung vor. */
@@ -27,7 +28,7 @@ export async function notifyTaskReview(firmId: string, task: { id: string; title
     body: t("push.doneBody", { name: byName, title: task.title }),
     url: `/boss/tasks/${task.id}`,
     tag: `review-${task.id}`,
-  }));
+  }), "task_review");
 }
 
 /** Mitarbeiter: Arbeit zurück zur Nacharbeit (mit Kommentar) */
@@ -37,7 +38,7 @@ export async function notifyRework(assigneeId: string, task: { id: string; title
     body: `${task.title}: ${comment.slice(0, 120)}`,
     url: `/staff/tasks/${task.id}`,
     tag: `rework-${task.id}`,
-  }));
+  }), "task_rework");
 }
 
 /** Mitarbeiter: Arbeit wurde abgenommen */
@@ -47,12 +48,12 @@ export async function notifyAccepted(assigneeId: string, task: { id: string; tit
     body: task.title,
     url: `/staff/tasks/${task.id}`,
     tag: `accepted-${task.id}`,
-  }));
+  }), "task_accepted");
 }
 
 /** Allgemein: alle Chefs der Firma benachrichtigen (Demo-Firmen werden in sendPushToMembers übersprungen) */
-export async function notifyBosses(firmId: string, build: Parameters<typeof sendPushToMembers>[1]) {
+export async function notifyBosses(firmId: string, build: Parameters<typeof sendPushToMembers>[1], type?: NotifyType) {
   const admin = createAdminClient();
   const { data: bosses } = await admin.from("members").select("id").eq("firm_id", firmId).eq("role", "boss").is("archived_at", null);
-  await sendPushToMembers((bosses ?? []).map((b) => b.id), build);
+  await sendPushToMembers((bosses ?? []).map((b) => b.id), build, type);
 }

@@ -20,7 +20,7 @@ import { IconPlus } from "@/components/icons";
 import type { Task } from "@/lib/supabase/types";
 import { IconChevronRight, IconTasks } from "@/components/icons";
 
-type SP = { status?: string; member?: string; priority?: string; group?: string; cal?: string; view?: string; feedMember?: string; feedDate?: string };
+type SP = { status?: string; member?: string; priority?: string; group?: string; cal?: string; view?: string; feedMember?: string; feedDate?: string; feedLimit?: string };
 
 export default async function BossDashboard({ searchParams }: { searchParams: Promise<SP> }) {
   const sp = await searchParams;
@@ -142,7 +142,7 @@ export default async function BossDashboard({ searchParams }: { searchParams: Pr
             <Calendar key={`${view}-${anchor}`} tasks={calTasks} view={view} anchor={anchor} taskHref="/boss/tasks/" compact draggable />
           </Suspense>
           <div className="mt-4">
-            <ActivityFeed ctx={ctx} t={t} locale={locale} member={sp.feedMember} date={sp.feedDate} names={new Map(members.map((m) => [m.id, m.full_name]))} />
+            <ActivityFeed ctx={ctx} t={t} locale={locale} member={sp.feedMember} date={sp.feedDate} names={new Map(members.map((m) => [m.id, m.full_name]))} limit={Math.min(Number(sp.feedLimit) || 25, 500)} />
           </div>
         </div>
       </aside>

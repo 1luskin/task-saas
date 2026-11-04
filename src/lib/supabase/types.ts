@@ -34,6 +34,8 @@ export type Firm = {
   deletion_scheduled_for: string | null;
   logo_path: string | null;
   public_slug: string | null;
+  trial_mail_sent_at: string | null;
+  weekly_mail_last: string | null;
   task_fields: TaskFields;
   shift_autoclose_hours: number;
   created_at: string;
@@ -95,6 +97,7 @@ export type TaskFile = {
   mime_type: string; size_bytes: number; uploaded_by: string | null; created_at: string;
 };
 export type Activity = { id: string; firm_id: string; member_id: string | null; kind: string; task_id: string | null; payload: Record<string, unknown>; created_at: string };
+export type NotificationPref = { member_id: string; type: string; enabled: boolean; updated_at: string };
 export type Consent = {
   id: string;
   user_id: string | null;
@@ -325,6 +328,7 @@ export interface Database {
       checklist_templates: Table<ChecklistTemplate, "firm_id" | "name">;
       task_files: Table<TaskFile, "task_id" | "storage_path" | "file_name" | "mime_type" | "size_bytes">;
       activity: Table<Activity, "firm_id" | "kind">;
+      notification_prefs: Table<NotificationPref, "member_id" | "type" | "enabled">;
       data_requests: Table<DataRequest, "firm_id" | "member_id" | "kind">;
       task_finance: Table<TaskFinance, "task_id">;
       checklist_items: Table<ChecklistItem, "task_id" | "text">;

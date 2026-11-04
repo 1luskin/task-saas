@@ -4,6 +4,7 @@ import { serverEnv } from "@/lib/env";
 import { daysInMonth, isOverdue, isoWeekday, todayISO } from "@/lib/dates";
 import { sendPushToMembers } from "@/lib/push";
 import { notifyNewTask } from "@/server/notify";
+import { runEmailJobs } from "@/server/jobs/emails";
 import type { TaskTemplate } from "@/lib/supabase/types";
 
 export const dynamic = "force-dynamic";
@@ -124,7 +125,7 @@ export async function GET(req: Request) {
       body: t("push.overdueBody", { n: ids.length }),
       url: "/boss?status=overdue",
       tag: "overdue",
-    }));
+    }), "overdue");
     await admin.from("tasks").update({ overdue_notified_at: new Date().toISOString() }).in("id", ids);
   }
 
@@ -138,5 +139,8 @@ export async function GET(req: Request) {
   // 4. Aufbewahrung: Login-Protokoll 90 Tage
   await admin.from("login_events").delete().lt("created_at", new Date(Date.now() - 90 * 864e5).toISOString());
 
-  return NextResponse.json({ ok: true, created, overdue: overdue.length, deletedFirms: doomed?.length ?? 0 });
+  // 5. E-Mails: Testzeitraum endet bald, Wochenbericht (montags)
+  const emails = await runEmailJobs();
+
+  return NextResponse.json({ ok: true, created, overdue: overdue.length, deletedFirms: doomed?.length ?? 0, emails });
 }

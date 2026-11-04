@@ -4,16 +4,18 @@ import { getI18n } from "@/i18n/server";
 import { addDays, formatDate, isOverdue, todayISO } from "@/lib/dates";
 import { EmptyState, cx, STATUS_DOT } from "@/components/ui";
 import { TaskRow } from "@/components/tasks/task-row";
+import { LoadMore, parseLimit } from "@/components/load-more";
 
-export default async function StaffTasksPage({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
+export default async function StaffTasksPage({ searchParams }: { searchParams: Promise<{ tab?: string; limit?: string }> }) {
   const ctx = await requireStaffPage();
   const { t, locale, messages } = await getI18n();
-  const { tab } = await searchParams;
+  const { tab, limit: lim } = await searchParams;
+  const limit = parseLimit(lim);
   const today = todayISO();
   const showDone = tab === "done";
 
   const { data } = await (showDone
-    ? ctx.supabase.from("tasks").select("*").eq("assignee_id", ctx.member.id).eq("status", "done").order("completed_at", { ascending: false }).limit(50)
+    ? ctx.supabase.from("tasks").select("*").eq("assignee_id", ctx.member.id).eq("status", "done").order("completed_at", { ascending: false }).limit(limit)
     : ctx.supabase.from("tasks").select("*").eq("assignee_id", ctx.member.id).neq("status", "done").order("due_date", { nullsFirst: false }));
   const tasks = data ?? [];
 
@@ -69,6 +71,7 @@ export default async function StaffTasksPage({ searchParams }: { searchParams: P
           {tasks.map((task) => (
             <TaskRow key={task.id} task={task} href={`/staff/tasks/${task.id}`} assigneeName={null} t={t} locale={locale} showAssignee={false} />
           ))}
+          {showDone && <LoadMore shown={tasks.length} limit={limit} href={(n) => `/staff/tasks?tab=done&limit=${n}`} />}
         </div>
       </section>
       <p className="text-center text-xs text-muted">{formatDate(today, locale)}</p>

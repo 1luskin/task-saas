@@ -78,7 +78,10 @@ export async function flush(): Promise<void> {
 
 /** Startet Sync bei Netzrückkehr, Sichtbarkeit und alle 30 s. */
 export function startSyncLoop(): () => void {
-  const tick = () => void flush();
+  const tick = () => {
+    void flush();
+    void import("./files").then(async (m) => { if ((await m.flushOfflineFiles()) > 0) onSynced?.(); });
+  };
   window.addEventListener("online", tick);
   document.addEventListener("visibilitychange", tick);
   const iv = window.setInterval(tick, 30_000);

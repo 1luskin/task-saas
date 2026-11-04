@@ -4,13 +4,15 @@ import { getMembers } from "@/server/queries";
 import { EmptyState, PageTitle } from "@/components/ui";
 import { TaskRow } from "@/components/tasks/task-row";
 import { ArchiveSearch } from "@/components/tasks/archive-search";
+import { LoadMore, parseLimit } from "@/components/load-more";
 
-export default async function ArchivePage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
+export default async function ArchivePage({ searchParams }: { searchParams: Promise<{ q?: string; limit?: string }> }) {
   const ctx = await requireBossPage();
   const { t, locale } = await getI18n();
-  const { q } = await searchParams;
+  const { q, limit: lim } = await searchParams;
+  const limit = parseLimit(lim);
   const members = await getMembers(ctx, { includeArchived: true });
-  let query = ctx.supabase.from("tasks").select("*").eq("firm_id", ctx.firm.id).eq("status", "done").order("completed_at", { ascending: false }).limit(200);
+  let query = ctx.supabase.from("tasks").select("*").eq("firm_id", ctx.firm.id).eq("status", "done").order("completed_at", { ascending: false }).limit(limit);
   const term = (q ?? "").trim().slice(0, 100).replace(/[%,()*\\]/g, " ");
   if (term) query = query.or(`title.ilike.%${term}%,description.ilike.%${term}%,address.ilike.%${term}%`);
   const { data } = await query;
@@ -24,6 +26,7 @@ export default async function ArchivePage({ searchParams }: { searchParams: Prom
           <TaskRow key={task.id} task={task} href={`/boss/tasks/${task.id}`} assigneeName={members.find((m) => m.id === task.assignee_id)?.full_name ?? null} t={t} locale={locale} />
         ))}
       </div>
+      <LoadMore shown={(data ?? []).length} limit={limit} href={(n) => `/boss/archive?limit=${n}${q ? `&q=${encodeURIComponent(q)}` : ""}`} />
     </div>
   );
 }

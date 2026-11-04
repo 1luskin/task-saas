@@ -96,7 +96,7 @@ export function createSeed(): DemoDb {
     ],
     firms: [{ id: DEMO.firm, name: "Glanz & Bau Service GmbH", timezone: "Europe/Berlin", auto_accept_days: 3,
       trial_ends_at: new Date(Date.now() + 9 * 864e5).toISOString(), plan: "trial", is_demo: false, contact_email: "chefin@demo.de",
-      deletion_requested_at: null, deletion_scheduled_for: null, logo_path: null, shift_autoclose_hours: 12, public_slug: "glanz-bau",
+      deletion_requested_at: null, deletion_scheduled_for: null, logo_path: null, shift_autoclose_hours: 12, public_slug: "glanz-bau", trial_mail_sent_at: null, weekly_mail_last: null,
       task_fields: { description: true, address: true, due_time: true, checklist: true, client_price: true, fixed_pay: true, photos: true }, created_at: ago(5 * 24) }],
     user_settings: [],
     login_events: [],
@@ -132,6 +132,7 @@ export function createSeed(): DemoDb {
       { id: id(1902), firm_id: DEMO.firm, name: "Fenster", items: ["Innen", "Außen", "Rahmen", "Fensterbänke"], created_at: now },
     ],
     task_files: [],
+    notification_prefs: [],
     activity: [
       { id: id(2001), firm_id: DEMO.firm, member_id: e2.member, kind: "status", task_id: id(405), payload: { from: "in_progress", to: "review", title: "Badfliesen verfugen" }, created_at: ago(20) },
       { id: id(2002), firm_id: DEMO.firm, member_id: e1.member, kind: "shift_start", task_id: null, payload: {}, created_at: ago(1.5) },

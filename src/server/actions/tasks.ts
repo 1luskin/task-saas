@@ -189,7 +189,7 @@ export async function addComment(taskId: string, body: string) {
             body: `${task?.title ?? ""}: ${text.slice(0, 120)}`,
             url: `/boss/tasks/${taskId}`,
             tag: `mention-${taskId}`,
-          }));
+          }), "mention");
         }
       });
     }

@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { deletePhoto, registerPhoto } from "@/server/actions/tasks";
 import { IconCamera, IconTrash } from "../icons";
 import { isDemo } from "@/lib/demo/mode";
+import { putOfflineFile } from "@/lib/offline/files";
 
 /** Bild im Browser verkleinern (spart mobile Daten): max. 1600px, JPEG 0.82 */
 async function compress(file: File): Promise<Blob> {
@@ -30,6 +31,7 @@ export function Photos({
   const input = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [kind, setKind] = useState<"general" | "before" | "after">("general");
+  const [queued, setQueued] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
   async function upload(files: FileList | null) {
@@ -40,6 +42,12 @@ export function Photos({
       const supabase = createClient();
       for (const f of Array.from(files).slice(0, 10)) {
         const blob = await compress(f);
+        if (!navigator.onLine) {
+          // offline: in IndexedDB merken, Upload später automatisch
+          await putOfflineFile({ id: crypto.randomUUID(), kind: "photo", taskId, firmId, blob, photoKind: kind, createdAt: new Date().toISOString() });
+          setQueued((q) => q + 1);
+          continue;
+        }
         const path = `${firmId}/${taskId}/${crypto.randomUUID()}.jpg`;
         const { error } = await supabase.storage.from("task-photos").upload(path, blob, { contentType: "image/jpeg" });
         if (error) throw error;
@@ -106,6 +114,7 @@ export function Photos({
         )}
       </div>
       <input ref={input} type="file" accept="image/*" multiple hidden onChange={(e) => upload(e.target.files)} />
+      {queued > 0 && <p className="mt-1 text-sm text-review">{t("offline.filesQueued", { n: queued })}</p>}
       {error && <p className="mt-1 text-sm text-danger">{error}</p>}
     </div>
   );

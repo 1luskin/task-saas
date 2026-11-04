@@ -10,6 +10,8 @@ import { StatusSwitch } from "./status-switch";
 import { RequestForm } from "./request-form";
 import { MyData } from "./my-data";
 import { isEnabled } from "@/lib/features";
+import { NotifyPrefs } from "@/components/settings/notify-prefs";
+import { NOTIFY_TYPES } from "@/lib/notify-types";
 import { LegalFooter } from "@/components/legal/legal-footer";
 
 export default async function ProfilePage() {
@@ -22,6 +24,7 @@ export default async function ProfilePage() {
     .order("created_at", { ascending: false })
     .limit(20);
   const requestsOn = await isEnabled(ctx, "requests");
+  const { data: prefs } = await ctx.supabase.from("notification_prefs").select("*").eq("member_id", ctx.member.id);
   const { data: dataReqs } = await ctx.supabase.from("data_requests").select("id").eq("member_id", ctx.member.id).eq("status", "open");
 
   return (
@@ -64,6 +67,8 @@ export default async function ProfilePage() {
       <section className="card-white space-y-3 p-4">
         <h2 className="font-semibold">{t("settings.notifications")}</h2>
         <PushToggle />
+        <p className="text-sm text-muted">{t("notifyTypes.alwaysNewTask")}</p>
+        <div className="-mx-4"><NotifyPrefs types={NOTIFY_TYPES.employee} off={(prefs ?? []).filter((p) => !p.enabled).map((p) => p.type)} /></div>
       </section>
 
       <section className="card-white space-y-3 p-4">

@@ -105,6 +105,7 @@ class Session {
       case "shifts": case "expenses": case "adjustments": case "time_edits": return r.firm_id === firm && (boss || r.member_id === me);
       case "clients": case "task_links": case "inbound_requests": case "checklist_templates": case "activity": return r.firm_id === firm && boss;
       case "task_files": return this.taskVisible(r.task_id);
+      case "notification_prefs": return r.member_id === me;
       case "data_requests": return r.firm_id === firm && (boss || r.member_id === me);
     }
   }
@@ -128,6 +129,7 @@ class Session {
       case "task_links": return this.boss && this.taskVisible(r.task_id);
       case "inbound_requests": case "activity": return false;
       case "checklist_templates": return this.boss && r.firm_id === this.firm;
+      case "notification_prefs": return r.member_id === me;
       case "task_files": return this.taskVisible(r.task_id) && r.uploaded_by === me;
       case "push_subscriptions": return r.user_id === this.uid && r.member_id === me;
       case "checklist_items": return this.boss && this.taskVisible(r.task_id);
@@ -158,6 +160,7 @@ class Session {
         if (old.member_id !== this.me?.id || old.ended_at) return deny();
         return changed(["ended_at"]) ? deny() : null;
       case "push_subscriptions": return null;
+      case "notification_prefs": return old.member_id === this.me?.id ? null : deny();
       case "shifts":
         if (old.member_id !== this.me?.id || old.ended_at) return deny();
         return changed(["ended_at", "break_minutes", "break_started_at"]) ? deny() : null;
@@ -174,6 +177,7 @@ class Session {
       case "task_statuses": return this.boss && !r.is_system;
       case "expenses": return this.boss || (r.member_id === me && r.status === "pending");
       case "clients": case "checklist_templates": return this.boss;
+      case "notification_prefs": return r.member_id === me;
       case "task_files": return this.boss || r.uploaded_by === me;
       case "task_links": case "inbound_requests": return false;
       case "shifts": case "time_edits": case "adjustments": return false;

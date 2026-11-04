@@ -7,7 +7,7 @@ import { z } from "zod";
 import { assertBoss, assertMember, assertWritable } from "@/lib/auth";
 import { ActionError, check, must, runAction } from "@/lib/action";
 import { isoDate, moneyInput, optText, optUuid, priority, uuid } from "@/lib/validation";
-import { notifyNewTask } from "@/server/notify";
+import { notifyBosses, notifyNewTask } from "@/server/notify";
 
 const requestInput = z.object({
   title: z.string().trim().min(1).max(200),
@@ -31,6 +31,8 @@ export async function createRequest(raw: z.input<typeof requestInput>) {
     );
     revalidatePath("/staff/profile");
     revalidatePath("/boss", "layout");
+    const firmId = ctx.firm.id, who = ctx.member.full_name, title = input.title;
+    after(() => notifyBosses(firmId, (t) => ({ title: t("push.newRequest"), body: `${who}: ${title}`, url: "/boss/requests", tag: "request" }), "new_request"));
   });
 }
 

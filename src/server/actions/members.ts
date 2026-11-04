@@ -7,6 +7,10 @@ import { assertBoss, assertMember, assertWritable, requireRecentAuth } from "@/l
 import { ActionError, check, must, runAction } from "@/lib/action";
 import { locale, memberStatus, moneyInput, optText, optUuid, payMode, uuid } from "@/lib/validation";
 import { LOCALE_COOKIE } from "@/i18n/config";
+import { layout, sendEmail } from "@/lib/email";
+import { getI18n } from "@/i18n/server";
+import { serverEnv } from "@/lib/env";
+import { hit } from "@/lib/rate-limit";
 import type { Member } from "@/lib/supabase/types";
 
 export async function createInvite(raw: { role: "boss" | "employee"; group_id?: string | null }) {
@@ -155,5 +159,19 @@ export async function updateFirm(raw: { name: string }) {
     const name = z.string().trim().min(1).max(120).parse(raw.name);
     check(await ctx.supabase.from("firms").update({ name }).eq("id", ctx.firm.id));
     revalidatePath("/", "layout");
+  });
+}
+
+/** Einladung zusätzlich per E-Mail verschicken (Link bleibt derselbe) */
+export async function sendInviteEmail(token: string, email: string) {
+  return runAction(async () => {
+    const ctx = await assertBoss();
+    const to = z.string().trim().toLowerCase().email().max(254).parse(email);
+    const inv = must(await ctx.supabase.from("invites").select("token").eq("token", z.string().regex(/^[0-9a-f]{20,64}$/).parse(token)).eq("firm_id", ctx.firm.id).maybeSingle());
+    if (!(await hit("publicForm", `invite:${ctx.userId}`))) throw new ActionError("forbidden", "rate_limited");
+    const { t } = await getI18n();
+    const url = `${serverEnv().NEXT_PUBLIC_APP_URL.replace(/\/$/, "")}/join/${inv.token}`;
+    const m = layout({ title: t("mail.inviteTitle", { firm: ctx.firm.name }), lines: [t("mail.inviteText", { name: ctx.member.full_name })], cta: { label: t("join.submit"), url }, footer: ctx.firm.name });
+    await sendEmail({ to, subject: t("mail.inviteTitle", { firm: ctx.firm.name }), ...m });
   });
 }

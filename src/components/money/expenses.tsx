@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useI18n } from "@/i18n/client";
 import { createClient } from "@/lib/supabase/client";
 import { isDemo } from "@/lib/demo/mode";
+import { putOfflineFile } from "@/lib/offline/files";
 import { createExpense, decideExpense, deleteExpense } from "@/server/actions/money";
 import { formatMoney } from "@/lib/money";
 import { useAction, ErrorText } from "../use-action";
@@ -40,6 +41,14 @@ export function Expenses({ taskId, firmId, rows, isBoss, myMemberId, canAdd }: {
     e.preventDefault();
     let receiptPath: string | null = null;
     const file = fileRef.current?.files?.[0];
+    if (!navigator.onLine) {
+      // offline: Ausgabe (+ Beleg) in IndexedDB, wird bei Netz automatisch gesendet
+      const blob = file ? await compress(file) : null;
+      await putOfflineFile({ id: crypto.randomUUID(), kind: "expense", taskId, firmId, blob, ext: file ? (file.type === "application/pdf" ? "pdf" : "jpg") : null, ...v, createdAt: new Date().toISOString() });
+      setV({ amount: "", description: "", reimburse: false });
+      setOpen(false);
+      return setError(t("offline.filesQueued", { n: 1 }));
+    }
     if (file && !isDemo()) {
       if (file.size > 10 * 1024 * 1024) return setError(t("common.invalid"));
       const blob = await compress(file);

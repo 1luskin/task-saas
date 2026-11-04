@@ -9,6 +9,7 @@ import { FEATURES, loadFeatures } from "@/lib/features";
 import { createAdminClient } from "@/lib/supabase/server";
 import { isDemo } from "@/lib/demo/mode";
 import { clientIpHash } from "@/lib/rate-limit";
+import { NOTIFY_TYPES } from "@/lib/notify-types";
 
 const fieldsSchema = z.object({
   description: z.boolean(), address: z.boolean(), due_time: z.boolean(), checklist: z.boolean(),
@@ -82,4 +83,16 @@ export async function logoutAllDevices() {
     await ctx.supabase.auth.signOut({ scope: "global" });
   }
   redirect("/login");
+}
+
+/** Benachrichtigung je Typ an/aus (eigene Einstellung) */
+export async function setNotifyPref(type: string, enabled: boolean) {
+  return runAction(async () => {
+    const ctx = await assertMember();
+    const allowed: readonly string[] = ctx.member.role === "boss" ? NOTIFY_TYPES.boss : NOTIFY_TYPES.employee;
+    const tp = z.string().parse(type);
+    if (!allowed.includes(tp)) throw new ActionError("invalid");
+    await ctx.supabase.from("notification_prefs").delete().eq("member_id", ctx.member.id).eq("type", tp);
+    check(await ctx.supabase.from("notification_prefs").insert({ member_id: ctx.member.id, type: tp, enabled: z.boolean().parse(enabled) }));
+  });
 }

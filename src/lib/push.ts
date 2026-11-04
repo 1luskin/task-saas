@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/server";
 import { serverEnv } from "./env";
 import { createT, dictionaries } from "@/i18n/config";
 import type { Locale } from "@/lib/supabase/types";
+import type { NotifyType } from "./notify-types";
 
 let configured = false;
 function configure(): boolean {
@@ -27,9 +28,17 @@ export interface PushPayload {
 export async function sendPushToMembers(
   memberIds: string[],
   build: (t: ReturnType<typeof createT>, locale: Locale) => PushPayload,
+  type?: NotifyType,
 ): Promise<void> {
   if (!memberIds.length || !configure()) return;
   const admin = createAdminClient();
+  // Abgeschaltete Benachrichtigungsarten herausfiltern ("new_task" immer an)
+  if (type && type !== "new_task") {
+    const { data: off } = await admin.from("notification_prefs").select("member_id").in("member_id", memberIds).eq("type", type).eq("enabled", false);
+    const blocked = new Set((off ?? []).map((o) => o.member_id));
+    memberIds = memberIds.filter((id) => !blocked.has(id));
+    if (!memberIds.length) return;
+  }
   const [{ data: subs }, { data: members }] = await Promise.all([
     admin.from("push_subscriptions").select("*").in("member_id", memberIds),
     admin.from("members").select("id, locale, is_demo").in("id", memberIds),

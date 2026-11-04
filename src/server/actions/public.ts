@@ -28,7 +28,7 @@ export async function clientAccept(token: string): Promise<R> {
   if (error) return { ok: false, error: "error" };
   await r.admin.from("time_entries").update({ ended_at: now }).eq("task_id", r.task.id).is("ended_at", null);
   const title = r.task.title;
-  after(() => notifyBosses(r.task.firm_id, (t) => ({ title: t("push.clientAccepted"), body: title, url: `/boss/tasks/${r.task.id}`, tag: `client-${r.task.id}` })));
+  after(() => notifyBosses(r.task.firm_id, (t) => ({ title: t("push.clientAccepted"), body: title, url: `/boss/tasks/${r.task.id}`, tag: `client-${r.task.id}` }), "client_accepted"));
   return { ok: true };
 }
 
@@ -55,7 +55,7 @@ export async function clientReview(token: string, raw: { rating: number; comment
   if (input.data.allowPublish) {
     await r.admin.from("consents").insert({ kind: "review_publish", version: LEGAL_VERSION, granted: true, user_id: null, member_id: null });
   }
-  after(() => notifyBosses(r.task.firm_id, (t) => ({ title: t("push.newReview"), body: `${input.data.rating}/5 · ${r.task.title}`, url: `/boss/clients`, tag: `review-${r.task.id}` })));
+  after(() => notifyBosses(r.task.firm_id, (t) => ({ title: t("push.newReview"), body: `${input.data.rating}/5 · ${r.task.title}`, url: `/boss/clients`, tag: `review-${r.task.id}` }), "new_review"));
   return { ok: true };
 }
 
@@ -109,6 +109,6 @@ export async function submitInbound(slug: string, raw: { name: string; contact: 
     message: input.data.message,
   });
   if (error) return { ok: false, error: "error" };
-  after(() => notifyBosses(firm.id, (t) => ({ title: t("push.newInbound"), body: input.data.message.slice(0, 120), url: "/boss/requests", tag: "inbound" })));
+  after(() => notifyBosses(firm.id, (t) => ({ title: t("push.newInbound"), body: input.data.message.slice(0, 120), url: "/boss/requests", tag: "inbound" }), "inbound"));
   return { ok: true };
 }
