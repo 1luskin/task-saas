@@ -6,11 +6,13 @@ import { centsToInput, formatMoney } from "@/lib/money";
 import type { Member } from "@/lib/supabase/types";
 import { Avatar, Field, Input, Select, cx } from "../ui";
 import { useAction, ErrorText } from "../use-action";
+import { ReauthDialog } from "../reauth-dialog";
 
-export function MemberCard({ member: m, groups, isSelf, tasksDoneMonth, reworksMonth = 0, avgRating = null }: { member: Member; groups: { id: string; name: string }[]; isSelf: boolean; tasksDoneMonth: number; reworksMonth?: number; avgRating?: number | null }) {
+export function MemberCard({ member: m, groups, isSelf, tasksDoneMonth, reworksMonth = 0, avgRating = null, myEmail = "" }: { member: Member; groups: { id: string; name: string }[]; isSelf: boolean; tasksDoneMonth: number; reworksMonth?: number; avgRating?: number | null; myEmail?: string }) {
   const { t, locale } = useI18n();
   const { run, pending, error } = useAction();
   const [open, setOpen] = useState(false);
+  const [reauth, setReauth] = useState(false);
   const [v, setV] = useState({
     full_name: m.full_name,
     phone: m.phone ?? "",
@@ -55,12 +57,29 @@ export function MemberCard({ member: m, groups, isSelf, tasksDoneMonth, reworksM
           </div>
         </div>
       </button>
+      {reauth && (
+        <ReauthDialog
+          email={myEmail}
+          onCancel={() => setReauth(false)}
+          onDone={() => {
+            setReauth(false);
+            run(() => updateMember(m.id, { ...v, group_id: v.group_id || null }), { onOk: () => setOpen(false) });
+          }}
+        />
+      )}
       {open && (
         <form
           className="grid gap-3 border-t border-line/70 bg-card/50 p-4 sm:grid-cols-2"
           onSubmit={(e) => {
             e.preventDefault();
-            run(() => updateMember(m.id, { ...v, group_id: v.group_id || null }), { onOk: () => setOpen(false) });
+            run(
+              async () => {
+                const r = await updateMember(m.id, { ...v, group_id: v.group_id || null });
+                if (!r.ok && r.error === "reauth") setReauth(true);
+                return r.ok || r.error !== "reauth" ? r : { ok: true as const, data: undefined };
+              },
+              { onOk: () => setOpen(false) },
+            );
           }}
         >
           <Field label={t("employees.name")}><Input value={v.full_name} onChange={(e) => setV({ ...v, full_name: e.target.value })} required /></Field>

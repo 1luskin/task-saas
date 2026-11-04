@@ -64,7 +64,16 @@ export type UserSettings = {
   acting_member_id: string | null;
   onboarding_done: boolean;
   hints_dismissed: string[];
+  reauth_at: string | null;
   updated_at: string;
+};
+export type LoginEvent = {
+  id: string;
+  user_id: string;
+  kind: "login" | "reauth" | "logout" | "logout_all";
+  user_agent: string | null;
+  ip_hash: string | null;
+  created_at: string;
 };
 export type Invite = {
   id: string;
@@ -210,6 +219,7 @@ export interface Database {
       tasks: Table<Task, "firm_id" | "title">;
       task_statuses: Table<TaskStatusRow, "firm_id" | "name" | "kind">;
       user_settings: Table<UserSettings, "user_id">;
+      login_events: Table<LoginEvent, "user_id" | "kind">;
       task_finance: Table<TaskFinance, "task_id">;
       checklist_items: Table<ChecklistItem, "task_id" | "text">;
       task_comments: Table<TaskComment, "task_id" | "author_name" | "body">;
@@ -238,6 +248,7 @@ export interface Database {
       reset_demo_firm: { Args: Record<string, never>; Returns: string };
       dismiss_hint: { Args: { p_key: string }; Returns: undefined };
       finish_onboarding: { Args: Record<string, never>; Returns: undefined };
+      rate_limit_hit: { Args: { p_bucket: string; p_max: number; p_window_seconds: number }; Returns: boolean };
       invite_info: {
         Args: { p_token: string };
         Returns: { firm_name: string; role: Role; valid: boolean }[];

@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { z } from "zod";
-import { assertBoss, assertMember, assertWritable } from "@/lib/auth";
+import { assertBoss, assertMember, assertWritable, requireRecentAuth } from "@/lib/auth";
 import { ActionError, check, must, runAction } from "@/lib/action";
 import { locale, memberStatus, moneyInput, optText, optUuid, payMode, uuid } from "@/lib/validation";
 import { LOCALE_COOKIE } from "@/i18n/config";
@@ -49,6 +49,9 @@ export async function updateMember(id: string, raw: z.input<typeof memberUpdate>
     const ctx = await assertBoss();
     uuid.parse(id);
     const input = memberUpdate.parse(raw);
+    // Rollenwechsel ist eine gefährliche Aktion → frische Code-Bestätigung nötig
+    const current = must(await ctx.supabase.from("members").select("role").eq("id", id).eq("firm_id", ctx.firm.id).maybeSingle());
+    if (current.role !== input.role) await requireRecentAuth(ctx);
     if (input.role !== "boss") {
       const { count } = await ctx.supabase
         .from("members")

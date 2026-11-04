@@ -4,7 +4,7 @@ import { AuthError } from "./auth";
 
 export type ActionResult<T = undefined> =
   | { ok: true; data: T }
-  | { ok: false; error: "unauthenticated" | "forbidden" | "expired" | "invalid" | "unavailable" | "error"; message?: string };
+  | { ok: false; error: "unauthenticated" | "forbidden" | "expired" | "reauth" | "invalid" | "unavailable" | "error"; message?: string };
 
 /** Einheitliche Fehlerbehandlung für Server Actions. */
 export async function runAction<T>(fn: () => Promise<T>): Promise<ActionResult<T>> {

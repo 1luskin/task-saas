@@ -83,7 +83,7 @@ class Session {
       case "checklist_items": case "task_comments": case "task_photos": return this.taskVisible(r.task_id);
       case "time_entries": return r.firm_id === firm && (boss || r.member_id === me);
       case "task_requests": return r.firm_id === firm && (boss || r.created_by === me);
-      case "push_subscriptions": case "user_settings": return r.user_id === this.uid;
+      case "push_subscriptions": case "user_settings": case "login_events": return r.user_id === this.uid;
     }
   }
   /** INSERT-Policies */
@@ -390,7 +390,7 @@ export function createFakeClient(uid: string | null, admin = false) {
         if (!uid) return { data: null, error: { message: "not authenticated" } };
         let us = s.db.user_settings.find((u) => u.user_id === uid);
         if (!us) {
-          us = { user_id: uid, active_member_id: null, acting_member_id: null, onboarding_done: false, hints_dismissed: [], updated_at: new Date().toISOString() };
+          us = { user_id: uid, active_member_id: null, acting_member_id: null, onboarding_done: false, hints_dismissed: [], reauth_at: null, updated_at: new Date().toISOString() };
           s.db.user_settings.push(us);
         }
         if (fn === "finish_onboarding") us.onboarding_done = true;

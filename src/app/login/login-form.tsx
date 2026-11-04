@@ -1,42 +1,42 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { z } from "zod";
-import { createClient } from "@/lib/supabase/client";
 import { useI18n } from "@/i18n/client";
 import { Field, Input } from "@/components/ui";
+import { requestCode, verifyCode, type LoginResult } from "@/server/actions/login";
+import { Turnstile } from "@/components/turnstile";
 
-export function LoginForm({ next }: { next: string }) {
+export function LoginForm({ next, nonce }: { next: string; nonce?: string }) {
   const { t } = useI18n();
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
+  const [captcha, setCaptcha] = useState<string | null>(null);
   const [step, setStep] = useState<"email" | "code">("email");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const message = (r: Exclude<LoginResult, { ok: true }>) =>
+    r.error === "rate_limited" ? t("auth.rateLimited") : r.error === "wrong_code" ? t("auth.wrongCode") : r.error === "captcha" ? t("auth.captcha") : r.error === "invalid" ? t("common.invalid") : t("common.error");
+
   async function sendCode(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    const parsed = z.string().trim().toLowerCase().email().safeParse(email);
-    if (!parsed.success) return setError(t("common.invalid"));
     setBusy(true);
-    const { error } = await createClient().auth.signInWithOtp({ email: parsed.data, options: { shouldCreateUser: true } });
+    const r = await requestCode({ email, captcha });
     setBusy(false);
-    if (error) return setError(error.message);
-    setEmail(parsed.data);
+    if (!r.ok) return setError(message(r));
+    setEmail(email.trim().toLowerCase());
     setStep("code");
   }
 
   async function verify(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    const token = code.replace(/\s/g, "");
-    if (!/^\d{6,10}$/.test(token)) return setError(t("auth.wrongCode"));
     setBusy(true);
-    const { error } = await createClient().auth.verifyOtp({ email, token, type: "email" });
+    const r = await verifyCode({ email, code });
     setBusy(false);
-    if (error) return setError(t("auth.wrongCode"));
+    if (!r.ok) return setError(message(r));
     router.replace(next);
     router.refresh();
   }
@@ -48,9 +48,10 @@ export function LoginForm({ next }: { next: string }) {
         <p className="mt-1 text-muted">{t("auth.loginIntro")}</p>
       </div>
       <Field label={t("auth.email")}>
-        <Input type="email" inputMode="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} autoFocus />
+        <Input type="email" inputMode="email" autoComplete="email" required maxLength={254} value={email} onChange={(e) => setEmail(e.target.value)} autoFocus />
       </Field>
-      {error && <p className="text-sm text-danger">{error}</p>}
+      <Turnstile onToken={setCaptcha} nonce={nonce} />
+      {error && <p className="text-sm text-danger" role="alert">{error}</p>}
       <button className="btn-primary btn-xl w-full" disabled={busy}>
         {busy ? t("common.loading") : t("auth.sendCode")}
       </button>
@@ -65,13 +66,13 @@ export function LoginForm({ next }: { next: string }) {
           autoComplete="one-time-code"
           pattern="[0-9 ]*"
           maxLength={12}
-          className="text-center text-2xl tracking-[0.4em]"
+          className="text-center text-2xl tracking-[0.4em] tabular-nums"
           value={code}
           onChange={(e) => setCode(e.target.value)}
           autoFocus
         />
       </Field>
-      {error && <p className="text-sm text-danger">{error}</p>}
+      {error && <p className="text-sm text-danger" role="alert">{error}</p>}
       <button className="btn-primary btn-xl w-full" disabled={busy}>
         {busy ? t("common.loading") : t("auth.verify")}
       </button>

@@ -1,6 +1,8 @@
 import { getI18n } from "@/i18n/server";
 import { NavLink } from "./nav-link";
 import { OfflineBanner } from "./offline-banner";
+import { IdleLogout } from "../idle-logout";
+import { isDemo } from "@/lib/demo/mode";
 import { DemoFirmBar } from "../demo/demo-firm-bar";
 import { ExpiredBanner } from "../trial/trial";
 import type { Ctx } from "@/lib/auth";
@@ -19,6 +21,7 @@ export async function StaffShell({ ctx, children }: { ctx: Ctx; children: React.
     <div className="min-h-dvh">
       <DemoFirmBar ctx={ctx} />
       <OfflineBanner />
+      {!isDemo() && <IdleLogout />}
       <header className="pt-safe sticky top-0 z-30 bg-bg/90 backdrop-blur">
         <div className="mx-auto flex max-w-3xl items-center gap-3 px-4 py-2">
           <img src="/icons/icon.svg" alt="" className="size-8 rounded-[9px]" />

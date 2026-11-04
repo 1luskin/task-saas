@@ -21,7 +21,7 @@ export async function loadTaskDetail(ctx: Ctx, id: string) {
   const photoRows = photos.data ?? [];
   let urls: (string | null)[] = [];
   if (photoRows.length) {
-    const { data } = await ctx.supabase.storage.from("task-photos").createSignedUrls(photoRows.map((p) => p.storage_path), 60 * 60);
+    const { data } = await ctx.supabase.storage.from("task-photos").createSignedUrls(photoRows.map((p) => p.storage_path), 15 * 60); // ≤ 15 min
     urls = photoRows.map((_, i) => data?.[i]?.signedUrl ?? null);
   }
 

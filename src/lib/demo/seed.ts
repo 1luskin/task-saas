@@ -94,6 +94,7 @@ export function createSeed(): DemoDb {
     firms: [{ id: DEMO.firm, name: "Glanz & Bau Service GmbH", timezone: "Europe/Berlin", auto_accept_days: 3,
       trial_ends_at: new Date(Date.now() + 9 * 864e5).toISOString(), plan: "trial", is_demo: false, contact_email: "chefin@demo.de", created_at: ago(5 * 24) }],
     user_settings: [],
+    login_events: [],
     task_statuses: [
       ...(["new", "in_progress", "review", "rework", "done"] as const).map((kind, i) => ({
         id: id(1200 + i), firm_id: DEMO.firm, name: ["Neu", "In Arbeit", "Zur Prüfung", "Nacharbeit", "Erledigt"][i]!,

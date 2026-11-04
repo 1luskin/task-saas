@@ -17,8 +17,8 @@
 ## Исправить обязательно
 - [x] A. Сотрудник не ставит «done» сам — только «На проверку» (триггер, applyOp, fake-client)
 - [x] B. Начисление (часы и фикс) только после приёмки (accepted_at): earnings, finance, Excel, PDF, экраны, тесты
-- [ ] C. Permissions-Policy geolocation=(self), camera=(self); HSTS; CSP  _(Permissions-Policy и HSTS готовы, CSP с nonce — этап 4)_
-- [ ] D. Запрос и проверка OTP-кода на сервере с rate limit
+- [x] C. Permissions-Policy geolocation=(self), camera=(self); HSTS; CSP
+- [x] D. Запрос и проверка OTP-кода на сервере с rate limit
 - [x] E. `members.user_id unique` → решение для демо-фирмы
 - [x] F. /api/cron/frequent (CRON_SECRET) каждые 15 мин через pg_cron + pg_net (выключено без настроек), ежедневный cron оставить
 - [x] G. PDF: шрифты Golos Text + Geologica вместо Inter, outputFileTracingIncludes
@@ -70,16 +70,16 @@
 - [x] Тарифы Start/Pro за сотрудника, «Оплатить» → заглушка, PaymentProvider
 
 ## Этап 4. Безопасность
-- [ ] Rate limit в Postgres (OTP 5/ч email, 20/ч IP, 5 попыток проверки; ссылки заказчика, формы, sync, загрузки)
-- [ ] Turnstile (опционально по env)
-- [ ] CSP с nonce, HSTS, Permissions-Policy
-- [ ] Проверка фирма+роль+принадлежность объекта в каждой action/route (IDOR)
-- [ ] Storage: приватные бакеты, ссылки ≤ 15 мин, пережатие фото, проверка типа/размера
-- [ ] Service role не в клиентском бандле (проверка)
-- [ ] XSS: только текст, санитизация имён файлов
-- [ ] Выход по бездействию, повторный код для опасных действий
-- [ ] Sentry (EU, по env), логи без персональных данных
-- [ ] npm audit без high/critical
+- [x] Rate limit в Postgres (OTP 5/ч email, 20/ч IP, 5 попыток проверки; ссылки заказчика, формы, sync, загрузки)
+- [x] Turnstile (опционально по env)
+- [x] CSP с nonce, HSTS, Permissions-Policy
+- [x] Проверка фирма+роль+принадлежность объекта в каждой action/route (IDOR)
+- [x] Storage: приватные бакеты, ссылки ≤ 15 мин, пережатие фото, проверка типа/размера _(task-photos; новые бакеты avatars/task-files/firm-logos — в своих этапах по тем же правилам)_
+- [x] Service role не в клиентском бандле (проверка)
+- [x] XSS: только текст, санитизация имён файлов
+- [x] Выход по бездействию, повторный код для опасных действий
+- [x] Sentry (EU, по env), логи без персональных данных
+- [x] npm audit без high/critical
 
 ## Этап 5. Юридическое и DSGVO
 - [ ] Impressum, Datenschutzerklärung (+ субподрядчики), AGB, AVV — DE/RU с плейсхолдерами

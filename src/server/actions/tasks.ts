@@ -7,6 +7,7 @@ import { assertBoss, assertMember, assertWritable } from "@/lib/auth";
 import { ActionError, check, must, runAction } from "@/lib/action";
 import { isoDate, moneyInput, optText, optUuid, priority, taskStatus, timeHHMM, uuid } from "@/lib/validation";
 import { notifyAccepted, notifyNewTask, notifyRework } from "@/server/notify";
+import { hit } from "@/lib/rate-limit";
 
 const taskInput = z.object({
   title: z.string().trim().min(1).max(200),
@@ -187,6 +188,7 @@ export async function registerPhoto(taskId: string, storagePath: string) {
     const ctx = await assertMember();
     assertWritable(ctx);
     uuid.parse(taskId);
+    if (!(await hit("upload", ctx.userId))) throw new ActionError("forbidden", "rate_limited");
     const path = z.string().regex(/^[0-9a-f-]{36}\/[0-9a-f-]{36}\/[0-9a-f-]{36}\.(jpg|jpeg|png|webp)$/i).parse(storagePath);
     if (!path.startsWith(`${ctx.firm.id}/${taskId}/`)) throw new ActionError("forbidden");
     check(await ctx.supabase.from("task_photos").insert({ task_id: taskId, storage_path: path, uploaded_by: ctx.member.id }));

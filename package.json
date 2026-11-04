@@ -10,7 +10,8 @@
     "vapid": "web-push generate-vapid-keys",
     "lint": "eslint .",
     "test": "vitest run",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "check:bundle": "node scripts/check-bundle.mjs"
   },
   "engines": {
     "node": ">=20"
@@ -41,6 +42,6 @@
     "tailwindcss": "^4.3.3",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.72.1",
-    "vitest": "^3.2.7"
+    "vitest": "^5.1.0"
   }
 }

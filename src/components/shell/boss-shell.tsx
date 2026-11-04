@@ -3,6 +3,8 @@ import { APP_NAME } from "@/config/app";
 import { getI18n } from "@/i18n/server";
 import { NavLink } from "./nav-link";
 import { OfflineBanner } from "./offline-banner";
+import { IdleLogout } from "../idle-logout";
+import { isDemo } from "@/lib/demo/mode";
 import { DemoFirmBar } from "../demo/demo-firm-bar";
 import { ExpiredBanner, TrialCard } from "../trial/trial";
 import type { Ctx } from "@/lib/auth";
@@ -70,6 +72,7 @@ export async function BossShell({
       <div className="min-w-0 flex-1">
         <DemoFirmBar ctx={ctx} />
         <OfflineBanner />
+        {!isDemo() && <IdleLogout />}
         {/* Kopfzeile (Handy) */}
         <header className="pt-safe sticky top-0 z-30 flex items-center justify-between bg-bg/90 px-4 py-2 backdrop-blur lg:hidden">
           <span className="truncate font-semibold">{firmName}</span>

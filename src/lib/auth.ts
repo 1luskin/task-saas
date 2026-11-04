@@ -3,6 +3,7 @@ import { cache } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { canWrite } from "@/lib/trial";
+import { isDemo } from "@/lib/demo/mode";
 import type { Firm, Member, UserSettings } from "@/lib/supabase/types";
 
 export interface Ctx {
@@ -69,7 +70,7 @@ export async function requireStaffPage(): Promise<Ctx> {
 }
 
 export class AuthError extends Error {
-  constructor(public code: "unauthenticated" | "forbidden" | "expired") {
+  constructor(public code: "unauthenticated" | "forbidden" | "expired" | "reauth") {
     super(code);
   }
 }
@@ -90,4 +91,12 @@ export async function assertBoss(): Promise<Ctx> {
 /** Nach Ende des Testzeitraums: nichts Neues anlegen (DB prüft zusätzlich per RLS). */
 export function assertWritable(ctx: Ctx) {
   if (!canWrite(ctx.firm)) throw new AuthError("expired");
+}
+
+/** Gefährliche Aktionen (Rollen ändern, Firma löschen, Komplett-Export): Code-Bestätigung ≤ 10 min alt */
+export async function requireRecentAuth(ctx: Ctx, maxMinutes = 10) {
+  if (isDemo()) return;
+  const { data } = await ctx.supabase.from("user_settings").select("reauth_at").eq("user_id", ctx.userId).maybeSingle();
+  const at = data?.reauth_at ? new Date(data.reauth_at).getTime() : 0;
+  if (Date.now() - at > maxMinutes * 60_000) throw new AuthError("reauth");
 }

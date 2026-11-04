@@ -37,3 +37,23 @@ describe("Auto-Abnahme", () => {
     expect(reviewReminderDue(sub, 3, null, t0 + 73 * h)).toBe(false); // dann schon Auto-Abnahme
   });
 });
+
+import { scrub } from "@/lib/report-error";
+import { buildCsp } from "@/lib/csp";
+
+describe("Sicherheit", () => {
+  it("Fehlerberichte ohne personenbezogene Daten", () => {
+    const s = scrub("Fehler für max.muster@firma.de member 00000000-0000-4000-8000-000000000401 von 10.1.2.3");
+    expect(s).not.toMatch(/@firma/);
+    expect(s).not.toMatch(/0000-4000/);
+    expect(s).not.toMatch(/10\.1\.2\.3/);
+  });
+  it("CSP: Nonce, keine fremden Frames, Supabase erlaubt", () => {
+    const c = buildCsp("abc", { supabaseUrl: "https://xyz.supabase.co" });
+    expect(c).toContain("'nonce-abc'");
+    expect(c).toContain("frame-ancestors 'none'");
+    expect(c).toContain("https://xyz.supabase.co");
+    expect(c).toContain("wss://xyz.supabase.co");
+    expect(c).not.toContain("unsafe-eval");
+  });
+});

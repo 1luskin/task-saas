@@ -4,6 +4,7 @@ import { z } from "zod";
 import { AuthError, assertMember } from "@/lib/auth";
 import { applyOp, syncOpSchema } from "@/server/task-ops";
 import { ActionError } from "@/lib/action";
+import { hit } from "@/lib/rate-limit";
 
 const bodySchema = z.object({
   ops: z.array(z.object({ id: z.string().min(1).max(64), op: z.unknown() }).passthrough()).max(200),
@@ -21,6 +22,7 @@ export async function POST(req: Request) {
     if (e instanceof AuthError) return NextResponse.json({ error: e.code }, { status: 401 });
     throw e;
   }
+  if (!(await hit("sync", ctx.userId))) return NextResponse.json({ error: "rate_limited" }, { status: 429 });
   const parsed = bodySchema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "invalid" }, { status: 400 });
 
