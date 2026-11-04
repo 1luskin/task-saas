@@ -3,7 +3,7 @@
 import { after } from "next/server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { assertBoss, assertMember } from "@/lib/auth";
+import { assertBoss, assertMember, assertWritable } from "@/lib/auth";
 import { ActionError, check, must, runAction } from "@/lib/action";
 import { isoDate, moneyInput, optText, optUuid, priority, taskStatus, timeHHMM, uuid } from "@/lib/validation";
 import { notifyAccepted, notifyNewTask, notifyRework } from "@/server/notify";
@@ -31,6 +31,7 @@ function revalidateTasks() {
 export async function createTask(raw: TaskInput) {
   return runAction(async () => {
     const ctx = await assertBoss();
+    assertWritable(ctx);
     const input = taskInput.parse(raw);
     let fixedPay = input.fixed_pay;
     if (input.assignee_id) {
@@ -135,6 +136,7 @@ export async function deleteTask(id: string) {
 export async function addChecklistItem(taskId: string, text: string) {
   return runAction(async () => {
     const ctx = await assertBoss();
+    assertWritable(ctx);
     uuid.parse(taskId);
     const t = z.string().trim().min(1).max(300).parse(text);
     const { count } = await ctx.supabase.from("checklist_items").select("id", { count: "exact", head: true }).eq("task_id", taskId);
@@ -155,6 +157,7 @@ export async function deleteChecklistItem(itemId: string) {
 export async function addComment(taskId: string, body: string) {
   return runAction(async () => {
     const ctx = await assertMember();
+    assertWritable(ctx);
     uuid.parse(taskId);
     const text = z.string().trim().min(1).max(4000).parse(body);
     check(
@@ -182,6 +185,7 @@ export async function deleteComment(id: string) {
 export async function registerPhoto(taskId: string, storagePath: string) {
   return runAction(async () => {
     const ctx = await assertMember();
+    assertWritable(ctx);
     uuid.parse(taskId);
     const path = z.string().regex(/^[0-9a-f-]{36}\/[0-9a-f-]{36}\/[0-9a-f-]{36}\.(jpg|jpeg|png|webp)$/i).parse(storagePath);
     if (!path.startsWith(`${ctx.firm.id}/${taskId}/`)) throw new ActionError("forbidden");

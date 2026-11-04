@@ -35,7 +35,7 @@ const DEFAULTS: Partial<Record<TableName, () => Row>> = {
     submitted_at: null, accepted_at: null, accepted_by: null, rating: null, rework_count: 0, review_reminded_at: null, custom_status_id: null }),
   task_statuses: () => ({ color: "slate", position: 0, is_system: false }),
   members: () => ({ email: null, phone: null, group_id: null, status: "active", pay_mode: "hourly", hourly_rate_cents: 0, locale: "de",
-    notify_overdue: true, notify_done: true, archived_at: null, user_id: null }),
+    notify_overdue: true, notify_done: true, archived_at: null, user_id: null, is_demo: false }),
   invites: () => ({ token: Array.from(crypto.getRandomValues(new Uint8Array(18)), (b) => b.toString(16).padStart(2, "0")).join(""),
     role: "employee", group_id: null, created_by: null, expires_at: new Date(Date.now() + 14 * 864e5).toISOString(), max_uses: 50, used_count: 0, revoked: false }),
   checklist_items: () => ({ done: false, position: 0 }),
@@ -83,7 +83,7 @@ class Session {
       case "checklist_items": case "task_comments": case "task_photos": return this.taskVisible(r.task_id);
       case "time_entries": return r.firm_id === firm && (boss || r.member_id === me);
       case "task_requests": return r.firm_id === firm && (boss || r.created_by === me);
-      case "push_subscriptions": return r.user_id === this.uid;
+      case "push_subscriptions": case "user_settings": return r.user_id === this.uid;
     }
   }
   /** INSERT-Policies */
@@ -382,6 +382,21 @@ export function createFakeClient(uid: string | null, admin = false) {
   return {
     from: (table: TableName) => new Query(s, table),
     rpc: async (fn: string, args: Record<string, string>) => {
+      if (fn === "current_context") {
+        const m = s.me;
+        return { data: m ? [{ member_id: m.id, real_member_id: m.id, own_member_id: m.id, demo_member_id: null, acting: false }] : [], error: null };
+      }
+      if (fn === "dismiss_hint" || fn === "finish_onboarding") {
+        if (!uid) return { data: null, error: { message: "not authenticated" } };
+        let us = s.db.user_settings.find((u) => u.user_id === uid);
+        if (!us) {
+          us = { user_id: uid, active_member_id: null, acting_member_id: null, onboarding_done: false, hints_dismissed: [], updated_at: new Date().toISOString() };
+          s.db.user_settings.push(us);
+        }
+        if (fn === "finish_onboarding") us.onboarding_done = true;
+        else if (!us.hints_dismissed.includes(String(args.p_key).slice(0, 40))) us.hints_dismissed.push(String(args.p_key).slice(0, 40));
+        return { data: null, error: null };
+      }
       if (fn === "invite_info") {
         const inv = s.db.invites.find((i) => i.token === args.p_token);
         const firm = s.db.firms.find((f) => f.id === inv?.firm_id);

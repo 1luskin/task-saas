@@ -1,10 +1,13 @@
 import { getI18n } from "@/i18n/server";
 import { NavLink } from "./nav-link";
 import { OfflineBanner } from "./offline-banner";
-import { DemoBanner } from "./demo-banner";
+import { DemoFirmBar } from "../demo/demo-firm-bar";
+import { ExpiredBanner } from "../trial/trial";
+import type { Ctx } from "@/lib/auth";
 import { IconSun, IconTasks, IconUser, IconWallet } from "../icons";
 
-export async function StaffShell({ firmName, children }: { firmName: string; children: React.ReactNode }) {
+export async function StaffShell({ ctx, children }: { ctx: Ctx; children: React.ReactNode }) {
+  const firmName = ctx.firm.name;
   const { t } = await getI18n();
   const tabs = [
     { href: "/staff/today", label: t("nav.today"), icon: IconSun },
@@ -14,8 +17,8 @@ export async function StaffShell({ firmName, children }: { firmName: string; chi
   ];
   return (
     <div className="min-h-dvh">
-      <DemoBanner />
-        <OfflineBanner />
+      <DemoFirmBar ctx={ctx} />
+      <OfflineBanner />
       <header className="pt-safe sticky top-0 z-30 bg-bg/90 backdrop-blur">
         <div className="mx-auto flex max-w-3xl items-center gap-3 px-4 py-2">
           <img src="/icons/icon.svg" alt="" className="size-8 rounded-[9px]" />
@@ -30,7 +33,10 @@ export async function StaffShell({ firmName, children }: { firmName: string; chi
           </nav>
         </div>
       </header>
-      <main className="mx-auto w-full max-w-3xl px-4 pb-32 pt-4 lg:pb-10">{children}</main>
+      <main className="mx-auto w-full max-w-3xl px-4 pb-32 pt-4 lg:pb-10">
+        <ExpiredBanner firm={ctx.firm} isBoss={false} />
+        {children}
+      </main>
       <nav className="pb-safe fixed inset-x-0 bottom-0 z-30 flex border-t border-line bg-surface/95 backdrop-blur lg:hidden">
         {tabs.map((tab) => (
           <NavLink key={tab.href} href={tab.href} variant="bottom">

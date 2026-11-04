@@ -32,13 +32,16 @@ export async function sendPushToMembers(
   const admin = createAdminClient();
   const [{ data: subs }, { data: members }] = await Promise.all([
     admin.from("push_subscriptions").select("*").in("member_id", memberIds),
-    admin.from("members").select("id, locale").in("id", memberIds),
+    admin.from("members").select("id, locale, is_demo").in("id", memberIds),
   ]);
   if (!subs?.length) return;
+  // Demo-Firmen senden nie an echte Geräte
+  const demo = new Set((members ?? []).filter((m) => m.is_demo).map((m) => m.id));
+  const realSubs = subs.filter((s) => !demo.has(s.member_id));
   const localeOf = new Map((members ?? []).map((m) => [m.id, m.locale]));
 
   await Promise.all(
-    subs.map(async (s) => {
+    realSubs.map(async (s) => {
       const locale = localeOf.get(s.member_id) ?? "de";
       const payload = build(createT(dictionaries[locale]), locale);
       try {

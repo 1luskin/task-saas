@@ -4,7 +4,8 @@ import { PageTitle } from "@/components/ui";
 import { LanguageSwitch } from "@/components/language-switch";
 import { PushToggle } from "@/components/settings/push-toggle";
 import { ProfileToggle } from "@/components/settings/toggle";
-import { InstallButton } from "@/components/settings/install-button";
+import { InstallHint } from "@/components/settings/install-hint";
+import { TrialCard } from "@/components/trial/trial";
 import { FirmForm } from "./firm-form";
 import { StatusesEditor } from "@/components/settings/statuses-editor";
 
@@ -15,6 +16,7 @@ export default async function SettingsPage() {
   return (
     <div className="mx-auto max-w-2xl space-y-4">
       <PageTitle>{t("settings.title")}</PageTitle>
+      <TrialCard firm={ctx.firm} />
       <section className="card-white p-4">
         <h2 className="mb-3 font-semibold">{t("settings.firm")}</h2>
         <FirmForm name={ctx.firm.name} />
@@ -36,7 +38,7 @@ export default async function SettingsPage() {
       <section className="card-white space-y-3 p-4">
         <h2 className="font-semibold">{t("settings.language")}</h2>
         <LanguageSwitch persist large />
-        <InstallButton />
+        <InstallHint />
       </section>
     </div>
   );

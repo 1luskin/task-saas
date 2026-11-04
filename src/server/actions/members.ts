@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { z } from "zod";
-import { assertBoss, assertMember } from "@/lib/auth";
+import { assertBoss, assertMember, assertWritable } from "@/lib/auth";
 import { ActionError, check, must, runAction } from "@/lib/action";
 import { locale, memberStatus, moneyInput, optText, optUuid, payMode, uuid } from "@/lib/validation";
 import { LOCALE_COOKIE } from "@/i18n/config";
@@ -12,6 +12,7 @@ import type { Member } from "@/lib/supabase/types";
 export async function createInvite(raw: { role: "boss" | "employee"; group_id?: string | null }) {
   return runAction(async () => {
     const ctx = await assertBoss();
+    assertWritable(ctx);
     const input = z.object({ role: z.enum(["boss", "employee"]), group_id: optUuid }).parse(raw);
     const inv = must(
       await ctx.supabase
@@ -97,6 +98,7 @@ export async function removeMember(id: string) {
 export async function createGroup(name: string) {
   return runAction(async () => {
     const ctx = await assertBoss();
+    assertWritable(ctx);
     const n = z.string().trim().min(1).max(80).parse(name);
     check(await ctx.supabase.from("groups").insert({ firm_id: ctx.firm.id, name: n }));
     revalidatePath("/boss", "layout");

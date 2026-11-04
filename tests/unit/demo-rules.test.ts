@@ -47,3 +47,12 @@ describe("Demo: Status & Abnahme", () => {
     expect(demoDb().task_statuses.some((s) => s.id === own.id)).toBe(false);
   });
 });
+
+describe("Demo: Testzeitraum", () => {
+  it("nach Ablauf blockiert der Server das Anlegen (assertWritable)", async () => {
+    const { assertWritable, AuthError } = await import("@/lib/auth");
+    const firm = { ...demoDb().firms[0]!, trial_ends_at: new Date(Date.now() - 1000).toISOString() };
+    expect(() => assertWritable({ firm } as never)).toThrow(AuthError);
+    expect(() => assertWritable({ firm: { ...firm, plan: "paid" } } as never)).not.toThrow();
+  });
+});

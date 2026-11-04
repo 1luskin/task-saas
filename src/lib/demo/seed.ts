@@ -37,7 +37,7 @@ export function createSeed(): DemoDb {
 
   const member = (o: Partial<Tables["members"]["Row"]> & Pick<Tables["members"]["Row"], "id" | "user_id" | "role" | "full_name">): Tables["members"]["Row"] => ({
     firm_id: DEMO.firm, email: null, phone: null, group_id: null, status: "active", pay_mode: "hourly",
-    hourly_rate_cents: 0, locale: "de", notify_overdue: true, notify_done: true, archived_at: null,
+    hourly_rate_cents: 0, locale: "de", notify_overdue: true, notify_done: true, archived_at: null, is_demo: false,
     created_at: now, updated_at: now, ...o,
   });
 
@@ -91,7 +91,9 @@ export function createSeed(): DemoDb {
       { id: e2.user, email: "lukas@demo.de" },
       { id: e3.user, email: "olga@demo.de" },
     ],
-    firms: [{ id: DEMO.firm, name: "Glanz & Bau Service GmbH", timezone: "Europe/Berlin", auto_accept_days: 3, created_at: now }],
+    firms: [{ id: DEMO.firm, name: "Glanz & Bau Service GmbH", timezone: "Europe/Berlin", auto_accept_days: 3,
+      trial_ends_at: new Date(Date.now() + 9 * 864e5).toISOString(), plan: "trial", is_demo: false, contact_email: "chefin@demo.de", created_at: ago(5 * 24) }],
+    user_settings: [],
     task_statuses: [
       ...(["new", "in_progress", "review", "rework", "done"] as const).map((kind, i) => ({
         id: id(1200 + i), firm_id: DEMO.firm, name: ["Neu", "In Arbeit", "Zur Prüfung", "Nacharbeit", "Erledigt"][i]!,

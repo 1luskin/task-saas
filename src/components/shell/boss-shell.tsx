@@ -3,7 +3,9 @@ import { APP_NAME } from "@/config/app";
 import { getI18n } from "@/i18n/server";
 import { NavLink } from "./nav-link";
 import { OfflineBanner } from "./offline-banner";
-import { DemoBanner } from "./demo-banner";
+import { DemoFirmBar } from "../demo/demo-firm-bar";
+import { ExpiredBanner, TrialCard } from "../trial/trial";
+import type { Ctx } from "@/lib/auth";
 import { LogoutButton } from "../logout-button";
 import { Avatar } from "../ui";
 import {
@@ -11,8 +13,10 @@ import {
 } from "../icons";
 
 export async function BossShell({
-  firmName, userName, pendingRequests, children,
-}: { firmName: string; userName: string; pendingRequests: number; children: React.ReactNode }) {
+  ctx, pendingRequests, children,
+}: { ctx: Ctx; pendingRequests: number; children: React.ReactNode }) {
+  const firmName = ctx.firm.name;
+  const userName = ctx.member.full_name;
   const { t } = await getI18n();
   const items = [
     { href: "/boss", exact: true, label: t("nav.tasks"), icon: IconTasks },
@@ -55,7 +59,8 @@ export async function BossShell({
             </NavLink>
           ))}
         </nav>
-        <div className="mt-auto flex items-center gap-2 px-2">
+        <TrialCard firm={ctx.firm} className="mx-1 mt-auto" />
+        <div className="mt-3 flex items-center gap-2 px-2">
           <Avatar name={userName} />
           <span className="flex-1 truncate text-sm">{userName}</span>
         </div>
@@ -63,7 +68,7 @@ export async function BossShell({
       </aside>
 
       <div className="min-w-0 flex-1">
-        <DemoBanner />
+        <DemoFirmBar ctx={ctx} />
         <OfflineBanner />
         {/* Kopfzeile (Handy) */}
         <header className="pt-safe sticky top-0 z-30 flex items-center justify-between bg-bg/90 px-4 py-2 backdrop-blur lg:hidden">
@@ -73,7 +78,10 @@ export async function BossShell({
             {pendingRequests > 0 && <span className="absolute right-1.5 top-1.5 size-2.5 rounded-full bg-danger" />}
           </Link>
         </header>
-        <main className="mx-auto w-full max-w-[1600px] px-4 pb-28 pt-4 lg:px-0 lg:pb-4 lg:pt-0">{children}</main>
+        <main className="mx-auto w-full max-w-[1600px] px-4 pb-28 pt-4 lg:px-0 lg:pb-4 lg:pt-0">
+          <ExpiredBanner firm={ctx.firm} isBoss />
+          {children}
+        </main>
       </div>
 
       {/* Untere Navigation (Handy) */}

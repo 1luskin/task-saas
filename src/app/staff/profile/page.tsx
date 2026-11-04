@@ -4,7 +4,7 @@ import { formatDate } from "@/lib/dates";
 import { LanguageSwitch } from "@/components/language-switch";
 import { LogoutButton } from "@/components/logout-button";
 import { PushToggle } from "@/components/settings/push-toggle";
-import { InstallButton } from "@/components/settings/install-button";
+import { InstallHint } from "@/components/settings/install-hint";
 import { Avatar } from "@/components/ui";
 import { StatusSwitch } from "./status-switch";
 import { RequestForm } from "./request-form";
@@ -64,7 +64,7 @@ export default async function ProfilePage() {
       <section className="card-white space-y-3 p-4">
         <h2 className="font-semibold">{t("settings.language")}</h2>
         <LanguageSwitch persist large />
-        <InstallButton />
+        <InstallHint />
       </section>
 
       <div className="card-white p-2">

@@ -7,6 +7,9 @@ import { loadFinance } from "@/lib/finance";
 import { formatMoney } from "@/lib/money";
 import { getCalendarTasks, getGroups, getMembers, parseCalParams, pendingRequestCount } from "@/server/queries";
 import { Calendar } from "@/components/calendar/calendar";
+import { redirect } from "next/navigation";
+import { isDemo } from "@/lib/demo/mode";
+import { Hint } from "@/components/hint";
 import { TaskFilters } from "@/components/tasks/filters";
 import { TaskRow } from "@/components/tasks/task-row";
 import { EmptyState, Stat } from "@/components/ui";
@@ -20,6 +23,7 @@ export default async function BossDashboard({ searchParams }: { searchParams: Pr
   const sp = await searchParams;
   const ctx = await requireBossPage();
   const { t, locale } = await getI18n();
+  if (!ctx.settings.onboarding_done && !ctx.firm.is_demo && !isDemo()) redirect("/boss/welcome");
   const [members, groups, pending] = await Promise.all([getMembers(ctx, { includeArchived: true }), getGroups(ctx), pendingRequestCount(ctx)]);
   const nameOf = (id: string | null) => (id ? members.find((m) => m.id === id)?.full_name ?? null : null);
 
@@ -84,6 +88,7 @@ export default async function BossDashboard({ searchParams }: { searchParams: Pr
           <Stat label={t("dashboard.weekProfit")} value={<span className="text-base sm:text-2xl xl:text-3xl">{formatMoney(fin.profitCents, locale)}</span>} tone="accent" href="/boss/money" />
         </div>
 
+        <Hint id="dashboard" dismissed={ctx.settings.hints_dismissed}>{t("hints.dashboard")}</Hint>
         {pending > 0 && (
           <Link href="/boss/requests" className="card flex min-h-12 items-center justify-between px-4 py-2 text-link">
             <span className="font-medium">{t("dashboard.pendingRequests", { n: pending })}</span>

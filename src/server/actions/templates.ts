@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { assertBoss } from "@/lib/auth";
+import { assertBoss, assertWritable } from "@/lib/auth";
 import { check, runAction } from "@/lib/action";
 import { moneyInput, optText, optUuid, priority, uuid } from "@/lib/validation";
 
@@ -29,6 +29,7 @@ export type TemplateInput = z.input<typeof templateInput>;
 export async function saveTemplate(id: string | null, raw: TemplateInput) {
   return runAction(async () => {
     const ctx = await assertBoss();
+    assertWritable(ctx);
     const input = templateInput.parse(raw);
     const row = {
       firm_id: ctx.firm.id,

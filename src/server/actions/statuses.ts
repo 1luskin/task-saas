@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { assertBoss } from "@/lib/auth";
+import { assertBoss, assertWritable } from "@/lib/auth";
 import { check, must, runAction } from "@/lib/action";
 import { uuid } from "@/lib/validation";
 
@@ -12,6 +12,7 @@ const kind = z.enum(["new", "in_progress", "review", "rework", "done"]);
 export async function saveTaskStatus(id: string | null, raw: { name: string; color: string; kind?: string; position?: number }) {
   return runAction(async () => {
     const ctx = await assertBoss();
+    assertWritable(ctx);
     const input = z.object({ name: z.string().trim().min(1).max(40), color, kind: kind.optional(), position: z.number().int().min(0).max(999).optional() }).parse(raw);
     if (id) {
       // Etappe eines bestehenden Status ändert sich nicht (Systemstatus: per Trigger gesperrt)

@@ -3,7 +3,7 @@
 import { after } from "next/server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { assertBoss, assertMember } from "@/lib/auth";
+import { assertBoss, assertMember, assertWritable } from "@/lib/auth";
 import { ActionError, check, must, runAction } from "@/lib/action";
 import { isoDate, moneyInput, optText, optUuid, priority, uuid } from "@/lib/validation";
 import { notifyNewTask } from "@/server/notify";
@@ -18,6 +18,7 @@ const requestInput = z.object({
 export async function createRequest(raw: z.input<typeof requestInput>) {
   return runAction(async () => {
     const ctx = await assertMember();
+    assertWritable(ctx);
     const input = requestInput.parse(raw);
     check(
       await ctx.supabase.from("task_requests").insert({
@@ -42,6 +43,7 @@ const approveInput = z.object({
 export async function approveRequest(id: string, raw: z.input<typeof approveInput>) {
   return runAction(async () => {
     const ctx = await assertBoss();
+    assertWritable(ctx);
     uuid.parse(id);
     const input = approveInput.parse(raw);
     const req = check(await ctx.supabase.from("task_requests").select("*").eq("id", id).maybeSingle());

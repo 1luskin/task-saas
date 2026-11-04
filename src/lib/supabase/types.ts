@@ -19,12 +19,17 @@ export type Priority = "normal" | "urgent";
 export type Recurrence = "daily" | "weekly" | "monthly";
 export type RequestStatus = "pending" | "approved" | "rejected";
 export type Locale = "de" | "ru";
+export type FirmPlan = "trial" | "paid" | "expired" | "blocked";
 
 export type Firm = {
   id: string;
   name: string;
   timezone: string;
   auto_accept_days: number | null;
+  trial_ends_at: string;
+  plan: FirmPlan;
+  is_demo: boolean;
+  contact_email: string | null;
   created_at: string;
 };
 export type Group = {
@@ -49,7 +54,16 @@ export type Member = {
   notify_overdue: boolean;
   notify_done: boolean;
   archived_at: string | null;
+  is_demo: boolean;
   created_at: string;
+  updated_at: string;
+};
+export type UserSettings = {
+  user_id: string;
+  active_member_id: string | null;
+  acting_member_id: string | null;
+  onboarding_done: boolean;
+  hints_dismissed: string[];
   updated_at: string;
 };
 export type Invite = {
@@ -195,6 +209,7 @@ export interface Database {
       task_templates: Table<TaskTemplate, "firm_id" | "title" | "recurrence">;
       tasks: Table<Task, "firm_id" | "title">;
       task_statuses: Table<TaskStatusRow, "firm_id" | "name" | "kind">;
+      user_settings: Table<UserSettings, "user_id">;
       task_finance: Table<TaskFinance, "task_id">;
       checklist_items: Table<ChecklistItem, "task_id" | "text">;
       task_comments: Table<TaskComment, "task_id" | "author_name" | "body">;
@@ -213,6 +228,16 @@ export interface Database {
         Args: { p_token: string; p_full_name: string; p_locale?: string };
         Returns: string;
       };
+      current_context: {
+        Args: Record<string, never>;
+        Returns: { member_id: string | null; real_member_id: string | null; own_member_id: string | null; demo_member_id: string | null; acting: boolean }[];
+      };
+      switch_firm: { Args: { p_target: "own" | "demo" }; Returns: undefined };
+      set_acting: { Args: { p_member: string | null }; Returns: undefined };
+      create_demo_firm: { Args: Record<string, never>; Returns: string };
+      reset_demo_firm: { Args: Record<string, never>; Returns: string };
+      dismiss_hint: { Args: { p_key: string }; Returns: undefined };
+      finish_onboarding: { Args: Record<string, never>; Returns: undefined };
       invite_info: {
         Args: { p_token: string };
         Returns: { firm_name: string; role: Role; valid: boolean }[];

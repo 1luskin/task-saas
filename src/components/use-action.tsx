@@ -25,7 +25,9 @@ export function useAction() {
           setError(
             r.message === "last_boss"
               ? t("employees.lastBoss")
-              : r.error === "forbidden" || r.error === "unauthenticated"
+              : r.error === "expired"
+                ? t("trial.expiredError")
+                : r.error === "forbidden" || r.error === "unauthenticated"
                 ? t("common.forbidden")
                 : r.error === "invalid"
                   ? t("common.invalid")

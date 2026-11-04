@@ -5,6 +5,7 @@ import { loadFinance } from "@/lib/finance";
 import { getGroups, getMembers } from "@/server/queries";
 import { serverEnv } from "@/lib/env";
 import { PageTitle } from "@/components/ui";
+import { Hint } from "@/components/hint";
 import { InvitePanel } from "@/components/employees/invite-panel";
 import { GroupsPanel } from "@/components/employees/groups-panel";
 import { MemberCard } from "@/components/employees/member-card";
@@ -23,6 +24,7 @@ export default async function EmployeesPage() {
   return (
     <div className="space-y-6">
       <PageTitle>{t("employees.title")}</PageTitle>
+      <Hint id="employees" dismissed={ctx.settings.hints_dismissed}>{t("hints.employees")}</Hint>
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
         <div className="space-y-3">
           {members.length <= 1 && <p className="text-muted">{t("employees.none")}</p>}

@@ -21,8 +21,11 @@ export async function createFirm(raw: { firmName: string; fullName: string }) {
       p_locale: await getLocale(),
     });
     if (error) throw error;
+    // Sandbox-Demo-Firma direkt mit anlegen (Fehler hier blockieren die Registrierung nicht)
+    const demo = await supabase.rpc("create_demo_firm");
+    if (demo.error) console.error("[demo-firm]", demo.error.message);
   });
-  if (res.ok) redirect("/boss");
+  if (res.ok) redirect("/boss/welcome");
   return res;
 }
 

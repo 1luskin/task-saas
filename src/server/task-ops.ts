@@ -1,7 +1,7 @@
 import "server-only";
 import { after } from "next/server";
 import { z } from "zod";
-import type { Ctx } from "@/lib/auth";
+import { assertWritable, type Ctx } from "@/lib/auth";
 import { ActionError, check } from "@/lib/action";
 import { notifyTaskReview } from "./notify";
 import { staffCanTransition } from "@/lib/workflow";
@@ -74,6 +74,7 @@ export async function applyOp(ctx: Ctx, op: SyncOp): Promise<void> {
       return;
     }
     case "start": {
+      assertWritable(ctx);
       const at = clampTs(op.at);
       const task = await loadTask(ctx, op.taskId);
       if (ctx.member.role !== "boss" && task.assignee_id !== ctx.member.id) throw new ActionError("forbidden");

@@ -6,7 +6,7 @@ export default async function BossLayout({ children }: { children: React.ReactNo
   const ctx = await requireBossPage();
   const pending = await pendingRequestCount(ctx);
   return (
-    <BossShell firmName={ctx.firm.name} userName={ctx.member.full_name} pendingRequests={pending}>
+    <BossShell ctx={ctx} pendingRequests={pending}>
       {children}
     </BossShell>
   );

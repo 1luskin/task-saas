@@ -5,6 +5,7 @@ import { loadFinance } from "@/lib/finance";
 import { formatMoney } from "@/lib/money";
 import { getMembers } from "@/server/queries";
 import { PageTitle } from "@/components/ui";
+import { Hint } from "@/components/hint";
 import { ExportForm } from "./export-form";
 
 export default async function MoneyPage({ searchParams }: { searchParams: Promise<{ month?: string }> }) {
@@ -34,6 +35,7 @@ export default async function MoneyPage({ searchParams }: { searchParams: Promis
   return (
     <div className="space-y-4">
       <PageTitle actions={<ExportForm month={m} />}>{t("money.title")}</PageTitle>
+      <Hint id="money" dismissed={ctx.settings.hints_dismissed}>{t("hints.money")}</Hint>
       <div className="grid gap-4 lg:grid-cols-2">
         {block({ title: t("money.week"), f: week })}
         {block({ title: `${t("money.monthLabel")} ${m}`, f: mon })}

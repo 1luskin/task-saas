@@ -4,7 +4,7 @@ import { AuthError } from "./auth";
 
 export type ActionResult<T = undefined> =
   | { ok: true; data: T }
-  | { ok: false; error: "unauthenticated" | "forbidden" | "invalid" | "unavailable" | "error"; message?: string };
+  | { ok: false; error: "unauthenticated" | "forbidden" | "expired" | "invalid" | "unavailable" | "error"; message?: string };
 
 /** Einheitliche Fehlerbehandlung für Server Actions. */
 export async function runAction<T>(fn: () => Promise<T>): Promise<ActionResult<T>> {
@@ -17,6 +17,7 @@ export async function runAction<T>(fn: () => Promise<T>): Promise<ActionResult<T
     const msg = (e as { message?: string; hint?: string })?.message ?? "";
     const hint = (e as { hint?: string })?.hint ?? "";
     if (hint === "member_unavailable" || msg.includes("assignee unavailable")) return { ok: false, error: "unavailable" };
+    if (msg.includes("row-level security") && msg.includes("violates")) return { ok: false, error: "forbidden" };
     if (msg.includes("not allowed") || (e as { code?: string })?.code === "42501") return { ok: false, error: "forbidden" };
     console.error("[action]", e);
     return { ok: false, error: "error" };
