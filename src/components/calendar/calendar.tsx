@@ -1,4 +1,5 @@
 "use client";
+import type { TaskStatus } from "@/lib/supabase/types";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
@@ -10,7 +11,7 @@ import { IconChevronLeft, IconChevronRight } from "../icons";
 export interface CalTask {
   id: string;
   title: string;
-  status: "new" | "in_progress" | "done";
+  status: TaskStatus;
   priority: "normal" | "urgent";
   due_date: string;
   assigneeName: string | null;
@@ -20,6 +21,8 @@ export interface CalTask {
 const CHIP: Record<CalTask["status"], string> = {
   new: "bg-surface-3 text-ink-2",
   in_progress: "bg-accent-soft text-link",
+  review: "bg-review-soft text-review",
+  rework: "bg-danger-soft text-danger",
   done: "bg-ok-soft text-ok line-through decoration-ok/40",
 };
 

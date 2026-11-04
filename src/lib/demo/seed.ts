@@ -44,7 +44,8 @@ export function createSeed(): DemoDb {
   const task = (n: number, o: Partial<Tables["tasks"]["Row"]> & Pick<Tables["tasks"]["Row"], "title">): Tables["tasks"]["Row"] => ({
     id: id(400 + n), firm_id: DEMO.firm, description: null, address: null, assignee_id: null, due_date: null, due_time: null,
     status: "new", priority: "normal", fixed_pay_cents: null, template_id: null, created_by: DEMO.boss,
-    completed_at: null, overdue_notified_at: null, created_at: at(-7, 8), updated_at: now, ...o,
+    completed_at: null, overdue_notified_at: null, submitted_at: null, accepted_at: null, accepted_by: null, rating: null,
+    rework_count: 0, review_reminded_at: null, custom_status_id: null, created_at: at(-7, 8), updated_at: now, ...o,
   });
 
   const tasks: Tables["tasks"]["Row"][] = [
@@ -52,19 +53,19 @@ export function createSeed(): DemoDb {
       address: "Karl-Marx-Allee 12, 10243 Berlin", description: "Alle Etagen wischen, Geländer abwischen, Fenster im EG." }),
     task(2, { title: "Büro Fenster 2. OG", assignee_id: e1.member, due_date: day(0), due_time: "13:00", priority: "urgent",
       address: "Friedrichstr. 88, 10117 Berlin", description: "Kunde kommt um 16 Uhr – unbedingt vorher fertig." }),
-    task(3, { title: "Grundreinigung Praxis Dr. Klein", assignee_id: e1.member, due_date: day(-2), status: "new",
+    task(3, { title: "Grundreinigung Praxis Dr. Klein", assignee_id: e1.member, due_date: day(-2), status: "rework", rework_count: 1,
       address: "Schönhauser Allee 40, 10435 Berlin" }),
     task(4, { title: "Trockenbauwand Küche stellen", assignee_id: e2.member, due_date: day(1), fixed_pay_cents: 18000,
       address: "Sonnenallee 150, 12059 Berlin", description: "Material liegt im Keller. Maße siehe Foto im Chat." }),
-    task(5, { title: "Badfliesen verfugen", assignee_id: e2.member, due_date: day(-1), status: "in_progress", priority: "urgent",
+    task(5, { title: "Badfliesen verfugen", assignee_id: e2.member, due_date: day(-1), status: "review", submitted_at: ago(20), priority: "urgent",
       fixed_pay_cents: 9000, address: "Hermannstr. 3, 12049 Berlin" }),
     task(6, { title: "Lager-Inventur Regal A–F", assignee_id: e2.member, due_date: day(3), fixed_pay_cents: 6000 }),
     task(7, { title: "Treppenhaus reinigen – Haus B", assignee_id: e1.member, due_date: day(0), status: "done",
-      completed_at: ago(2), address: "Karl-Marx-Allee 14, 10243 Berlin" }),
+      completed_at: ago(2), accepted_at: ago(2), accepted_by: DEMO.boss, rating: 5, address: "Karl-Marx-Allee 14, 10243 Berlin" }),
     task(8, { title: "Malerarbeiten Flur", assignee_id: e2.member, due_date: day(0), status: "done", fixed_pay_cents: 25000,
-      completed_at: ago(1) }),
+      completed_at: ago(1), accepted_at: ago(1), accepted_by: DEMO.boss, rating: 4 }),
     task(9, { title: "Fensterreinigung Kita Sonnenschein", assignee_id: e3.member, due_date: day(-4), status: "done",
-      fixed_pay_cents: 7000, completed_at: at(-4, 14) }),
+      fixed_pay_cents: 7000, completed_at: at(-4, 14), accepted_at: at(-4, 16), accepted_by: DEMO.boss, rating: 5 }),
     task(10, { title: "Teppichreinigung Hotel Lobby", due_date: day(5), description: "Noch niemandem zugewiesen.",
       address: "Unter den Linden 77, 10117 Berlin" }),
   ];
@@ -90,7 +91,14 @@ export function createSeed(): DemoDb {
       { id: e2.user, email: "lukas@demo.de" },
       { id: e3.user, email: "olga@demo.de" },
     ],
-    firms: [{ id: DEMO.firm, name: "Glanz & Bau Service GmbH", timezone: "Europe/Berlin", created_at: now }],
+    firms: [{ id: DEMO.firm, name: "Glanz & Bau Service GmbH", timezone: "Europe/Berlin", auto_accept_days: 3, created_at: now }],
+    task_statuses: [
+      ...(["new", "in_progress", "review", "rework", "done"] as const).map((kind, i) => ({
+        id: id(1200 + i), firm_id: DEMO.firm, name: ["Neu", "In Arbeit", "Zur Prüfung", "Nacharbeit", "Erledigt"][i]!,
+        color: (["slate", "blue", "amber", "red", "green"] as const)[i]!, position: i, kind, is_system: true, created_at: now,
+      })),
+      { id: id(1210), firm_id: DEMO.firm, name: "Material fehlt", color: "violet" as const, position: 5, kind: "in_progress" as const, is_system: false, created_at: now },
+    ],
     groups: [
       { id: gClean, firm_id: DEMO.firm, name: "Reinigung", created_at: now },
       { id: gBuild, firm_id: DEMO.firm, name: "Bau & Renovierung", created_at: now },
@@ -126,6 +134,8 @@ export function createSeed(): DemoDb {
         body: "Ok, bin um 12:30 da.", created_at: at(0, 7, 45) },
       { id: id(1003), task_id: id(405), firm_id: DEMO.firm, author_id: e2.member, author_name: "Lukas Weber",
         body: "Brauche noch 2 Säcke Fugenmörtel.", created_at: at(-1, 15) },
+      { id: id(1004), task_id: id(403), firm_id: DEMO.firm, author_id: DEMO.boss, author_name: "Anna Becker",
+        body: "Bitte die Fensterbänke im Wartezimmer nochmal – da sind noch Streifen.", created_at: ago(18) },
     ],
     task_photos: [],
     time_entries: [

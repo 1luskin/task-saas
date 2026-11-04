@@ -1,7 +1,7 @@
 import { requireStaffPage } from "@/lib/auth";
 import { getI18n } from "@/i18n/server";
 import { formatDate, formatDuration, monthPeriod, todayISO, weekPeriod } from "@/lib/dates";
-import { loadFinance } from "@/lib/finance";
+import { loadFinance, loadPending } from "@/lib/finance";
 import { formatMoney } from "@/lib/money";
 import { buildPeriodReport } from "@/server/month-report";
 import { EmptyState } from "@/components/ui";
@@ -11,10 +11,11 @@ export default async function EarningsPage() {
   const { t, locale } = await getI18n();
   const today = todayISO();
   // RLS + memberId: ausschließlich eigene Zahlen, keine Kundenpreise
-  const [week, month, report] = await Promise.all([
+  const [week, month, report, pending] = await Promise.all([
     loadFinance(ctx, weekPeriod(today), { memberId: ctx.member.id }),
     loadFinance(ctx, monthPeriod(today), { memberId: ctx.member.id }),
     buildPeriodReport(ctx, monthPeriod(today)),
+    loadPending(ctx, ctx.member.id),
   ]);
   const w = week.perMember.get(ctx.member.id);
   const m = month.perMember.get(ctx.member.id);
@@ -38,6 +39,15 @@ export default async function EarningsPage() {
         {card({ title: t("staff.earningsWeek"), e: w })}
         {card({ title: t("staff.earningsMonth"), e: m })}
       </div>
+      {pending.cents > 0 && (
+        <div className="card-white flex items-center justify-between gap-3 p-4">
+          <div>
+            <div className="font-medium">{t("staff.pending")}</div>
+            <div className="text-sm text-muted">{t("staff.pendingHint")}</div>
+          </div>
+          <div className="text-xl font-semibold tabular-nums text-review">{formatMoney(pending.cents, locale)}</div>
+        </div>
+      )}
       <h2 className="font-semibold">{t("staff.perTask")}</h2>
       <div className="card-white divide-y divide-line/70">
         {rows.length === 0 && <EmptyState>—</EmptyState>}

@@ -1,5 +1,7 @@
 import "server-only";
 import { createSeed, type DemoDb } from "./seed";
+import { staffCanTransition } from "@/lib/workflow";
+import type { TaskStatus } from "@/lib/supabase/types";
 
 /**
  * Minimaler Ersatz für den Supabase-Client im Demo-Modus.
@@ -29,7 +31,9 @@ const deny = (msg = "not allowed"): Err => ({ message: msg, code: "42501" });
 
 const DEFAULTS: Partial<Record<TableName, () => Row>> = {
   tasks: () => ({ description: null, address: null, assignee_id: null, due_date: null, due_time: null, status: "new", priority: "normal",
-    fixed_pay_cents: null, template_id: null, created_by: null, completed_at: null, overdue_notified_at: null }),
+    fixed_pay_cents: null, template_id: null, created_by: null, completed_at: null, overdue_notified_at: null,
+    submitted_at: null, accepted_at: null, accepted_by: null, rating: null, rework_count: 0, review_reminded_at: null, custom_status_id: null }),
+  task_statuses: () => ({ color: "slate", position: 0, is_system: false }),
   members: () => ({ email: null, phone: null, group_id: null, status: "active", pay_mode: "hourly", hourly_rate_cents: 0, locale: "de",
     notify_overdue: true, notify_done: true, archived_at: null, user_id: null }),
   invites: () => ({ token: Array.from(crypto.getRandomValues(new Uint8Array(18)), (b) => b.toString(16).padStart(2, "0")).join(""),
@@ -72,7 +76,7 @@ class Session {
     const firm = this.firm, me = this.me?.id, boss = this.boss;
     switch (table) {
       case "firms": return r.id === firm;
-      case "groups": return r.firm_id === firm;
+      case "groups": case "task_statuses": return r.firm_id === firm;
       case "members": return r.firm_id === firm && (boss || r.user_id === this.uid);
       case "invites": case "task_templates": case "task_finance": return r.firm_id === firm && boss;
       case "tasks": return r.firm_id === firm && (boss || r.assignee_id === me);
@@ -101,10 +105,16 @@ class Session {
     if (this.admin) return null;
     const changed = (allowed: string[]) => Object.keys(next).some((k) => !allowed.includes(k) && JSON.stringify(next[k]) !== JSON.stringify(old[k]));
     if (this.boss) {
-      if (["firms", "groups", "members", "invites", "task_templates", "tasks", "task_finance", "checklist_items", "time_entries", "task_requests"].includes(table)) return null;
+      if (table === "task_statuses" && old.is_system && (("kind" in next && next.kind !== old.kind) || ("is_system" in next && next.is_system !== old.is_system))) return deny("system status");
+      if (["firms", "groups", "members", "invites", "task_templates", "tasks", "task_finance", "checklist_items", "time_entries", "task_requests", "task_statuses"].includes(table)) return null;
     }
     switch (table) {
-      case "tasks": return changed(["status", "completed_at", "updated_at"]) ? deny() : null;
+      case "tasks":
+        if (changed(["status", "completed_at", "updated_at"])) return deny();
+        // gleiche Übergangsregeln wie private.guard_task_write
+        if ("status" in next && next.status !== old.status && !staffCanTransition(old.status as TaskStatus, next.status as TaskStatus))
+          return { message: "status transition not allowed", code: "42501", hint: "transition" };
+        return null;
       case "checklist_items": return changed(["done", "updated_at"]) ? deny() : null;
       case "members":
         if (old.user_id !== this.uid) return deny();
@@ -123,6 +133,7 @@ class Session {
       case "task_comments": return this.boss || r.author_id === me;
       case "task_photos": return this.boss || r.uploaded_by === me;
       case "task_requests": return this.boss || (r.created_by === me && r.status === "pending");
+      case "task_statuses": return this.boss && !r.is_system;
       case "push_subscriptions": return r.user_id === this.uid;
       default: return this.boss;
     }
@@ -143,8 +154,28 @@ function applyTriggers(s: Session, table: TableName, row: Row, old: Row | null):
       if (!m || m.firm_id !== row.firm_id || m.archived_at) return { message: "invalid assignee", code: "23514" };
       if (m.status !== "active") return { message: "assignee unavailable", code: "23514", hint: "member_unavailable" };
     }
-    if (row.status === "done" && (!old || old.status !== "done")) row.completed_at = row.completed_at ?? new Date().toISOString();
-    else if (row.status !== "done") row.completed_at = null;
+    if (row.custom_status_id) {
+      const st = db.task_statuses.find((x) => x.id === row.custom_status_id);
+      if (!st || st.firm_id !== row.firm_id) return { message: "invalid status", code: "23514" };
+      if (old && row.custom_status_id !== old.custom_status_id) row.status = st.kind;
+      else if (st.kind !== row.status) row.custom_status_id = null;
+    }
+    const now = new Date().toISOString();
+    if (row.status === "review" && (!old || old.status !== "review")) {
+      row.submitted_at = now;
+      row.review_reminded_at = null;
+    }
+    if (old && row.status === "rework" && old.status !== "rework") row.rework_count = Number(old.rework_count ?? 0) + 1;
+    if (row.status === "done" && (!old || old.status !== "done")) {
+      row.completed_at = row.completed_at ?? now;
+      row.accepted_at = row.accepted_at ?? now;
+      row.accepted_by = row.accepted_by ?? s.me?.id ?? null;
+    } else if (row.status !== "done") {
+      row.completed_at = null;
+      row.accepted_at = null;
+      row.accepted_by = null;
+      row.rating = null;
+    }
   }
   if (table === "time_entries" && !old) {
     const m = db.members.find((x) => x.id === row.member_id);

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { Ctx } from "@/lib/auth";
 import type { TFunction } from "@/i18n/config";
-import { formatDate, formatDuration, isOverdue } from "@/lib/dates";
+import { formatDate, formatDateTime, formatDuration, isOverdue } from "@/lib/dates";
 import { formatMoney } from "@/lib/money";
 import type { loadTaskDetail } from "@/server/task-detail";
 import { Avatar, OverdueBadge, StatusBadge, UrgentBadge, cx } from "../ui";
@@ -10,6 +10,7 @@ import { TaskActions } from "./task-actions";
 import { Checklist } from "./checklist";
 import { Comments } from "./comments";
 import { Photos } from "./photos";
+import { ReviewPanel } from "./review-panel";
 
 type Detail = NonNullable<Awaited<ReturnType<typeof loadTaskDetail>>>;
 
@@ -20,6 +21,7 @@ export function TaskDetail({
   const isBoss = ctx.member.role === "boss";
   const overdue = isOverdue(task);
   const canWork = task.assignee_id === ctx.member.id;
+  const lastBossComment = [...d.comments].reverse().find((c) => c.author_id && c.author_id !== task.assignee_id)?.body ?? null;
   const mapUrl = task.address ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(task.address)}` : null;
 
   return (
@@ -63,6 +65,27 @@ export function TaskDetail({
 
         {task.description && <p className="whitespace-pre-wrap break-words">{task.description}</p>}
 
+        {/* Status-Hinweise */}
+        {task.status === "rework" && (
+          <div className="rounded-[14px] bg-danger-soft px-4 py-3 text-danger">
+            <div className="font-semibold">{t("task.reworkBanner")}</div>
+            {lastBossComment && <p className="mt-1 whitespace-pre-wrap break-words text-ink-2">{lastBossComment}</p>}
+          </div>
+        )}
+        {task.status === "done" && task.accepted_at && (
+          <div className="flex flex-wrap items-center gap-2 rounded-[14px] bg-ok-soft px-4 py-3 text-ok">
+            <span className="font-semibold">
+              {task.accepted_by ? t("task.acceptedBy", { date: formatDateTime(task.accepted_at, locale) }) : t("task.autoAccepted")}
+            </span>
+            {task.rating ? <span className="tabular-nums">· {task.rating}/5</span> : null}
+          </div>
+        )}
+        {isBoss && task.rework_count > 0 && <div className="text-sm text-muted">{t("task.reworkCount", { n: task.rework_count })}</div>}
+
+        {isBoss && (task.status === "review" || task.status === "done") && (
+          <ReviewPanel taskId={task.id} submittedAt={task.submitted_at} status={task.status} />
+        )}
+
         <TaskActions
           taskId={task.id}
           status={task.status}
@@ -71,22 +94,25 @@ export function TaskDetail({
           canWork={canWork}
         />
 
-        {/* Verdienst / Finanzen */}
+        {/* Geld zur Aufgabe – gutgeschrieben erst nach Abnahme */}
         {isBoss ? (
           <div className="grid grid-cols-2 gap-2 rounded-[16px] bg-card p-3 text-sm sm:grid-cols-4">
-            <div><div className="text-muted">{t("task.timeSpent")}</div><div className="font-semibold">{formatDuration(d.pay.minutes)}</div></div>
-            <div><div className="text-muted">{t("task.clientPrice")}</div><div className="font-semibold">{formatMoney(d.clientPriceCents, locale)}</div></div>
-            <div><div className="text-muted">{t("task.payout")}</div><div className="font-semibold">{formatMoney(d.pay.totalCents + (task.status === "done" ? 0 : task.fixed_pay_cents ?? 0), locale)}</div></div>
-            <div><div className="text-muted">{t("task.profit")}</div><div className="font-semibold text-link">{formatMoney(d.clientPriceCents - d.pay.totalCents - (task.status === "done" ? 0 : task.fixed_pay_cents ?? 0), locale)}</div></div>
+            <div><div className="text-muted">{t("task.timeSpent")}</div><div className="font-semibold tabular-nums">{formatDuration(d.pay.minutes)}</div></div>
+            <div><div className="text-muted">{t("task.clientPrice")}</div><div className="font-semibold tabular-nums">{formatMoney(d.clientPriceCents, locale)}</div></div>
+            <div>
+              <div className="text-muted">{t("task.payout")}{!d.pay.accepted && ` · ${t("task.pendingPay")}`}</div>
+              <div className="font-semibold tabular-nums">{formatMoney(d.pay.projectedCents, locale)}</div>
+            </div>
+            <div><div className="text-muted">{t("task.profit")}</div><div className="font-semibold tabular-nums text-link">{formatMoney(d.clientPriceCents - d.pay.projectedCents, locale)}</div></div>
           </div>
         ) : (
-          (d.pay.totalCents > 0 || Boolean(task.fixed_pay_cents)) && (
+          d.pay.projectedCents > 0 && (
             <div className="flex items-center justify-between rounded-[16px] bg-card p-3">
-              <span className="flex items-center gap-2 text-muted"><IconClock className="size-5" />{t("task.earned")}</span>
-              <span className="text-lg font-semibold">
-                {formatMoney(d.pay.totalCents, locale)}
-                {task.status !== "done" && task.fixed_pay_cents ? <span className="ml-1 text-sm font-normal text-muted">(+{formatMoney(task.fixed_pay_cents, locale)})</span> : null}
+              <span className="flex items-center gap-2 text-muted">
+                <IconClock className="size-5" />
+                {d.pay.accepted ? t("task.earned") : t("staff.pending")}
               </span>
+              <span className={cx("text-lg font-semibold tabular-nums", !d.pay.accepted && "text-muted")}>{formatMoney(d.pay.projectedCents, locale)}</span>
             </div>
           )
         )}

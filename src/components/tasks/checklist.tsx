@@ -1,4 +1,5 @@
 "use client";
+import type { TaskStatus } from "@/lib/supabase/types";
 import { useState } from "react";
 import { tap } from "@/lib/haptics";
 import { useI18n } from "@/i18n/client";
@@ -10,7 +11,7 @@ import { cx } from "../ui";
 
 export function Checklist({
   taskId, status, items, editable,
-}: { taskId: string; status: "new" | "in_progress" | "done"; items: { id: string; text: string; done: boolean }[]; editable: boolean }) {
+}: { taskId: string; status: TaskStatus; items: { id: string; text: string; done: boolean }[]; editable: boolean }) {
   const { t } = useI18n();
   const queue = useQueue();
   const ov = overlayTask({ id: taskId, status }, queue);

@@ -33,6 +33,8 @@ export default async function EmployeesPage() {
               groups={groups}
               isSelf={m.id === ctx.member.id}
               tasksDoneMonth={fin.perMember.get(m.id)?.tasksDone ?? 0}
+              reworksMonth={fin.perMember.get(m.id)?.reworks ?? 0}
+              avgRating={(() => { const x = fin.perMember.get(m.id); return x && x.ratingCount ? x.ratingSum / x.ratingCount : null; })()}
             />
           ))}
         </div>

@@ -19,15 +19,16 @@ export default async function TodayPage() {
       .from("tasks")
       .select("*")
       .eq("assignee_id", ctx.member.id)
-      .or(`due_date.eq.${today},and(status.neq.done,due_date.lt.${today}),status.eq.in_progress`)
+      .or(`due_date.eq.${today},and(status.neq.done,status.neq.review,due_date.lt.${today}),status.eq.in_progress,status.eq.rework`)
       .order("due_time", { nullsFirst: false }),
     loadFinance(ctx, weekPeriod(today), { memberId: ctx.member.id }),
   ]);
   const tasks = (data ?? []).sort((a, b) => {
-    const rank = (x: typeof a) => (x.status === "done" ? 3 : isOverdue(x) ? 0 : x.priority === "urgent" ? 1 : 2);
+    const rank = (x: typeof a) => (x.status === "done" || x.status === "review" ? 3 : x.status === "rework" || isOverdue(x) ? 0 : x.priority === "urgent" ? 1 : 2);
     return rank(a) - rank(b);
   });
-  const done = tasks.filter((x) => x.status === "done").length;
+  // "erledigt" aus Sicht des Mitarbeiters: abgegeben oder abgenommen
+  const done = tasks.filter((x) => x.status === "done" || x.status === "review").length;
   const extras = await staffTaskExtras(ctx, tasks);
   const pct = tasks.length ? Math.round((done / tasks.length) * 100) : 0;
   const week = fin.perMember.get(ctx.member.id)?.totalCents ?? 0;

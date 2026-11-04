@@ -14,15 +14,30 @@ export interface TaskPay {
 }
 
 /**
- * Auszahlung für eine Aufgabe: Festpreis (nur wenn erledigt) + Stunden × Satz.
+ * Auszahlung für eine Aufgabe: Festpreis + Stunden × Satz.
+ * Gutgeschrieben wird BEIDES erst nach Abnahme (status done + accepted_at).
+ * Vorher steht der Betrag als "wartet auf Abnahme" (projectedCents) bereit.
  * Ob Festpreis/Stundenlohn gilt, steckt bereits in den Daten:
  * fixed_pay_cents wird nur bei passendem Modus gesetzt, rate_cents per Trigger.
  */
-export function taskPay(task: Pick<Task, "status" | "fixed_pay_cents">, entries: Pick<TimeEntry, "started_at" | "ended_at" | "rate_cents">[]): TaskPay {
-  const minutes = entries.reduce((s, e) => s + minutesBetween(e.started_at, e.ended_at), 0);
-  const hourlyCents = entries.reduce((s, e) => s + entryPayCents(e), 0);
-  const fixedCents = task.status === "done" ? (task.fixed_pay_cents ?? 0) : 0;
-  return { minutes, hourlyCents, fixedCents, totalCents: hourlyCents + fixedCents };
+export function taskPay(
+  task: Pick<Task, "status" | "fixed_pay_cents"> & { accepted_at?: string | null },
+  entries: Pick<TimeEntry, "started_at" | "ended_at" | "rate_cents">[],
+  now = Date.now(),
+): TaskPay & { accepted: boolean; projectedCents: number } {
+  const minutes = entries.reduce((s, e) => s + minutesBetween(e.started_at, e.ended_at, now), 0);
+  const hourly = entries.reduce((s, e) => s + entryPayCents(e, now), 0);
+  const fixed = task.fixed_pay_cents ?? 0;
+  const accepted = task.status === "done" && Boolean(task.accepted_at);
+  const projectedCents = hourly + fixed;
+  return {
+    minutes,
+    hourlyCents: accepted ? hourly : 0,
+    fixedCents: accepted ? fixed : 0,
+    totalCents: accepted ? projectedCents : 0,
+    accepted,
+    projectedCents,
+  };
 }
 
 /** Gilt der Festpreis für diesen Mitarbeiter? */

@@ -18,9 +18,17 @@ describe("earnings", () => {
   it("Stundenlohn: 90 min × 20 €/h = 30 €", () => {
     expect(entryPayCents({ started_at: "2026-01-01T08:00:00Z", ended_at: "2026-01-01T09:30:00Z", rate_cents: 2000 })).toBe(3000);
   });
-  it("Festpreis nur bei erledigter Aufgabe", () => {
-    const e = [{ started_at: "2026-01-01T08:00:00Z", ended_at: "2026-01-01T09:00:00Z", rate_cents: 1000 }];
-    expect(taskPay({ status: "in_progress", fixed_pay_cents: 5000 }, e).totalCents).toBe(1000);
-    expect(taskPay({ status: "done", fixed_pay_cents: 5000 }, e).totalCents).toBe(6000);
+  const e = [{ started_at: "2026-01-01T08:00:00Z", ended_at: "2026-01-01T09:00:00Z", rate_cents: 1000 }];
+  it("Stunden UND Festpreis erst nach Abnahme gutgeschrieben", () => {
+    const open = taskPay({ status: "review", fixed_pay_cents: 5000, accepted_at: null }, e);
+    expect(open.totalCents).toBe(0);
+    expect(open.hourlyCents).toBe(0);
+    expect(open.projectedCents).toBe(6000);
+    const done = taskPay({ status: "done", fixed_pay_cents: 5000, accepted_at: "2026-01-02T10:00:00Z" }, e);
+    expect(done.totalCents).toBe(6000);
+    expect(done.accepted).toBe(true);
+  });
+  it("done ohne accepted_at zählt nicht", () => {
+    expect(taskPay({ status: "done", fixed_pay_cents: 5000, accepted_at: null }, e).totalCents).toBe(0);
   });
 });

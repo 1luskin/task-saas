@@ -13,7 +13,8 @@ type Table<Row, Required extends keyof Row = never> = {
 export type Role = "boss" | "employee";
 export type MemberStatus = "active" | "vacation" | "sick";
 export type PayMode = "hourly" | "fixed" | "both";
-export type TaskStatus = "new" | "in_progress" | "done";
+export type TaskStatus = "new" | "in_progress" | "review" | "rework" | "done";
+export type StatusColor = "slate" | "blue" | "amber" | "red" | "green" | "violet" | "teal";
 export type Priority = "normal" | "urgent";
 export type Recurrence = "daily" | "weekly" | "monthly";
 export type RequestStatus = "pending" | "approved" | "rejected";
@@ -23,6 +24,7 @@ export type Firm = {
   id: string;
   name: string;
   timezone: string;
+  auto_accept_days: number | null;
   created_at: string;
 };
 export type Group = {
@@ -97,8 +99,25 @@ export type Task = {
   created_by: string | null;
   completed_at: string | null;
   overdue_notified_at: string | null;
+  submitted_at: string | null;
+  accepted_at: string | null;
+  accepted_by: string | null;
+  rating: number | null;
+  rework_count: number;
+  review_reminded_at: string | null;
+  custom_status_id: string | null;
   created_at: string;
   updated_at: string;
+};
+export type TaskStatusRow = {
+  id: string;
+  firm_id: string;
+  name: string;
+  color: StatusColor;
+  position: number;
+  kind: TaskStatus;
+  is_system: boolean;
+  created_at: string;
 };
 export type TaskFinance = {
   task_id: string;
@@ -175,6 +194,7 @@ export interface Database {
       invites: Table<Invite, "firm_id">;
       task_templates: Table<TaskTemplate, "firm_id" | "title" | "recurrence">;
       tasks: Table<Task, "firm_id" | "title">;
+      task_statuses: Table<TaskStatusRow, "firm_id" | "name" | "kind">;
       task_finance: Table<TaskFinance, "task_id">;
       checklist_items: Table<ChecklistItem, "task_id" | "text">;
       task_comments: Table<TaskComment, "task_id" | "author_name" | "body">;

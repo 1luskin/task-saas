@@ -19,50 +19,38 @@ export interface ReportRow {
 }
 
 /**
- * Detailzeilen eines Zeitraums, deren Summen exakt den Firmen-Summen entsprechen:
- * Stunden zählen im Zeitraum des Zeiteintrags, Festpreis/Kundenpreis beim Abschluss.
+ * Detailzeilen eines Zeitraums: eine Zeile pro abgenommener Aufgabe (accepted_at im Zeitraum).
+ * Summen entsprechen exakt loadFinance.
  */
 export async function buildPeriodReport(ctx: Ctx, period: Period) {
   const fin = await loadFinance(ctx, period);
-  const rows = new Map<string, ReportRow>();
-  const row = (id: string): ReportRow => {
-    let r = rows.get(id);
-    if (!r) {
-      r = { taskId: id, title: "", date: null, memberId: null, minutes: 0, hourlyCents: 0, fixedCents: 0, payoutCents: 0, clientPriceCents: 0, profitCents: 0 };
-      rows.set(id, r);
-    }
-    return r;
-  };
+  const byTask = new Map<string, ReportRow>();
   for (const t of fin.doneTasks) {
-    const r = row(t.id);
-    r.fixedCents += t.fixed_pay_cents ?? 0;
-    r.clientPriceCents += fin.clientPrice.get(t.id) ?? 0;
-    r.date = t.completed_at;
+    byTask.set(t.id, {
+      taskId: t.id,
+      title: t.title,
+      date: t.accepted_at,
+      memberId: t.assignee_id,
+      minutes: 0,
+      hourlyCents: 0,
+      fixedCents: t.fixed_pay_cents ?? 0,
+      payoutCents: 0,
+      clientPriceCents: fin.clientPrice.get(t.id) ?? 0,
+      profitCents: 0,
+    });
   }
-  const doneIds = new Set(fin.doneTasks.map((t) => t.id));
   for (const e of fin.entries) {
-    const r = row(e.task_id);
+    const r = byTask.get(e.task_id);
+    if (!r) continue;
     r.minutes += minutesBetween(e.started_at, e.ended_at);
     r.hourlyCents += entryPayCents(e);
-    if (!r.memberId) r.memberId = e.member_id;
-    const d = e.ended_at ?? e.started_at;
-    if (!doneIds.has(e.task_id) && (!r.date || d > r.date)) r.date = d;
   }
-  const ids = [...rows.keys()];
-  if (ids.length) {
-    const { data: tasks } = await ctx.supabase.from("tasks").select("id, title, assignee_id").in("id", ids);
-    for (const t of tasks ?? []) {
-      const r = rows.get(t.id)!;
-      r.title = t.title;
-      r.memberId = t.assignee_id ?? r.memberId;
-    }
-  }
-  for (const r of rows.values()) {
+  for (const r of byTask.values()) {
     r.payoutCents = r.hourlyCents + r.fixedCents;
     r.profitCents = r.clientPriceCents - r.payoutCents;
   }
   const { data: members } = await ctx.supabase.from("members").select("*").eq("firm_id", ctx.firm.id);
   const memberById = new Map<string, Member>((members ?? []).map((m) => [m.id, m]));
-  const sorted = [...rows.values()].sort((a, b) => (a.date ?? "").localeCompare(b.date ?? ""));
+  const sorted = [...byTask.values()].sort((a, b) => (a.date ?? "").localeCompare(b.date ?? ""));
   return { fin, rows: sorted, memberById };
 }

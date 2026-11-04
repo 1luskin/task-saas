@@ -21,6 +21,8 @@ export function TaskFilters({ members, groups }: { members: { id: string; full_n
         <option value="overdue">{t("dashboard.overdue")}</option>
         <option value="new">{t("status.new")}</option>
         <option value="in_progress">{t("status.in_progress")}</option>
+        <option value="review">{t("status.review")}</option>
+        <option value="rework">{t("status.rework")}</option>
         <option value="done">{t("status.done")}</option>
         <option value="all">{t("common.all")}</option>
       </Select>

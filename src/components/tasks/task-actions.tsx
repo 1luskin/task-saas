@@ -1,10 +1,11 @@
 "use client";
+import type { TaskStatus } from "@/lib/supabase/types";
 import { useEffect, useState } from "react";
 import { tap } from "@/lib/haptics";
 import { useI18n } from "@/i18n/client";
 import { enqueue, overlayTask, useQueue, uuid } from "@/lib/offline/queue";
 import { formatDuration, minutesBetween } from "@/lib/dates";
-import { IconCheck, IconPlay } from "../icons";
+import { IconCheck, IconClock, IconPlay } from "../icons";
 import { cx } from "../ui";
 
 /**
@@ -15,7 +16,7 @@ export function TaskActions({
   taskId, status, runningSince, spentMinutes, canWork, size = "xl",
 }: {
   taskId: string;
-  status: "new" | "in_progress" | "done";
+  status: TaskStatus;
   runningSince: string | null; // laufender Zeiteintrag (Server)
   spentMinutes: number; // abgeschlossene Minuten (Server)
   canWork: boolean;
@@ -46,13 +47,11 @@ export function TaskActions({
           {t("task.timeSpent")}: <span className="font-semibold tabular-nums">{formatDuration(total)}</span>
         </div>
       )}
-      {curStatus === "done" ? (
-        <button
-          className={cx("btn-secondary w-full", h)}
-          onClick={() => enqueue({ op: "status", taskId, status: "in_progress" })}
-        >
-          {t("task.reopen")}
-        </button>
+      {curStatus === "done" ? null : curStatus === "review" ? (
+        <div className="flex min-h-[52px] items-center gap-2 rounded-[14px] bg-review-soft px-4 text-review">
+          <IconClock className="size-5" />
+          {t("task.waitingReview")}
+        </div>
       ) : (
         <div className="grid grid-cols-2 gap-2">
           <button
@@ -68,7 +67,7 @@ export function TaskActions({
             onClick={() => { tap(); enqueue({ op: "finish", taskId }); }}
           >
             <IconCheck className="size-6" />
-            {t("task.finish")}
+            <span className="leading-tight">{size === "xl" ? t("task.finish") : t("task.finishReview")}</span>
           </button>
         </div>
       )}

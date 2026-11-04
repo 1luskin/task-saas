@@ -99,7 +99,7 @@ export function periodToRange(p: Period): { fromTs: string; toTs: string } {
 }
 
 export function isOverdue(t: { status: string; due_date: string | null; due_time: string | null }, now = new Date()): boolean {
-  if (t.status === "done" || !t.due_date) return false;
+  if (t.status === "done" || t.status === "review" || !t.due_date) return false;
   const today = toISODate(now);
   if (t.due_date < today) return true;
   if (t.due_date > today || !t.due_time) return false;

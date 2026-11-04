@@ -33,7 +33,7 @@ export const moneyInput = z
   })
   .refine((v) => v === null || (v >= 0 && v <= 100_000_000));
 
-export const taskStatus = z.enum(["new", "in_progress", "done"]);
+export const taskStatus = z.enum(["new", "in_progress", "review", "rework", "done"]);
 export const priority = z.enum(["normal", "urgent"]);
 export const memberStatus = z.enum(["active", "vacation", "sick"]);
 export const payMode = z.enum(["hourly", "fixed", "both"]);

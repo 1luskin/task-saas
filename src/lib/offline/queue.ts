@@ -4,10 +4,11 @@
  * Alle diese Aktionen laufen IMMER über die Queue → ein einziger Codepfad online & offline.
  * Persistenz: localStorage (synchron, überlebt Neustart der App).
  */
+import type { TaskStatus } from "@/lib/supabase/types";
 import { useSyncExternalStore } from "react";
 
 export type QueuedOp =
-  | { id: string; op: "status"; taskId: string; status: "new" | "in_progress" | "done"; at: string }
+  | { id: string; op: "status"; taskId: string; status: TaskStatus; at: string }
   | { id: string; op: "checklist"; itemId: string; taskId: string; done: boolean; at: string }
   | { id: string; op: "start"; taskId: string; entryId: string; at: string }
   | { id: string; op: "finish"; taskId: string; at: string };
@@ -118,10 +119,10 @@ export function clearQueue() {
 
 /** Offline-Zustand über Serverdaten legen (zuletzt gequeuter Wert gewinnt). */
 export function overlayTask(
-  task: { id: string; status: "new" | "in_progress" | "done" },
+  task: { id: string; status: TaskStatus },
   queue: QueuedOp[],
   serverRunningSince: string | null = null,
-): { status: "new" | "in_progress" | "done"; running: string | null; extraMinutes: number; checklist: Map<string, boolean> } {
+): { status: TaskStatus; running: string | null; extraMinutes: number; checklist: Map<string, boolean> } {
   let status = task.status;
   let running = serverRunningSince;
   let extraMinutes = 0;
@@ -139,7 +140,8 @@ export function overlayTask(
       status = "in_progress";
       if (!running) running = o.at;
     } else if (o.op === "finish") {
-      status = "done";
+      // "Fertig" = Abgabe zur Prüfung; "done" setzt nur der Chef
+      status = "review";
       stop(o.at);
     } else if (o.op === "checklist") {
       checklist.set(o.itemId, o.done);

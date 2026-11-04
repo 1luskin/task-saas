@@ -6,16 +6,21 @@ import { PushToggle } from "@/components/settings/push-toggle";
 import { ProfileToggle } from "@/components/settings/toggle";
 import { InstallButton } from "@/components/settings/install-button";
 import { FirmForm } from "./firm-form";
+import { StatusesEditor } from "@/components/settings/statuses-editor";
 
 export default async function SettingsPage() {
   const ctx = await requireBossPage();
   const { t } = await getI18n();
+  const { data: statuses } = await ctx.supabase.from("task_statuses").select("*").eq("firm_id", ctx.firm.id).order("position");
   return (
     <div className="mx-auto max-w-2xl space-y-4">
       <PageTitle>{t("settings.title")}</PageTitle>
       <section className="card-white p-4">
         <h2 className="mb-3 font-semibold">{t("settings.firm")}</h2>
         <FirmForm name={ctx.firm.name} />
+      </section>
+      <section className="card-white p-4">
+        <StatusesEditor statuses={statuses ?? []} autoAcceptDays={ctx.firm.auto_accept_days} />
       </section>
       <section className="card-white overflow-hidden">
         <h2 className="px-4 pt-4 font-semibold">{t("settings.notifications")}</h2>

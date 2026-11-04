@@ -60,11 +60,15 @@ export function PageTitle({ children, actions }: { children: React.ReactNode; ac
 const STATUS_STYLE: Record<string, string> = {
   new: "bg-surface-3 text-ink-2",
   in_progress: "bg-accent-soft text-link",
+  review: "bg-review-soft text-review",
+  rework: "bg-danger-soft text-danger",
   done: "bg-ok-soft text-ok",
 };
 export const STATUS_DOT: Record<string, string> = {
   new: "bg-st-new",
   in_progress: "bg-st-progress",
+  review: "bg-st-review",
+  rework: "bg-danger",
   done: "bg-st-done",
 };
 
@@ -99,11 +103,11 @@ export function Avatar({ name, className }: { name: string | null | undefined; c
   );
 }
 
-export function Stat({ label, value, tone, href }: { label: string; value: React.ReactNode; tone?: "danger" | "accent"; href?: string }) {
+export function Stat({ label, value, tone, href }: { label: string; value: React.ReactNode; tone?: "danger" | "accent" | "review"; href?: string }) {
   const inner = (
     <>
       <div className="text-sm leading-tight text-muted">{label}</div>
-      <div className={cx("mt-1 whitespace-nowrap text-2xl font-semibold tracking-tight sm:text-3xl", tone === "danger" && "text-danger", tone === "accent" && "text-link")}>{value}</div>
+      <div className={cx("mt-1 whitespace-nowrap text-2xl font-semibold tracking-tight sm:text-3xl", tone === "danger" && "text-danger", tone === "accent" && "text-link", tone === "review" && "text-review")}>{value}</div>
     </>
   );
   return href ? (

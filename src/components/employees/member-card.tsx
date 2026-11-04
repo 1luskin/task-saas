@@ -7,7 +7,7 @@ import type { Member } from "@/lib/supabase/types";
 import { Avatar, Field, Input, Select, cx } from "../ui";
 import { useAction, ErrorText } from "../use-action";
 
-export function MemberCard({ member: m, groups, isSelf, tasksDoneMonth }: { member: Member; groups: { id: string; name: string }[]; isSelf: boolean; tasksDoneMonth: number }) {
+export function MemberCard({ member: m, groups, isSelf, tasksDoneMonth, reworksMonth = 0, avgRating = null }: { member: Member; groups: { id: string; name: string }[]; isSelf: boolean; tasksDoneMonth: number; reworksMonth?: number; avgRating?: number | null }) {
   const { t, locale } = useI18n();
   const { run, pending, error } = useAction();
   const [open, setOpen] = useState(false);
@@ -40,9 +40,19 @@ export function MemberCard({ member: m, groups, isSelf, tasksDoneMonth }: { memb
             {m.email && ` · ${m.email}`}
           </div>
         </div>
-        <div className="text-right">
-          <div className="text-lg font-semibold">{tasksDoneMonth}</div>
-          <div className="text-xs text-muted">{t("employees.tasksDone")}</div>
+        <div className="flex gap-4 text-right">
+          <div>
+            <div className="text-lg font-semibold tabular-nums">{tasksDoneMonth}</div>
+            <div className="text-xs text-muted">{t("employees.tasksDone")}</div>
+          </div>
+          <div className="hidden sm:block">
+            <div className="text-lg font-semibold tabular-nums">{reworksMonth}</div>
+            <div className="text-xs text-muted">{t("employees.reworks")}</div>
+          </div>
+          <div className="hidden sm:block">
+            <div className="text-lg font-semibold tabular-nums">{avgRating ? avgRating.toFixed(1) : "—"}</div>
+            <div className="text-xs text-muted">{t("employees.avgRating")}</div>
+          </div>
         </div>
       </button>
       {open && (

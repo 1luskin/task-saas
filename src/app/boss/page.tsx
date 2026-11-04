@@ -27,7 +27,7 @@ export default async function BossDashboard({ searchParams }: { searchParams: Pr
   let q = ctx.supabase.from("tasks").select("*").eq("firm_id", ctx.firm.id);
   const status = sp.status ?? "";
   if (status === "" || status === "overdue") q = q.neq("status", "done");
-  else if (status === "new" || status === "in_progress" || status === "done") q = q.eq("status", status);
+  else if (status === "new" || status === "in_progress" || status === "review" || status === "rework" || status === "done") q = q.eq("status", status);
   if (sp.member === "none") q = q.is("assignee_id", null);
   else if (sp.member && /^[0-9a-f-]{36}$/.test(sp.member)) q = q.eq("assignee_id", sp.member);
   if (sp.priority === "urgent" || sp.priority === "normal") q = q.eq("priority", sp.priority);
@@ -49,7 +49,8 @@ export default async function BossDashboard({ searchParams }: { searchParams: Pr
   if (status === "overdue") tasks = tasks.filter((x) => isOverdue(x));
   tasks.sort((a, b) => {
     if (status === "done") return 0;
-    const ao = isOverdue(a) ? 0 : 1, bo = isOverdue(b) ? 0 : 1;
+    const rank = (x: Task) => (x.status === "review" ? 0 : isOverdue(x) ? 1 : 2);
+    const ao = rank(a), bo = rank(b);
     if (ao !== bo) return ao - bo;
     const au = a.priority === "urgent" ? 0 : 1, bu = b.priority === "urgent" ? 0 : 1;
     if (au !== bu) return au - bu;
@@ -59,6 +60,7 @@ export default async function BossDashboard({ searchParams }: { searchParams: Pr
   const open = openData ?? [];
   const overdueCount = open.filter((x) => isOverdue(x)).length;
   const inProgress = open.filter((x) => x.status === "in_progress").length;
+  const inReview = open.filter((x) => x.status === "review").length;
 
   const { data: items } = tasks.length
     ? await ctx.supabase.from("checklist_items").select("task_id, done").in("task_id", tasks.map((x) => x.id))
@@ -75,8 +77,9 @@ export default async function BossDashboard({ searchParams }: { searchParams: Pr
     <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(420px,520px)] 2xl:grid-cols-[minmax(0,1fr)_600px]">
       {/* Mitte */}
       <section className="min-w-0 space-y-4">
-        <div className="grid grid-cols-3 gap-2 sm:gap-3">
+        <div className="grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-4">
           <Stat label={t("dashboard.overdue")} value={overdueCount} tone={overdueCount ? "danger" : undefined} href="/boss?status=overdue" />
+          <Stat label={t("dashboard.review")} value={inReview} tone={inReview ? "review" : undefined} href="/boss?status=review" />
           <Stat label={t("dashboard.inProgress")} value={inProgress} href="/boss?status=in_progress" />
           <Stat label={t("dashboard.weekProfit")} value={<span className="text-base sm:text-2xl xl:text-3xl">{formatMoney(fin.profitCents, locale)}</span>} tone="accent" href="/boss/money" />
         </div>

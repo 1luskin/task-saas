@@ -6,8 +6,7 @@ import { z } from "zod";
 import { assertBoss, assertMember } from "@/lib/auth";
 import { ActionError, check, must, runAction } from "@/lib/action";
 import { isoDate, moneyInput, optText, optUuid, priority, taskStatus, timeHHMM, uuid } from "@/lib/validation";
-import { notifyNewTask } from "@/server/notify";
-import { applyOp } from "@/server/task-ops";
+import { notifyAccepted, notifyNewTask, notifyRework } from "@/server/notify";
 
 const taskInput = z.object({
   title: z.string().trim().min(1).max(200),
@@ -208,7 +207,66 @@ export async function deletePhoto(photoId: string) {
 export async function bossSetStatus(taskId: string, status: z.infer<typeof taskStatus>) {
   return runAction(async () => {
     const ctx = await assertBoss();
-    await applyOp(ctx, { op: "status", taskId: uuid.parse(taskId), status: taskStatus.parse(status), at: new Date().toISOString() });
+    uuid.parse(taskId);
+    const next = taskStatus.parse(status);
+    const task = must(await ctx.supabase.from("tasks").select("*").eq("id", taskId).maybeSingle());
+    if (next === "done") return acceptInternal(ctx, task, null);
+    check(await ctx.supabase.from("tasks").update({ status: next }).eq("id", taskId));
+    revalidateTasks();
+  });
+}
+
+async function acceptInternal(ctx: Awaited<ReturnType<typeof assertBoss>>, task: { id: string; title: string; assignee_id: string | null; status: string }, rating: number | null) {
+  if (task.status === "done") return;
+  const now = new Date().toISOString();
+  check(
+    await ctx.supabase
+      .from("tasks")
+      .update({ status: "done", accepted_at: now, accepted_by: ctx.member.id, completed_at: now, rating })
+      .eq("id", task.id),
+  );
+  // offene Zeiteinträge schließen (falls noch Timer lief)
+  check(await ctx.supabase.from("time_entries").update({ ended_at: now }).eq("task_id", task.id).is("ended_at", null));
+  if (task.assignee_id) {
+    const a = task.assignee_id;
+    after(() => notifyAccepted(a, task));
+  }
+  revalidateTasks();
+}
+
+/** Arbeit abnehmen (+ optionale Bewertung 1–5). Erst danach zählt der Verdienst. */
+export async function acceptTask(taskId: string, rating?: number | null) {
+  return runAction(async () => {
+    const ctx = await assertBoss();
+    uuid.parse(taskId);
+    const r = z.number().int().min(1).max(5).nullable().optional().parse(rating) ?? null;
+    // IDOR-Schutz: Aufgabe muss über RLS in der eigenen Firma sichtbar sein
+    const task = must(await ctx.supabase.from("tasks").select("*").eq("id", taskId).eq("firm_id", ctx.firm.id).maybeSingle());
+    await acceptInternal(ctx, task, r);
+  });
+}
+
+/** Zur Nacharbeit zurückgeben – Kommentar ist Pflicht und wird in den Verlauf geschrieben. */
+export async function returnTask(taskId: string, comment: string) {
+  return runAction(async () => {
+    const ctx = await assertBoss();
+    uuid.parse(taskId);
+    const text = z.string().trim().min(3).max(4000).parse(comment);
+    const task = must(await ctx.supabase.from("tasks").select("*").eq("id", taskId).eq("firm_id", ctx.firm.id).maybeSingle());
+    if (task.status !== "review" && task.status !== "done") throw new ActionError("invalid");
+    check(await ctx.supabase.from("tasks").update({ status: "rework" }).eq("id", taskId));
+    check(
+      await ctx.supabase.from("task_comments").insert({
+        task_id: taskId,
+        author_id: ctx.member.id,
+        author_name: ctx.member.full_name,
+        body: text,
+      }),
+    );
+    if (task.assignee_id) {
+      const a = task.assignee_id;
+      after(() => notifyRework(a, task, text));
+    }
     revalidateTasks();
   });
 }

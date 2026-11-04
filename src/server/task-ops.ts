@@ -3,11 +3,13 @@ import { after } from "next/server";
 import { z } from "zod";
 import type { Ctx } from "@/lib/auth";
 import { ActionError, check } from "@/lib/action";
-import { notifyTaskDone } from "./notify";
+import { notifyTaskReview } from "./notify";
+import { staffCanTransition } from "@/lib/workflow";
 
 /** Operationen, die Mitarbeiter auch offline ausführen können (siehe /api/sync). */
 export const syncOpSchema = z.discriminatedUnion("op", [
-  z.object({ op: z.literal("status"), taskId: z.string().uuid(), status: z.enum(["new", "in_progress", "done"]), at: z.string().datetime() }),
+  // "done" ist hier bewusst NICHT erlaubt – Abnahme nur über acceptTask (Chef) bzw. Auto-Abnahme
+  z.object({ op: z.literal("status"), taskId: z.string().uuid(), status: z.enum(["new", "in_progress", "review"]), at: z.string().datetime() }),
   z.object({ op: z.literal("checklist"), itemId: z.string().uuid(), done: z.boolean(), at: z.string().datetime() }),
   z.object({ op: z.literal("start"), taskId: z.string().uuid(), entryId: z.string().uuid(), at: z.string().datetime() }),
   z.object({ op: z.literal("finish"), taskId: z.string().uuid(), at: z.string().datetime() }),
@@ -42,20 +44,24 @@ async function closeOpenEntries(ctx: Ctx, filter: { taskId?: string }, endedAt: 
   }
 }
 
-async function markDone(ctx: Ctx, taskId: string, at: string) {
+/** "Fertig": Timer stoppen, zur Prüfung abgeben, Chef benachrichtigen */
+async function submitForReview(ctx: Ctx, taskId: string, at: string) {
   const task = await loadTask(ctx, taskId);
-  if (task.status === "done") return;
+  if (task.status === "review" || task.status === "done") return; // idempotent
+  if (ctx.member.role !== "boss" && !staffCanTransition(task.status, "review")) throw new ActionError("forbidden");
   await closeOpenEntries(ctx, { taskId }, at);
-  check(await ctx.supabase.from("tasks").update({ status: "done", completed_at: at }).eq("id", taskId));
-  after(() => notifyTaskDone(ctx.firm.id, task, ctx.member.full_name));
+  check(await ctx.supabase.from("tasks").update({ status: "review" }).eq("id", taskId));
+  after(() => notifyTaskReview(ctx.firm.id, task, ctx.member.full_name));
 }
 
 export async function applyOp(ctx: Ctx, op: SyncOp): Promise<void> {
   switch (op.op) {
     case "status": {
       const at = clampTs(op.at);
-      if (op.status === "done") return markDone(ctx, op.taskId, at);
-      await loadTask(ctx, op.taskId);
+      if (op.status === "review") return submitForReview(ctx, op.taskId, at);
+      const task = await loadTask(ctx, op.taskId);
+      if (task.status === op.status) return;
+      if (ctx.member.role !== "boss" && !staffCanTransition(task.status, op.status)) throw new ActionError("forbidden");
       if (op.status === "new") await closeOpenEntries(ctx, { taskId: op.taskId }, at);
       check(await ctx.supabase.from("tasks").update({ status: op.status }).eq("id", op.taskId));
       return;
@@ -71,6 +77,7 @@ export async function applyOp(ctx: Ctx, op: SyncOp): Promise<void> {
       const at = clampTs(op.at);
       const task = await loadTask(ctx, op.taskId);
       if (ctx.member.role !== "boss" && task.assignee_id !== ctx.member.id) throw new ActionError("forbidden");
+      if (task.status === "review" || task.status === "done") throw new ActionError("forbidden");
       // Idempotent: gleicher Eintrag schon vorhanden?
       const existing = check(await ctx.supabase.from("time_entries").select("id").eq("id", op.entryId).maybeSingle());
       if (existing) return;
@@ -85,11 +92,12 @@ export async function applyOp(ctx: Ctx, op: SyncOp): Promise<void> {
         }),
       );
       if (task.status !== "in_progress") {
+        // new/rework → in_progress (vom Trigger geprüft)
         check(await ctx.supabase.from("tasks").update({ status: "in_progress" }).eq("id", op.taskId));
       }
       return;
     }
     case "finish":
-      return markDone(ctx, op.taskId, clampTs(op.at));
+      return submitForReview(ctx, op.taskId, clampTs(op.at));
   }
 }

@@ -96,7 +96,7 @@ export function TaskForm({
         {taskId && (
           <Field label={t("task.status")}>
             <Select value={v.status} onChange={(e) => set("status", e.target.value as TaskStatus)}>
-              {(["new", "in_progress", "done"] as const).map((s) => (
+              {(["new", "in_progress", "review", "rework", "done"] as const).map((s) => (
                 <option key={s} value={s}>{t(`status.${s}`)}</option>
               ))}
             </Select>
