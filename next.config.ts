@@ -7,6 +7,7 @@ const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
     "/api/reports/weekly-pdf": ["./assets/fonts/**/*"],
     "/api/**/*": ["./assets/fonts/**/*"],
+    "/opengraph-image": ["./assets/fonts/**/*"],
   },
   serverExternalPackages: ["exceljs", "web-push"],
   async headers() {

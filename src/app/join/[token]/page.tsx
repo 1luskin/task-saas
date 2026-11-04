@@ -5,6 +5,8 @@ import { createClient } from "@/lib/supabase/server";
 import { getI18n } from "@/i18n/server";
 import { JoinForm } from "./form";
 
+export const metadata = { robots: { index: false, follow: false } };
+
 export default async function JoinPage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
   const { t } = await getI18n();

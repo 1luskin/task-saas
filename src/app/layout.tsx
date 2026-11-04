@@ -11,6 +11,7 @@ import { ServiceWorkerRegister } from "@/components/pwa/sw-register";
 import { CookieBanner } from "@/components/legal/cookie-banner";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
   title: { default: APP_NAME, template: `%s · ${APP_NAME}` },
   description: "Aufgaben & Verdienst für kleine Teams",
   applicationName: APP_NAME,

@@ -1,6 +1,6 @@
 import { requireBossPage } from "@/lib/auth";
 import { getI18n } from "@/i18n/server";
-import { DEFAULT_PLANS } from "@/lib/payments";
+import { getPlans } from "@/lib/plans";
 import { formatMoney } from "@/lib/money";
 import { trialInfo } from "@/lib/trial";
 import { startCheckout } from "@/server/actions/billing";
@@ -13,6 +13,7 @@ export default async function PlansPage() {
   const ctx = await requireBossPage();
   const { t, locale } = await getI18n();
   const info = trialInfo(ctx.firm);
+  const plans = await getPlans();
   return (
     <div className="mx-auto max-w-3xl space-y-4">
       <PageTitle>{t("plans.title")}</PageTitle>
@@ -23,7 +24,7 @@ export default async function PlansPage() {
         </p>
       )}
       <div className="grid gap-4 sm:grid-cols-2">
-        {DEFAULT_PLANS.map((p) => (
+        {plans.map((p) => (
           <div key={p.id} className="card-white flex flex-col gap-3 p-5">
             <h2 className="text-xl font-semibold">{t(`plans.${p.id}`)}</h2>
             <div>

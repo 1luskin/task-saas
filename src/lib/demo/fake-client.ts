@@ -74,6 +74,7 @@ class Session {
   /** entspricht den SELECT-Policies */
   visible(table: TableName, r: Row): boolean {
     if (this.admin) return true;
+    if (table === "site_content" || table === "plans") return true; // öffentlich lesbar
     if (!this.uid) return false;
     const firm = this.firm, me = this.me?.id, boss = this.boss;
     switch (table) {
@@ -87,6 +88,7 @@ class Session {
       case "task_requests": return r.firm_id === firm && (boss || r.created_by === me);
       case "push_subscriptions": case "user_settings": case "login_events": return r.user_id === this.uid;
       case "consents": return r.user_id === this.uid || (boss && this.db.members.some((m) => m.id === r.member_id && m.firm_id === firm));
+      case "reviews": return r.firm_id === firm && boss;
       case "data_requests": return r.firm_id === firm && (boss || r.member_id === me);
     }
   }
@@ -402,6 +404,13 @@ export function createFakeClient(uid: string | null, admin = false) {
         if (fn === "finish_onboarding") us.onboarding_done = true;
         else if (!us.hints_dismissed.includes(String(args.p_key).slice(0, 40))) us.hints_dismissed.push(String(args.p_key).slice(0, 40));
         return { data: null, error: null };
+      }
+      if (fn === "published_reviews") {
+        const list = s.db.reviews
+          .filter((r) => r.moderation === "approved" && r.allow_publish && r.comment)
+          .slice(0, Number(args.p_limit ?? 6))
+          .map((r) => ({ client_name: (r.client_name ?? "").split(" ")[0], rating: r.rating, comment: r.comment, created_at: r.created_at }));
+        return { data: list, error: null };
       }
       if (fn === "invite_info") {
         const inv = s.db.invites.find((i) => i.token === args.p_token);

@@ -34,6 +34,19 @@ export type Firm = {
   deletion_scheduled_for: string | null;
   created_at: string;
 };
+export type SiteContent = { key: "landing"; locale: Locale; data: Record<string, unknown>; updated_at: string };
+export type PlanRow = { id: "start" | "pro"; price_cents: number | null; position: number; updated_at: string };
+export type Review = {
+  id: string;
+  firm_id: string;
+  task_id: string | null;
+  client_name: string | null;
+  rating: number;
+  comment: string | null;
+  allow_publish: boolean;
+  moderation: "pending" | "approved" | "rejected";
+  created_at: string;
+};
 export type Consent = {
   id: string;
   user_id: string | null;
@@ -242,6 +255,9 @@ export interface Database {
       user_settings: Table<UserSettings, "user_id">;
       login_events: Table<LoginEvent, "user_id" | "kind">;
       consents: Table<Consent, "kind" | "version" | "granted">;
+      site_content: Table<SiteContent, "key" | "locale">;
+      plans: Table<PlanRow, "id">;
+      reviews: Table<Review, "firm_id" | "rating">;
       data_requests: Table<DataRequest, "firm_id" | "member_id" | "kind">;
       task_finance: Table<TaskFinance, "task_id">;
       checklist_items: Table<ChecklistItem, "task_id" | "text">;
@@ -272,6 +288,10 @@ export interface Database {
       dismiss_hint: { Args: { p_key: string }; Returns: undefined };
       finish_onboarding: { Args: Record<string, never>; Returns: undefined };
       rate_limit_hit: { Args: { p_bucket: string; p_max: number; p_window_seconds: number }; Returns: boolean };
+      published_reviews: {
+        Args: { p_limit?: number };
+        Returns: { client_name: string; rating: number; comment: string; created_at: string }[];
+      };
       invite_info: {
         Args: { p_token: string };
         Returns: { firm_name: string; role: Role; valid: boolean }[];

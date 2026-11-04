@@ -97,6 +97,9 @@ export function createSeed(): DemoDb {
     user_settings: [],
     login_events: [],
     consents: [],
+    site_content: [],
+    plans: [{ id: "start", price_cents: null, position: 0, updated_at: now }, { id: "pro", price_cents: null, position: 1, updated_at: now }],
+    reviews: [],
     data_requests: [],
     task_statuses: [
       ...(["new", "in_progress", "review", "rework", "done"] as const).map((kind, i) => ({

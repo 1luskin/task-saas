@@ -4,6 +4,8 @@ import { getContext } from "@/lib/auth";
 import { OnboardingForm } from "./form";
 import { LogoutButton } from "@/components/logout-button";
 
+export const metadata = { robots: { index: false, follow: false } };
+
 export default async function OnboardingPage() {
   const ctx = await getContext();
   if (!ctx) redirect("/login");
