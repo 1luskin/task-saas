@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { requireBossPage } from "@/lib/auth";
 import { getCalendarTasks, getMembers, parseCalParams } from "@/server/queries";
 import { Calendar } from "@/components/calendar/calendar";
+import { ViewTabs } from "@/components/tasks/view-tabs";
 
 export default async function BossCalendarPage({ searchParams }: { searchParams: Promise<{ cal?: string; view?: string }> }) {
   const ctx = await requireBossPage();
@@ -9,8 +10,11 @@ export default async function BossCalendarPage({ searchParams }: { searchParams:
   const members = await getMembers(ctx, { includeArchived: true });
   const tasks = await getCalendarTasks(ctx, view, anchor, (id) => members.find((m) => m.id === id)?.full_name ?? null);
   return (
+    <div className="space-y-4">
+    <div className="flex justify-end"><ViewTabs active="calendar" /></div>
     <Suspense>
-      <Calendar tasks={tasks} view={view} anchor={anchor} taskHref="/boss/tasks/" />
+      <Calendar key={`${view}-${anchor}`} tasks={tasks} view={view} anchor={anchor} taskHref="/boss/tasks/" draggable />
     </Suspense>
+    </div>
   );
 }

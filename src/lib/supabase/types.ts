@@ -89,6 +89,12 @@ export type InboundRequest = {
   id: string; firm_id: string; name: string; contact: string; address: string | null; message: string;
   status: "new" | "converted" | "dismissed"; task_id: string | null; client_id: string | null; created_at: string;
 };
+export type ChecklistTemplate = { id: string; firm_id: string; name: string; items: string[]; created_at: string };
+export type TaskFile = {
+  id: string; task_id: string; firm_id: string; comment_id: string | null; storage_path: string; file_name: string;
+  mime_type: string; size_bytes: number; uploaded_by: string | null; created_at: string;
+};
+export type Activity = { id: string; firm_id: string; member_id: string | null; kind: string; task_id: string | null; payload: Record<string, unknown>; created_at: string };
 export type Consent = {
   id: string;
   user_id: string | null;
@@ -208,6 +214,8 @@ export type Task = {
   custom_status_id: string | null;
   client_id: string | null;
   accepted_via: "boss" | "auto" | "client" | null;
+  pinned: boolean;
+  reminder_sent_at: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -314,6 +322,9 @@ export interface Database {
       clients: Table<Client, "firm_id" | "name">;
       task_links: Table<TaskLink, "task_id">;
       inbound_requests: Table<InboundRequest, "firm_id" | "name" | "contact" | "message">;
+      checklist_templates: Table<ChecklistTemplate, "firm_id" | "name">;
+      task_files: Table<TaskFile, "task_id" | "storage_path" | "file_name" | "mime_type" | "size_bytes">;
+      activity: Table<Activity, "firm_id" | "kind">;
       data_requests: Table<DataRequest, "firm_id" | "member_id" | "kind">;
       task_finance: Table<TaskFinance, "task_id">;
       checklist_items: Table<ChecklistItem, "task_id" | "text">;
@@ -359,6 +370,7 @@ export interface Database {
         Args: { p_kind: "shift" | "time_entry"; p_id: string; p_started_at: string; p_ended_at: string | null; p_break_minutes: number; p_reason: string };
         Returns: undefined;
       };
+      search_all: { Args: { p_q: string; p_limit?: number }; Returns: { kind: "task" | "member" | "client" | "request"; id: string; title: string; subtitle: string }[] };
       invite_info: {
         Args: { p_token: string };
         Returns: { firm_name: string; role: Role; valid: boolean }[];

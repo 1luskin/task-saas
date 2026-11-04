@@ -7,6 +7,7 @@ import { DemoFirmBar } from "../demo/demo-firm-bar";
 import { ExpiredBanner } from "../trial/trial";
 import type { Ctx } from "@/lib/auth";
 import { logoUrl } from "@/lib/logo";
+import { SearchBox } from "../search-box";
 import { IconSun, IconTasks, IconUser, IconWallet } from "../icons";
 
 export async function StaffShell({ ctx, children }: { ctx: Ctx; children: React.ReactNode }) {
@@ -38,6 +39,7 @@ export async function StaffShell({ ctx, children }: { ctx: Ctx; children: React.
         </div>
       </header>
       <main className="mx-auto w-full max-w-3xl px-4 pb-32 pt-4 lg:pb-10">
+        <SearchBox className="mb-4" />
         <ExpiredBanner firm={ctx.firm} isBoss={false} />
         {children}
       </main>

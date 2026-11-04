@@ -33,7 +33,9 @@ const DEFAULTS: Partial<Record<TableName, () => Row>> = {
   tasks: () => ({ description: null, address: null, assignee_id: null, due_date: null, due_time: null, status: "new", priority: "normal",
     fixed_pay_cents: null, template_id: null, created_by: null, completed_at: null, overdue_notified_at: null,
     submitted_at: null, accepted_at: null, accepted_by: null, rating: null, rework_count: 0, review_reminded_at: null, custom_status_id: null,
-    client_id: null, accepted_via: null }),
+    client_id: null, accepted_via: null, pinned: false, reminder_sent_at: null }),
+  checklist_templates: () => ({ items: [] }),
+  task_files: () => ({ comment_id: null, uploaded_by: null }),
   task_statuses: () => ({ color: "slate", position: 0, is_system: false }),
   members: () => ({ email: null, phone: null, group_id: null, status: "active", pay_mode: "hourly", hourly_rate_cents: 0, locale: "de",
     notify_overdue: true, notify_done: true, archived_at: null, user_id: null, is_demo: false, hourly_basis: "tasks" }),
@@ -57,7 +59,7 @@ const DEFAULTS: Partial<Record<TableName, () => Row>> = {
   admin_audit: () => ({ details: {} }),
   data_requests: () => ({ status: "open", note: null, resolved_at: null }),
 };
-const CHILD_OF_TASK: TableName[] = ["checklist_items", "task_comments", "task_photos", "task_finance", "time_entries", "expenses", "task_links"];
+const CHILD_OF_TASK: TableName[] = ["checklist_items", "task_comments", "task_photos", "task_finance", "time_entries", "expenses", "task_links", "task_files"];
 const KEY: Partial<Record<TableName, string>> = { task_finance: "task_id", feature_flags: "key", plans: "id" };
 
 class Session {
@@ -101,7 +103,8 @@ class Session {
       case "firm_features": return r.firm_id === firm;
       case "admin_audit": return false;
       case "shifts": case "expenses": case "adjustments": case "time_edits": return r.firm_id === firm && (boss || r.member_id === me);
-      case "clients": case "task_links": case "inbound_requests": return r.firm_id === firm && boss;
+      case "clients": case "task_links": case "inbound_requests": case "checklist_templates": case "activity": return r.firm_id === firm && boss;
+      case "task_files": return this.taskVisible(r.task_id);
       case "data_requests": return r.firm_id === firm && (boss || r.member_id === me);
     }
   }
@@ -123,7 +126,9 @@ class Session {
       case "time_edits": return false;
       case "clients": return this.boss && r.firm_id === this.firm;
       case "task_links": return this.boss && this.taskVisible(r.task_id);
-      case "inbound_requests": return false;
+      case "inbound_requests": case "activity": return false;
+      case "checklist_templates": return this.boss && r.firm_id === this.firm;
+      case "task_files": return this.taskVisible(r.task_id) && r.uploaded_by === me;
       case "push_subscriptions": return r.user_id === this.uid && r.member_id === me;
       case "checklist_items": return this.boss && this.taskVisible(r.task_id);
       default: return this.boss && r.firm_id === this.firm && this.visible(table, r);
@@ -136,7 +141,7 @@ class Session {
     if (this.boss) {
       if (table === "shifts" && old.ended_at) return deny();
       if (table === "task_statuses" && old.is_system && (("kind" in next && next.kind !== old.kind) || ("is_system" in next && next.is_system !== old.is_system))) return deny("system status");
-      if (["firms", "groups", "members", "invites", "task_templates", "tasks", "task_finance", "checklist_items", "time_entries", "task_requests", "task_statuses", "expenses", "clients", "task_links", "inbound_requests"].includes(table)) return null;
+      if (["firms", "groups", "members", "invites", "task_templates", "tasks", "task_finance", "checklist_items", "time_entries", "task_requests", "task_statuses", "expenses", "clients", "task_links", "inbound_requests", "checklist_templates"].includes(table)) return null;
     }
     switch (table) {
       case "tasks":
@@ -168,7 +173,8 @@ class Session {
       case "task_requests": return this.boss || (r.created_by === me && r.status === "pending");
       case "task_statuses": return this.boss && !r.is_system;
       case "expenses": return this.boss || (r.member_id === me && r.status === "pending");
-      case "clients": return this.boss;
+      case "clients": case "checklist_templates": return this.boss;
+      case "task_files": return this.boss || r.uploaded_by === me;
       case "task_links": case "inbound_requests": return false;
       case "shifts": case "time_edits": case "adjustments": return false;
       case "push_subscriptions": return r.user_id === this.uid;
@@ -468,6 +474,19 @@ export function createFakeClient(uid: string | null, admin = false) {
           created_at: new Date().toISOString(),
         });
         return { data: null, error: null };
+      }
+      if (fn === "search_all") {
+        const q = String(args.p_q ?? "").trim().toLowerCase();
+        if (q.length < 2) return { data: [], error: null };
+        const vis = (tb: TableName) => (s.db[tb] as unknown as Row[]).filter((r) => s.visible(tb, r));
+        const has = (...v: unknown[]) => v.some((x) => typeof x === "string" && x.toLowerCase().includes(q));
+        const out = [
+          ...vis("tasks").filter((r) => has(r.title, r.description, r.address)).map((r) => ({ kind: "task", id: r.id, title: r.title, subtitle: r.address ?? "" })),
+          ...vis("members").filter((r) => !r.archived_at && has(r.full_name)).map((r) => ({ kind: "member", id: r.id, title: r.full_name, subtitle: r.email ?? "" })),
+          ...vis("clients").filter((r) => has(r.name, r.address)).map((r) => ({ kind: "client", id: r.id, title: r.name, subtitle: r.address ?? "" })),
+          ...vis("task_requests").filter((r) => has(r.title)).map((r) => ({ kind: "request", id: r.id, title: r.title, subtitle: r.status })),
+        ].slice(0, 20);
+        return { data: out, error: null };
       }
       if (fn === "published_reviews") {
         const list = s.db.reviews

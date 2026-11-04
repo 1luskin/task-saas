@@ -6,6 +6,7 @@ import { useMemo, useState } from "react";
 import { useI18n } from "@/i18n/client";
 import { addDays, addMonths, formatDate, intlLocale, startOfMonth, startOfWeek, todayISO } from "@/lib/dates";
 import { cx, initials, STATUS_DOT } from "../ui";
+import { moveTaskDate } from "@/server/actions/views";
 import { IconChevronLeft, IconChevronRight } from "../icons";
 
 export interface CalTask {
@@ -27,8 +28,43 @@ const CHIP: Record<CalTask["status"], string> = {
 };
 
 export function Calendar({
-  tasks, view, anchor, taskHref, compact = false,
-}: { tasks: CalTask[]; view: "month" | "week"; anchor: string; taskHref: string; compact?: boolean }) {
+  tasks: initialTasks, view, anchor, taskHref, compact = false, draggable = false,
+}: { tasks: CalTask[]; view: "month" | "week" | "day"; anchor: string; taskHref: string; compact?: boolean; draggable?: boolean }) {
+  const [tasks, setTasks] = useState(initialTasks);
+  const [drag, setDrag] = useState<{ id: string; x: number; y: number; moved: boolean; sx: number; sy: number } | null>(null);
+  const [overDay, setOverDay] = useState<string | null>(null);
+  const dayAt = (x: number, y: number) => document.elementFromPoint(x, y)?.closest("[data-day]")?.getAttribute("data-day") ?? null;
+  async function moveTo(id: string, day: string) {
+    const prev = tasks;
+    setTasks((ts) => ts.map((x) => (x.id === id ? { ...x, due_date: day } : x)));
+    const r = await moveTaskDate(id, day);
+    if (!r.ok) setTasks(prev);
+  }
+  const chipHandlers = (task: CalTask) =>
+    draggable
+      ? {
+          onPointerDown: (e: React.PointerEvent) => {
+            e.stopPropagation();
+            (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+            setDrag({ id: task.id, x: e.clientX, y: e.clientY, sx: e.clientX, sy: e.clientY, moved: false });
+          },
+          onPointerMove: (e: React.PointerEvent) => {
+            if (!drag || drag.id !== task.id) return;
+            const moved = drag.moved || Math.abs(e.clientX - drag.sx) + Math.abs(e.clientY - drag.sy) > 6;
+            setDrag({ ...drag, x: e.clientX, y: e.clientY, moved });
+            if (moved) setOverDay(dayAt(e.clientX, e.clientY));
+          },
+          onPointerUp: (e: React.PointerEvent) => {
+            e.stopPropagation();
+            const d = drag?.moved ? dayAt(e.clientX, e.clientY) : null;
+            setDrag(null);
+            setOverDay(null);
+            if (d && d !== task.due_date) void moveTo(task.id, d);
+          },
+          onClick: (e: React.MouseEvent) => { if (drag?.moved) e.stopPropagation(); },
+          style: drag?.id === task.id && drag.moved ? ({ position: "fixed", left: drag.x - 40, top: drag.y - 10, width: 140, zIndex: 60, pointerEvents: "none" } as React.CSSProperties) : undefined,
+        }
+      : {};
   const { t, messages, locale } = useI18n();
   const router = useRouter();
   const pathname = usePathname();
@@ -49,6 +85,7 @@ export function Calendar({
   }, [tasks]);
 
   const days = useMemo(() => {
+    if (view === "day") return [anchor];
     if (view === "week") {
       const s = startOfWeek(anchor);
       return Array.from({ length: 7 }, (_, i) => addDays(s, i));
@@ -69,7 +106,9 @@ export function Calendar({
   }
 
   const title =
-    view === "month"
+    view === "day"
+      ? formatDate(anchor, locale, { weekday: "long", day: "numeric", month: "long", year: "numeric" })
+      : view === "month"
       ? new Intl.DateTimeFormat(intlLocale(locale), { month: "long", year: "numeric", timeZone: "UTC" }).format(new Date(`${startOfMonth(anchor)}T00:00:00Z`))
       : `${formatDate(days[0]!, locale, { day: "2-digit", month: "2-digit" })} – ${formatDate(days[6]!, locale)}`;
 
@@ -80,11 +119,11 @@ export function Calendar({
     <div className="card-white overflow-hidden">
       {/* Kopf */}
       <div className="flex items-center gap-2 border-b border-line/70 px-3 py-2.5">
-        <button className="btn-ghost !min-h-10 !px-2" onClick={() => go({ cal: view === "month" ? addMonths(startOfMonth(anchor), -1) : addDays(anchor, -7) })} aria-label={t("calendar.prev")}>
+        <button className="btn-ghost !min-h-10 !px-2" onClick={() => go({ cal: view === "month" ? addMonths(startOfMonth(anchor), -1) : addDays(anchor, view === "day" ? -1 : -7) })} aria-label={t("calendar.prev")}>
           <IconChevronLeft className="size-5" />
         </button>
         <div className="min-w-0 flex-1 text-center font-semibold capitalize">{title}</div>
-        <button className="btn-ghost !min-h-10 !px-2" onClick={() => go({ cal: view === "month" ? addMonths(startOfMonth(anchor), 1) : addDays(anchor, 7) })} aria-label={t("calendar.next")}>
+        <button className="btn-ghost !min-h-10 !px-2" onClick={() => go({ cal: view === "month" ? addMonths(startOfMonth(anchor), 1) : addDays(anchor, view === "day" ? 1 : 7) })} aria-label={t("calendar.next")}>
           <IconChevronRight className="size-5" />
         </button>
       </div>
@@ -93,14 +132,30 @@ export function Calendar({
           {t("calendar.today")}
         </button>
         <div className="inline-flex rounded-[10px] bg-card p-0.5">
-          {(["month", "week"] as const).map((v) => (
+          {(["month", "week", "day"] as const).map((v) => (
             <button key={v} onClick={() => go({ view: v })} className={cx("min-h-9 rounded-[8px] px-3 text-sm font-medium", view === v ? "bg-surface-3 text-ink" : "text-muted")}>
-              {t(`calendar.${v}`)}
+              {v === "day" ? t("views.day") : t(`calendar.${v}`)}
             </button>
           ))}
         </div>
       </div>
 
+      {view === "day" && (
+        <ul className="space-y-1.5 p-3">
+          {(byDay.get(anchor) ?? []).map((task) => (
+            <li key={task.id}>
+              <Link href={`${taskHref}${task.id}`} className="flex min-h-12 items-center gap-2 rounded-[12px] bg-card px-3 py-2 hover:bg-surface-3">
+                <span className={cx("size-2 shrink-0 rounded-full", task.overdue ? "bg-danger" : STATUS_DOT[task.status])} />
+                <span className="min-w-0 flex-1 truncate">{task.title}</span>
+                {task.priority === "urgent" && <span className="chip bg-danger-soft text-danger">!</span>}
+                <span className="shrink-0 text-xs text-muted">{task.assigneeName ?? "—"}</span>
+              </Link>
+            </li>
+          ))}
+          {!(byDay.get(anchor) ?? []).length && <li className="text-sm text-muted">{t("calendar.noTasksDay")}</li>}
+        </ul>
+      )}
+      {view !== "day" && <>
       {/* Wochentage */}
       <div className="grid grid-cols-7 border-y border-line/70 bg-card/60 text-center text-xs font-medium text-muted">
         {messages.weekdaysShort.map((d) => (
@@ -119,6 +174,7 @@ export function Calendar({
             <button
               key={d}
               type="button"
+              data-day={d}
               onClick={() => setSelected(isSel ? null : d)}
               className={cx(
                 "group flex flex-col items-stretch gap-1 border-line/50 p-1 text-left transition hover:bg-card",
@@ -127,6 +183,7 @@ export function Calendar({
                 view === "week" ? "min-h-56" : compact ? "min-h-[88px]" : "min-h-28",
                 !inMonth && "bg-card/50",
                 isSel && "bg-accent-soft/60",
+                overDay === d && "ring-2 ring-inset ring-accent-2",
               )}
             >
               <span
@@ -147,11 +204,13 @@ export function Calendar({
                 {list.slice(0, maxChips).map((task) => (
                   <span
                     key={task.id}
+                    {...chipHandlers(task)}
                     title={`${task.assigneeName ?? "—"}: ${task.title}`}
                     className={cx(
                       "flex items-center gap-1 truncate rounded-[6px] px-1 py-0.5 text-[11px] leading-tight",
                       task.overdue ? "bg-danger-soft text-danger" : CHIP[task.status],
                       task.priority === "urgent" && "ring-1 ring-danger/50",
+                      draggable && "cursor-grab touch-none select-none",
                     )}
                   >
                     <span className="shrink-0 font-semibold">{initials(task.assigneeName)}</span>
@@ -165,6 +224,7 @@ export function Calendar({
         })}
       </div>
 
+      </>}
       {/* Ausgewählter Tag */}
       {selected && (
         <div className="border-t border-line/70 p-3">

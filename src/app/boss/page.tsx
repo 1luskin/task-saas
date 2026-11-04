@@ -12,13 +12,15 @@ import { isDemo } from "@/lib/demo/mode";
 import { Hint } from "@/components/hint";
 import { isEnabled } from "@/lib/features";
 import { TaskFilters } from "@/components/tasks/filters";
-import { TaskRow } from "@/components/tasks/task-row";
+import { BulkTaskList } from "@/components/tasks/bulk-list";
+import { ActivityFeed } from "@/components/activity-feed";
+import { ViewTabs } from "@/components/tasks/view-tabs";
 import { EmptyState, Stat } from "@/components/ui";
 import { IconPlus } from "@/components/icons";
 import type { Task } from "@/lib/supabase/types";
 import { IconChevronRight, IconTasks } from "@/components/icons";
 
-type SP = { status?: string; member?: string; priority?: string; group?: string; cal?: string; view?: string };
+type SP = { status?: string; member?: string; priority?: string; group?: string; cal?: string; view?: string; feedMember?: string; feedDate?: string };
 
 export default async function BossDashboard({ searchParams }: { searchParams: Promise<SP> }) {
   const sp = await searchParams;
@@ -54,7 +56,7 @@ export default async function BossDashboard({ searchParams }: { searchParams: Pr
   if (status === "overdue") tasks = tasks.filter((x) => isOverdue(x));
   tasks.sort((a, b) => {
     if (status === "done") return 0;
-    const rank = (x: Task) => (x.status === "review" ? 0 : isOverdue(x) ? 1 : 2);
+    const rank = (x: Task) => (x.pinned ? -1 : x.status === "review" ? 0 : isOverdue(x) ? 1 : 2);
     const ao = rank(a), bo = rank(b);
     if (ao !== bo) return ao - bo;
     const au = a.priority === "urgent" ? 0 : 1, bu = b.priority === "urgent" ? 0 : 1;
@@ -106,7 +108,10 @@ export default async function BossDashboard({ searchParams }: { searchParams: Pr
         )}
 
         <div className="flex items-center justify-between gap-3">
-          <h1 className="text-2xl font-semibold tracking-tight">{t("nav.tasks")}</h1>
+          <div className="flex flex-wrap items-center gap-3">
+            <h1 className="text-2xl font-semibold tracking-tight">{t("nav.tasks")}</h1>
+            <ViewTabs active="list" />
+          </div>
           <Link href="/boss/tasks/new" className="btn-primary">
             <IconPlus className="size-5" />
             {t("dashboard.newTask")}
@@ -119,9 +124,13 @@ export default async function BossDashboard({ searchParams }: { searchParams: Pr
           {tasks.length === 0 ? (
             <EmptyState icon={<IconTasks />} action={<Link href="/boss/tasks/new" className="btn-primary">{t("dashboard.newTask")}</Link>}>{t("dashboard.noTasks")}</EmptyState>
           ) : (
-            tasks.map((task) => (
-              <TaskRow key={task.id} task={task} href={`/boss/tasks/${task.id}`} assigneeName={nameOf(task.assignee_id)} checklist={progress.get(task.id)} t={t} locale={locale} />
-            ))
+            <BulkTaskList
+              members={members.filter((m) => !m.archived_at).map((m) => ({ id: m.id, full_name: m.full_name, status: m.status }))}
+              rows={tasks.map((task) => ({
+                id: task.id, title: task.title, status: task.status, priority: task.priority, due_date: task.due_date, due_time: task.due_time,
+                assigneeName: nameOf(task.assignee_id), overdue: isOverdue(task), pinned: task.pinned, checklist: progress.get(task.id),
+              }))}
+            />
           )}
         </div>
       </section>
@@ -130,8 +139,11 @@ export default async function BossDashboard({ searchParams }: { searchParams: Pr
       <aside className="order-first hidden lg:block xl:order-none">
         <div className="xl:sticky xl:top-6">
           <Suspense>
-            <Calendar tasks={calTasks} view={view} anchor={anchor} taskHref="/boss/tasks/" compact />
+            <Calendar key={`${view}-${anchor}`} tasks={calTasks} view={view} anchor={anchor} taskHref="/boss/tasks/" compact draggable />
           </Suspense>
+          <div className="mt-4">
+            <ActivityFeed ctx={ctx} t={t} locale={locale} member={sp.feedMember} date={sp.feedDate} names={new Map(members.map((m) => [m.id, m.full_name]))} />
+          </div>
         </div>
       </aside>
     </div>

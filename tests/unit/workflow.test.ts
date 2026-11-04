@@ -57,3 +57,14 @@ describe("Sicherheit", () => {
     expect(c).not.toContain("unsafe-eval");
   });
 });
+
+import { parseMentions } from "@/lib/mentions";
+describe("@Erwähnungen", () => {
+  const people = [{ id: "a", full_name: "Anna Becker" }, { id: "d", full_name: "Dmitri Iwanow" }, { id: "x", full_name: "Annabell Fuchs" }];
+  it("findet Vorname und vollen Namen, keine Teiltreffer", () => {
+    expect(parseMentions("Bitte @Dmitri prüfen", people)).toEqual(["d"]);
+    expect(parseMentions("@anna becker danke", people)).toEqual(["a"]);
+    expect(parseMentions("@Annabell bitte", people)).toEqual(["x"]);
+    expect(parseMentions("keine Erwähnung", people)).toEqual([]);
+  });
+});

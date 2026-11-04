@@ -48,13 +48,13 @@ export function createSeed(): DemoDb {
     id: id(400 + n), firm_id: DEMO.firm, description: null, address: null, assignee_id: null, due_date: null, due_time: null,
     status: "new", priority: "normal", fixed_pay_cents: null, template_id: null, created_by: DEMO.boss,
     completed_at: null, overdue_notified_at: null, submitted_at: null, accepted_at: null, accepted_by: null, rating: null,
-    rework_count: 0, review_reminded_at: null, custom_status_id: null, client_id: null, accepted_via: null, created_at: at(-7, 8), updated_at: now, ...o,
+    rework_count: 0, review_reminded_at: null, custom_status_id: null, client_id: null, accepted_via: null, pinned: false, reminder_sent_at: null, created_at: at(-7, 8), updated_at: now, ...o,
   });
 
   const tasks: Tables["tasks"]["Row"][] = [
     task(1, { title: "Treppenhaus reinigen – Haus A", client_id: id(1601), assignee_id: e1.member, due_date: day(0), due_time: "09:00", status: "in_progress",
       address: "Karl-Marx-Allee 12, 10243 Berlin", description: "Alle Etagen wischen, Geländer abwischen, Fenster im EG." }),
-    task(2, { title: "Büro Fenster 2. OG", assignee_id: e1.member, due_date: day(0), due_time: "13:00", priority: "urgent",
+    task(2, { title: "Büro Fenster 2. OG", pinned: true, assignee_id: e1.member, due_date: day(0), due_time: "13:00", priority: "urgent",
       address: "Friedrichstr. 88, 10117 Berlin", description: "Kunde kommt um 16 Uhr – unbedingt vorher fertig." }),
     task(3, { title: "Grundreinigung Praxis Dr. Klein", client_id: id(1602), assignee_id: e1.member, due_date: day(-2), status: "rework", rework_count: 1,
       address: "Schönhauser Allee 40, 10435 Berlin" }),
@@ -126,6 +126,18 @@ export function createSeed(): DemoDb {
     ],
     task_links: [
       { id: id(1701), firm_id: DEMO.firm, task_id: id(405), token: DEMO_LINK_TOKEN, expires_at: new Date(Date.now() + 60 * 864e5).toISOString(), revoked: false, created_by: DEMO.boss, created_at: now },
+    ],
+    checklist_templates: [
+      { id: id(1901), firm_id: DEMO.firm, name: "Treppenhaus", items: ["Erdgeschoss", "Obergeschosse", "Geländer", "Briefkästen"], created_at: now },
+      { id: id(1902), firm_id: DEMO.firm, name: "Fenster", items: ["Innen", "Außen", "Rahmen", "Fensterbänke"], created_at: now },
+    ],
+    task_files: [],
+    activity: [
+      { id: id(2001), firm_id: DEMO.firm, member_id: e2.member, kind: "status", task_id: id(405), payload: { from: "in_progress", to: "review", title: "Badfliesen verfugen" }, created_at: ago(20) },
+      { id: id(2002), firm_id: DEMO.firm, member_id: e1.member, kind: "shift_start", task_id: null, payload: {}, created_at: ago(1.5) },
+      { id: id(2003), firm_id: DEMO.firm, member_id: e2.member, kind: "expense", task_id: id(405), payload: { amount_cents: 2380, description: "2 Säcke Fugenmörtel" }, created_at: ago(22) },
+      { id: id(2004), firm_id: DEMO.firm, member_id: e1.member, kind: "request", task_id: null, payload: { title: "Mülltonnenplatz Haus A säubern" }, created_at: ago(5) },
+      { id: id(2005), firm_id: DEMO.firm, member_id: DEMO.boss, kind: "status", task_id: id(408), payload: { from: "review", to: "done", title: "Malerarbeiten Flur" }, created_at: ago(1) },
     ],
     inbound_requests: [
       { id: id(1801), firm_id: DEMO.firm, name: "Maria Hoffmann", contact: "0171 2345678", address: "Boxhagener Str. 20, 10245 Berlin", message: "Bitte Angebot für Endreinigung nach Umzug, 3 Zimmer, ca. 75 m².", status: "new", task_id: null, client_id: null, created_at: ago(5) },

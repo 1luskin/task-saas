@@ -27,11 +27,12 @@ export async function pendingRequestCount(ctx: Ctx): Promise<number> {
 
 export function parseCalParams(sp: { cal?: string; view?: string }) {
   const anchor = sp.cal && /^\d{4}-\d{2}-\d{2}$/.test(sp.cal) ? sp.cal : todayISO();
-  const view: "month" | "week" = sp.view === "week" ? "week" : "month";
+  const view: "month" | "week" | "day" = sp.view === "week" ? "week" : sp.view === "day" ? "day" : "month";
   return { anchor, view };
 }
 
-export function calendarRange(view: "month" | "week", anchor: string) {
+export function calendarRange(view: "month" | "week" | "day", anchor: string) {
+  if (view === "day") return { from: anchor, to: addDays(anchor, 1) };
   if (view === "week") {
     const from = startOfWeek(anchor);
     return { from, to: addDays(from, 7) };
@@ -54,7 +55,7 @@ export function toCalTasks(tasks: Task[], nameOf: (id: string | null) => string 
     }));
 }
 
-export async function getCalendarTasks(ctx: Ctx, view: "month" | "week", anchor: string, nameOf: (id: string | null) => string | null) {
+export async function getCalendarTasks(ctx: Ctx, view: "month" | "week" | "day", anchor: string, nameOf: (id: string | null) => string | null) {
   const { from, to } = calendarRange(view, anchor);
   const { data } = await ctx.supabase
     .from("tasks")

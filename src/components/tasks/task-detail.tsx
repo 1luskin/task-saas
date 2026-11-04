@@ -12,12 +12,14 @@ import { Comments } from "./comments";
 import { Photos } from "./photos";
 import { ReviewPanel } from "./review-panel";
 import { Expenses } from "../money/expenses";
+import { ApplyChecklistTemplate } from "./checklist-templates";
+import { TaskFiles } from "./files";
 
 type Detail = NonNullable<Awaited<ReturnType<typeof loadTaskDetail>>>;
 
 export function TaskDetail({
-  d, ctx, t, locale, backHref, bossTools, expensesOn = true, clientPanel,
-}: { d: Detail; ctx: Ctx; t: TFunction; locale: string; backHref: string; bossTools?: React.ReactNode; expensesOn?: boolean; clientPanel?: React.ReactNode }) {
+  d, ctx, t, locale, backHref, bossTools, expensesOn = true, clientPanel, checklistTemplates = [],
+}: { d: Detail; ctx: Ctx; t: TFunction; locale: string; backHref: string; bossTools?: React.ReactNode; expensesOn?: boolean; clientPanel?: React.ReactNode; checklistTemplates?: { id: string; name: string }[] }) {
   const { task } = d;
   const isBoss = ctx.member.role === "boss";
   const overdue = isOverdue(task);
@@ -124,6 +126,7 @@ export function TaskDetail({
 
       <div className="card-white p-4 sm:p-6">
         <Checklist taskId={task.id} status={task.status} items={d.checklist} editable={isBoss} />
+        {isBoss && <div className="mt-2"><ApplyChecklistTemplate taskId={task.id} templates={checklistTemplates} /></div>}
       </div>
 
       {clientPanel}
@@ -147,6 +150,7 @@ export function TaskDetail({
               </a>
             </div>
           )}
+          <TaskFiles taskId={task.id} firmId={ctx.firm.id} files={d.files} myMemberId={ctx.member.id} isBoss={isBoss} />
           {ctx.firm.task_fields.photos !== false && <Photos taskId={task.id} firmId={ctx.firm.id} photos={d.photos} myMemberId={ctx.member.id} isBoss={isBoss} />}
         </div>
       </details>

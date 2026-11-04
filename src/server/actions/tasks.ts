@@ -9,6 +9,9 @@ import { isoDate, moneyInput, optText, optUuid, priority, taskStatus, timeHHMM, 
 import { notifyAccepted, notifyNewTask, notifyRework } from "@/server/notify";
 import { hit } from "@/lib/rate-limit";
 import { requestReview } from "@/server/review-request";
+import { resolveMentions } from "@/server/mentions";
+import { createAdminClient } from "@/lib/supabase/server";
+import { sendPushToMembers } from "@/lib/push";
 
 const taskInput = z.object({
   title: z.string().trim().min(1).max(200),
@@ -173,6 +176,23 @@ export async function addComment(taskId: string, body: string) {
         body: text,
       }),
     );
+    // @Erwähnungen: nur Personen, die die Aufgabe sehen dürfen (Chefs + Ausführender)
+    if (text.includes("@")) {
+      const firmId = ctx.firm.id;
+      const author = ctx.member;
+      after(async () => {
+        const mentioned = await resolveMentions(firmId, taskId, text, author.id);
+        if (mentioned.length) {
+          const { data: task } = await createAdminClient().from("tasks").select("id, title").eq("id", taskId).single();
+          await sendPushToMembers(mentioned, (t) => ({
+            title: t("push.mention", { name: author.full_name }),
+            body: `${task?.title ?? ""}: ${text.slice(0, 120)}`,
+            url: `/boss/tasks/${taskId}`,
+            tag: `mention-${taskId}`,
+          }));
+        }
+      });
+    }
     revalidateTasks();
   });
 }

@@ -18,6 +18,12 @@ export async function loadTaskDetail(ctx: Ctx, id: string) {
     task.assignee_id ? ctx.supabase.from("members").select("*").eq("id", task.assignee_id).maybeSingle() : Promise.resolve({ data: null }),
     ctx.supabase.from("expenses").select("*").eq("task_id", id).order("created_at"),
   ]);
+  const { data: fileRows } = await ctx.supabase.from("task_files").select("*").eq("task_id", id).order("created_at");
+  const fileUrls = new Map<string, string>();
+  if (fileRows?.length) {
+    const { data } = await ctx.supabase.storage.from("task-files").createSignedUrls(fileRows.map((f) => f.storage_path), 15 * 60);
+    fileRows.forEach((f, i) => { const u = data?.[i]?.signedUrl; if (u) fileUrls.set(f.id, u); });
+  }
   const expRows = expenses.data ?? [];
   const receiptPaths = expRows.filter((e) => e.receipt_path).map((e) => e.receipt_path!);
   const receiptUrls = new Map<string, string>();
@@ -58,6 +64,7 @@ export async function loadTaskDetail(ctx: Ctx, id: string) {
       receiptUrl: e.receipt_path ? receiptUrls.get(e.receipt_path) ?? null : null,
       memberName: expMembers?.find((m) => m.id === e.member_id)?.full_name ?? "",
     })),
+    files: (fileRows ?? []).map((f) => ({ id: f.id, name: f.file_name, size: f.size_bytes, url: fileUrls.get(f.id) ?? null, uploaded_by: f.uploaded_by })),
     expensesApprovedCents: expRows.filter((e) => e.status === "approved").reduce((s, e) => s + e.amount_cents, 0),
   };
 }

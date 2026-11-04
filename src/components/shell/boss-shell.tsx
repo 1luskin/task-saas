@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { APP_NAME } from "@/config/app";
 import { logoUrl } from "@/lib/logo";
+import { SearchBox } from "../search-box";
+import { DemoWorkerButton } from "../demo/demo-worker-button";
 import { getI18n } from "@/i18n/server";
 import { NavLink } from "./nav-link";
 import { OfflineBanner } from "./offline-banner";
@@ -89,6 +91,10 @@ export async function BossShell({
           </Link>
         </header>
         <main className="mx-auto w-full max-w-[1600px] px-4 pb-28 pt-4 lg:px-0 lg:pb-4 lg:pt-0">
+          <div className="mb-4 flex flex-wrap items-center gap-2">
+            <SearchBox className="min-w-0 flex-1" />
+            {ctx.firm.is_demo && <DemoWorkerButton />}
+          </div>
           <ExpiredBanner firm={ctx.firm} isBoss />
           {children}
         </main>
