@@ -11,7 +11,8 @@ export type QueuedOp =
   | { id: string; op: "status"; taskId: string; status: TaskStatus; at: string }
   | { id: string; op: "checklist"; itemId: string; taskId: string; done: boolean; at: string }
   | { id: string; op: "start"; taskId: string; entryId: string; at: string }
-  | { id: string; op: "finish"; taskId: string; at: string };
+  | { id: string; op: "finish"; taskId: string; at: string }
+  | { id: string; op: "shift_start" | "shift_pause" | "shift_resume" | "shift_end"; shiftId: string; taskId?: undefined; at: string };
 
 type NewOp = QueuedOp extends infer O ? (O extends QueuedOp ? Omit<O, "id" | "at"> : never) : never;
 

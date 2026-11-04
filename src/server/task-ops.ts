@@ -13,6 +13,11 @@ export const syncOpSchema = z.discriminatedUnion("op", [
   z.object({ op: z.literal("checklist"), itemId: z.string().uuid(), done: z.boolean(), at: z.string().datetime() }),
   z.object({ op: z.literal("start"), taskId: z.string().uuid(), entryId: z.string().uuid(), at: z.string().datetime() }),
   z.object({ op: z.literal("finish"), taskId: z.string().uuid(), at: z.string().datetime() }),
+  // Schichten (offline-fähig, id vom Client → idempotent)
+  z.object({ op: z.literal("shift_start"), shiftId: z.string().uuid(), at: z.string().datetime() }),
+  z.object({ op: z.literal("shift_pause"), shiftId: z.string().uuid(), at: z.string().datetime() }),
+  z.object({ op: z.literal("shift_resume"), shiftId: z.string().uuid(), at: z.string().datetime() }),
+  z.object({ op: z.literal("shift_end"), shiftId: z.string().uuid(), at: z.string().datetime() }),
 ]);
 export type SyncOp = z.infer<typeof syncOpSchema>;
 
@@ -100,5 +105,32 @@ export async function applyOp(ctx: Ctx, op: SyncOp): Promise<void> {
     }
     case "finish":
       return submitForReview(ctx, op.taskId, clampTs(op.at));
+    case "shift_start": {
+      assertWritable(ctx);
+      const existing = check(await ctx.supabase.from("shifts").select("id").eq("id", op.shiftId).maybeSingle());
+      if (existing) return;
+      check(await ctx.supabase.from("shifts").insert({ id: op.shiftId, firm_id: ctx.firm.id, member_id: ctx.member.id, started_at: clampTs(op.at) }));
+      return;
+    }
+    case "shift_pause":
+    case "shift_resume":
+    case "shift_end": {
+      const sh = check(await ctx.supabase.from("shifts").select("*").eq("id", op.shiftId).eq("member_id", ctx.member.id).maybeSingle());
+      if (!sh) throw new ActionError("forbidden");
+      if (sh.ended_at) return; // schon beendet (z. B. Auto-Ende) → idempotent
+      const at = clampTs(op.at);
+      const pausedMin = sh.break_started_at ? Math.max(0, Math.round((new Date(at).getTime() - new Date(sh.break_started_at).getTime()) / 60000)) : 0;
+      if (op.op === "shift_pause") {
+        if (sh.break_started_at) return;
+        check(await ctx.supabase.from("shifts").update({ break_started_at: at }).eq("id", sh.id));
+      } else if (op.op === "shift_resume") {
+        if (!sh.break_started_at) return;
+        check(await ctx.supabase.from("shifts").update({ break_started_at: null, break_minutes: sh.break_minutes + pausedMin }).eq("id", sh.id));
+      } else {
+        const end = at < sh.started_at ? sh.started_at : at;
+        check(await ctx.supabase.from("shifts").update({ ended_at: end, break_started_at: null, break_minutes: sh.break_minutes + pausedMin }).eq("id", sh.id));
+      }
+      return;
+    }
   }
 }

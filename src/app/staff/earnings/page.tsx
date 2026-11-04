@@ -5,6 +5,7 @@ import { loadFinance, loadPending } from "@/lib/finance";
 import { formatMoney } from "@/lib/money";
 import { buildPeriodReport } from "@/server/month-report";
 import { EmptyState } from "@/components/ui";
+import Link from "next/link";
 
 export default async function EarningsPage() {
   const ctx = await requireStaffPage();
@@ -19,6 +20,8 @@ export default async function EarningsPage() {
   ]);
   const w = week.perMember.get(ctx.member.id);
   const m = month.perMember.get(ctx.member.id);
+  const mp = monthPeriod(today);
+  const { data: adjustments } = await ctx.supabase.from("adjustments").select("*").eq("member_id", ctx.member.id).gte("effective_date", mp.from).lt("effective_date", mp.to).order("effective_date", { ascending: false });
   const rows = report.rows.filter((r) => r.payoutCents > 0 || r.minutes > 0).reverse();
 
   const card = ({ title, e }: { title: string; e: typeof w }) => (
@@ -28,6 +31,9 @@ export default async function EarningsPage() {
       <div className="mt-2 space-y-0.5 text-sm text-muted">
         <div>{t("staff.hourly")}: {formatDuration(e?.minutes ?? 0)} · {formatMoney(e?.hourlyCents ?? 0, locale)}</div>
         <div>{t("staff.fixed")}: {formatMoney(e?.fixedCents ?? 0, locale)}</div>
+        {(e?.shiftCents ?? 0) !== 0 && <div>{t("shift.title")}: {formatDuration(e?.shiftMinutes ?? 0)} · {formatMoney(e?.shiftCents ?? 0, locale)}</div>}
+        {(e?.adjustCents ?? 0) !== 0 && <div>{t("adjust.title")}: {formatMoney(e?.adjustCents ?? 0, locale)}</div>}
+        {(e?.reimburseCents ?? 0) !== 0 && <div>{t("expense.reimbursements")}: {formatMoney(e?.reimburseCents ?? 0, locale)}</div>}
       </div>
     </div>
   );
@@ -65,6 +71,23 @@ export default async function EarningsPage() {
           </div>
         ))}
       </div>
+      {(adjustments ?? []).length > 0 && (
+        <>
+          <h2 className="font-semibold">{t("adjust.title")}</h2>
+          <div className="card-white divide-y divide-line/70">
+            {adjustments!.map((a) => (
+              <div key={a.id} className="flex min-h-14 items-center gap-3 px-4 py-2">
+                <div className="min-w-0 flex-1">
+                  <div className="font-medium">{a.amount_cents < 0 ? t("adjust.deduction") : t("adjust.bonus")}</div>
+                  <div className="text-sm text-muted">{formatDate(a.effective_date, locale, { day: "2-digit", month: "2-digit" })} · {a.reason}</div>
+                </div>
+                <div className={`text-lg font-semibold tabular-nums ${a.amount_cents < 0 ? "text-danger" : "text-ok"}`}>{formatMoney(a.amount_cents, locale)}</div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+      <Link href="/staff/times" className="btn-secondary w-full">{t("times.mine")}</Link>
     </div>
   );
 }

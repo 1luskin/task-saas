@@ -6,6 +6,7 @@ import { centsToInput, formatMoney } from "@/lib/money";
 import type { Member } from "@/lib/supabase/types";
 import { Avatar, Field, Input, Select, cx } from "../ui";
 import { useAction, ErrorText } from "../use-action";
+import Link from "next/link";
 import { ReauthDialog } from "../reauth-dialog";
 
 export function MemberCard({ member: m, groups, isSelf, tasksDoneMonth, reworksMonth = 0, avgRating = null, myEmail = "" }: { member: Member; groups: { id: string; name: string }[]; isSelf: boolean; tasksDoneMonth: number; reworksMonth?: number; avgRating?: number | null; myEmail?: string }) {
@@ -21,6 +22,7 @@ export function MemberCard({ member: m, groups, isSelf, tasksDoneMonth, reworksM
     status: m.status,
     pay_mode: m.pay_mode,
     hourly_rate: centsToInput(m.hourly_rate_cents),
+    hourly_basis: m.hourly_basis ?? "tasks",
   });
   const unavailable = m.status !== "active";
   const group = groups.find((g) => g.id === m.group_id);
@@ -101,6 +103,14 @@ export function MemberCard({ member: m, groups, isSelf, tasksDoneMonth, reworksM
             </Select>
           </Field>
           {v.pay_mode !== "fixed" && (
+            <Field label={t("shift.basis")}>
+              <Select value={v.hourly_basis} onChange={(e) => setV({ ...v, hourly_basis: e.target.value as "tasks" | "shifts" })}>
+                <option value="tasks">{t("shift.basisTasks")}</option>
+                <option value="shifts">{t("shift.basisShifts")}</option>
+              </Select>
+            </Field>
+          )}
+          {v.pay_mode !== "fixed" && (
             <Field label={t("employees.rate")}><Input inputMode="decimal" value={v.hourly_rate} onChange={(e) => setV({ ...v, hourly_rate: e.target.value })} placeholder="15,00" /></Field>
           )}
           <Field label={t("employees.group")}>
@@ -111,6 +121,7 @@ export function MemberCard({ member: m, groups, isSelf, tasksDoneMonth, reworksM
           </Field>
           <div className="flex flex-wrap items-end gap-2 sm:col-span-2">
             <button className="btn-primary" disabled={pending}>{t("common.save")}</button>
+            <Link href={`/boss/employees/${m.id}/times`} className="btn-secondary">{t("times.title")}</Link>
             {!isSelf && (
               <button type="button" className="btn-secondary text-danger" disabled={pending} onClick={() => confirm(t("employees.removeConfirm")) && run(() => removeMember(m.id))}>
                 {t("employees.remove")}

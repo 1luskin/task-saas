@@ -56,3 +56,13 @@ describe("Demo: Testzeitraum", () => {
     expect(() => assertWritable({ firm: { ...firm, plan: "paid" } } as never)).not.toThrow();
   });
 });
+
+describe("Demo: Ausgaben", () => {
+  it("Chef darf genehmigen, Mitarbeiter nicht", async () => {
+    const id = demoDb().expenses.find((e) => e.status === "pending")!.id;
+    const no = await lukas().from("expenses").update({ status: "approved" }).eq("id", id);
+    expect(no.error?.code).toBe("42501");
+    const ok = await boss().from("expenses").update({ status: "approved" }).eq("id", id);
+    expect(ok.error).toBeNull();
+  });
+});

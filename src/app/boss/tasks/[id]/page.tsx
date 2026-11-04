@@ -4,6 +4,7 @@ import { getI18n } from "@/i18n/server";
 import { loadTaskDetail } from "@/server/task-detail";
 import { getMembers } from "@/server/queries";
 import { TaskDetail } from "@/components/tasks/task-detail";
+import { isEnabled } from "@/lib/features";
 import { BossTaskTools } from "@/components/tasks/boss-task-tools";
 import { centsToInput } from "@/lib/money";
 
@@ -21,6 +22,7 @@ export default async function BossTaskPage({ params }: { params: Promise<{ id: s
       t={t}
       locale={locale}
       backHref="/boss"
+      expensesOn={await isEnabled(ctx, "expenses")}
       bossTools={
         <BossTaskTools
           taskId={task.id}

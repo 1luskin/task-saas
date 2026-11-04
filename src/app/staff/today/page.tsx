@@ -7,13 +7,16 @@ import { loadFinance } from "@/lib/finance";
 import { formatMoney } from "@/lib/money";
 import { staffTaskExtras } from "@/server/staff";
 import { StaffTaskCard } from "@/components/tasks/staff-task-card";
+import { ShiftCard } from "@/components/shifts/shift-card";
+import { isEnabled } from "@/lib/features";
 import { EmptyState } from "@/components/ui";
 
 export default async function TodayPage() {
   const ctx = await requireStaffPage();
   const { t, locale } = await getI18n();
   const today = todayISO();
-  const [{ data }, fin] = await Promise.all([
+  const shiftsOn = await isEnabled(ctx, "shifts");
+  const [{ data }, fin, { data: openShift }] = await Promise.all([
     // RLS: nur eigene Aufgaben
     ctx.supabase
       .from("tasks")
@@ -22,6 +25,7 @@ export default async function TodayPage() {
       .or(`due_date.eq.${today},and(status.neq.done,status.neq.review,due_date.lt.${today}),status.eq.in_progress,status.eq.rework`)
       .order("due_time", { nullsFirst: false }),
     loadFinance(ctx, weekPeriod(today), { memberId: ctx.member.id }),
+    ctx.supabase.from("shifts").select("*").eq("member_id", ctx.member.id).is("ended_at", null).maybeSingle(),
   ]);
   const tasks = (data ?? []).sort((a, b) => {
     const rank = (x: typeof a) => (x.status === "done" || x.status === "review" ? 3 : x.status === "rework" || isOverdue(x) ? 0 : x.priority === "urgent" ? 1 : 2);
@@ -39,6 +43,8 @@ export default async function TodayPage() {
         <div className="text-muted">{formatDate(today, locale, { weekday: "long", day: "numeric", month: "long" })}</div>
         <h1 className="text-2xl font-semibold tracking-tight">{t("staff.hello", { name: ctx.member.full_name.split(" ")[0] ?? "" })}</h1>
       </div>
+
+      {shiftsOn && <ShiftCard open={openShift ?? null} />}
 
       {ctx.member.status !== "active" && (
         <div className="card bg-danger-soft p-4 text-danger">{t(`memberStatus.${ctx.member.status}`)}</div>

@@ -10,6 +10,7 @@ import { Calendar } from "@/components/calendar/calendar";
 import { redirect } from "next/navigation";
 import { isDemo } from "@/lib/demo/mode";
 import { Hint } from "@/components/hint";
+import { isEnabled } from "@/lib/features";
 import { TaskFilters } from "@/components/tasks/filters";
 import { TaskRow } from "@/components/tasks/task-row";
 import { EmptyState, Stat } from "@/components/ui";
@@ -65,6 +66,10 @@ export default async function BossDashboard({ searchParams }: { searchParams: Pr
   const overdueCount = open.filter((x) => isOverdue(x)).length;
   const inProgress = open.filter((x) => x.status === "in_progress").length;
   const inReview = open.filter((x) => x.status === "review").length;
+  const shiftsOn = await isEnabled(ctx, "shifts");
+  const { count: onShift } = shiftsOn
+    ? await ctx.supabase.from("shifts").select("id", { count: "exact", head: true }).eq("firm_id", ctx.firm.id).is("ended_at", null)
+    : { count: 0 };
 
   const { data: items } = tasks.length
     ? await ctx.supabase.from("checklist_items").select("task_id, done").in("task_id", tasks.map((x) => x.id))
@@ -84,7 +89,11 @@ export default async function BossDashboard({ searchParams }: { searchParams: Pr
         <div className="grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-4">
           <Stat label={t("dashboard.overdue")} value={overdueCount} tone={overdueCount ? "danger" : undefined} href="/boss?status=overdue" />
           <Stat label={t("dashboard.review")} value={inReview} tone={inReview ? "review" : undefined} href="/boss?status=review" />
-          <Stat label={t("dashboard.inProgress")} value={inProgress} href="/boss?status=in_progress" />
+          {shiftsOn ? (
+            <Stat label={t("dashboard.onShift")} value={onShift ?? 0} tone={onShift ? "accent" : undefined} href="/boss/employees" />
+          ) : (
+            <Stat label={t("dashboard.inProgress")} value={inProgress} href="/boss?status=in_progress" />
+          )}
           <Stat label={t("dashboard.weekProfit")} value={<span className="text-base sm:text-2xl xl:text-3xl">{formatMoney(fin.profitCents, locale)}</span>} tone="accent" href="/boss/money" />
         </div>
 

@@ -5,6 +5,7 @@ import { useI18n } from "@/i18n/client";
 import { Field, Input, Select, Textarea, cx } from "../ui";
 import { ErrorText, useAction } from "../use-action";
 import { createTask, updateTask, type TaskInput } from "@/server/actions/tasks";
+import { suggestAssignee } from "@/server/actions/money";
 import type { MemberStatus, PayMode, TaskFields, TaskStatus } from "@/lib/supabase/types";
 import type { TaskFormValues } from "./task-form-values";
 export type { TaskFormValues } from "./task-form-values";
@@ -66,6 +67,7 @@ export function TaskForm({
       )}
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label={t("task.assignee")}>
+          <div className="flex gap-2">
           <Select value={v.assignee_id} onChange={(e) => set("assignee_id", e.target.value)}>
             <option value="">{t("dashboard.unassigned")}</option>
             {members.map((m) => (
@@ -75,6 +77,19 @@ export function TaskForm({
               </option>
             ))}
           </Select>
+          <button
+            type="button"
+            className="btn-secondary shrink-0 !px-3 text-sm"
+            title={t("assign.auto")}
+            onClick={async () => {
+              const r = await suggestAssignee({ date: v.due_date || null });
+              if (r.ok && r.data.memberId) set("assignee_id", r.data.memberId);
+              else alert(t("assign.none"));
+            }}
+          >
+            {t("assign.auto")}
+          </button>
+          </div>
         </Field>
         <div>
           <span className="label">{t("task.priority")}</span>

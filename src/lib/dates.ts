@@ -139,3 +139,23 @@ export function formatDateTime(ts: string | null, locale: string): string {
     minute: "2-digit",
   }).format(new Date(ts));
 }
+
+/** "2026-11-04T08:30" (Berliner Ortszeit, z. B. aus <input type=datetime-local>) → ISO UTC */
+export function berlinLocalToISO(local: string): string {
+  const [d, tm = "00:00"] = local.split("T") as [string, string?];
+  const [hh, mm] = tm.split(":").map(Number) as [number, number];
+  const base = berlinStartOfDay(d).getTime();
+  // Offset an diesem Tag kann sich durch Sommerzeit ändern → über die Ziel-Uhrzeit korrigieren
+  const guess = base + (hh * 60 + mm) * 60_000;
+  const parts = new Intl.DateTimeFormat("en-GB", { timeZone: TZ, hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date(guess));
+  const [gh, gm] = parts.split(":").map(Number) as [number, number];
+  const diff = (hh * 60 + mm - (gh * 60 + gm)) * 60_000;
+  return new Date(guess + (Math.abs(diff) < 3 * 3600_000 ? diff : 0)).toISOString();
+}
+
+/** ISO → "2026-11-04T08:30" in Berliner Ortszeit (für <input type=datetime-local>) */
+export function isoToBerlinLocal(iso: string): string {
+  const p = new Intl.DateTimeFormat("en-CA", { timeZone: TZ, year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).formatToParts(new Date(iso));
+  const g = (t: string) => p.find((x) => x.type === t)?.value ?? "00";
+  return `${g("year")}-${g("month")}-${g("day")}T${g("hour")}:${g("minute")}`;
+}

@@ -3,6 +3,7 @@ import { requireStaffPage } from "@/lib/auth";
 import { getI18n } from "@/i18n/server";
 import { loadTaskDetail } from "@/server/task-detail";
 import { TaskDetail } from "@/components/tasks/task-detail";
+import { isEnabled } from "@/lib/features";
 
 export default async function StaffTaskPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -10,5 +11,5 @@ export default async function StaffTaskPage({ params }: { params: Promise<{ id: 
   const { t, locale } = await getI18n();
   const d = await loadTaskDetail(ctx, id);
   if (!d) notFound();
-  return <TaskDetail d={d} ctx={ctx} t={t} locale={locale} backHref="/staff/today" />;
+  return <TaskDetail d={d} ctx={ctx} t={t} locale={locale} backHref="/staff/today" expensesOn={await isEnabled(ctx, "expenses")} />;
 }

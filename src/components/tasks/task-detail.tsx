@@ -11,12 +11,13 @@ import { Checklist } from "./checklist";
 import { Comments } from "./comments";
 import { Photos } from "./photos";
 import { ReviewPanel } from "./review-panel";
+import { Expenses } from "../money/expenses";
 
 type Detail = NonNullable<Awaited<ReturnType<typeof loadTaskDetail>>>;
 
 export function TaskDetail({
-  d, ctx, t, locale, backHref, bossTools,
-}: { d: Detail; ctx: Ctx; t: TFunction; locale: string; backHref: string; bossTools?: React.ReactNode }) {
+  d, ctx, t, locale, backHref, bossTools, expensesOn = true,
+}: { d: Detail; ctx: Ctx; t: TFunction; locale: string; backHref: string; bossTools?: React.ReactNode; expensesOn?: boolean }) {
   const { task } = d;
   const isBoss = ctx.member.role === "boss";
   const overdue = isOverdue(task);
@@ -103,7 +104,10 @@ export function TaskDetail({
               <div className="text-muted">{t("task.payout")}{!d.pay.accepted && ` · ${t("task.pendingPay")}`}</div>
               <div className="font-semibold tabular-nums">{formatMoney(d.pay.projectedCents, locale)}</div>
             </div>
-            <div><div className="text-muted">{t("task.profit")}</div><div className="font-semibold tabular-nums text-link">{formatMoney(d.clientPriceCents - d.pay.projectedCents, locale)}</div></div>
+            <div>
+              <div className="text-muted">{t("task.profit")}{d.expensesApprovedCents > 0 && ` (− ${t("expense.materials")})`}</div>
+              <div className="font-semibold tabular-nums text-link">{formatMoney(d.clientPriceCents - d.pay.projectedCents - d.expensesApprovedCents, locale)}</div>
+            </div>
           </div>
         ) : (
           d.pay.projectedCents > 0 && (
@@ -121,6 +125,12 @@ export function TaskDetail({
       <div className="card-white p-4 sm:p-6">
         <Checklist taskId={task.id} status={task.status} items={d.checklist} editable={isBoss} />
       </div>
+
+      {expensesOn && (
+        <div className="card-white p-4 sm:p-6">
+          <Expenses taskId={task.id} firmId={ctx.firm.id} rows={d.expenses} isBoss={isBoss} myMemberId={ctx.member.id} canAdd={isBoss || canWork} />
+        </div>
+      )}
 
       <details className="card-white" open={Boolean(task.address || d.photos.length)}>
         <summary className="flex min-h-14 cursor-pointer items-center px-4 font-semibold sm:px-6">{t("task.more")}</summary>

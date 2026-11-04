@@ -37,7 +37,7 @@ export function createSeed(): DemoDb {
 
   const member = (o: Partial<Tables["members"]["Row"]> & Pick<Tables["members"]["Row"], "id" | "user_id" | "role" | "full_name">): Tables["members"]["Row"] => ({
     firm_id: DEMO.firm, email: null, phone: null, group_id: null, status: "active", pay_mode: "hourly",
-    hourly_rate_cents: 0, locale: "de", notify_overdue: true, notify_done: true, archived_at: null, is_demo: false,
+    hourly_rate_cents: 0, locale: "de", notify_overdue: true, notify_done: true, archived_at: null, is_demo: false, hourly_basis: "tasks",
     created_at: now, updated_at: now, ...o,
   });
 
@@ -107,6 +107,19 @@ export function createSeed(): DemoDb {
     ] as const).map(([key, on]) => ({ key, default_enabled: on, description: null, updated_at: now })),
     firm_features: [],
     admin_audit: [],
+    shifts: [
+      { id: id(1301), firm_id: DEMO.firm, member_id: e1.member, started_at: ago(1.5), ended_at: null, break_minutes: 0, break_started_at: null, rate_cents: 0, auto_closed: false, needs_review: false, created_at: ago(1.5) },
+      { id: id(1302), firm_id: DEMO.firm, member_id: e2.member, started_at: ago(30), ended_at: ago(21), break_minutes: 30, break_started_at: null, rate_cents: 0, auto_closed: false, needs_review: false, created_at: ago(30) },
+      { id: id(1303), firm_id: DEMO.firm, member_id: e2.member, started_at: ago(10), ended_at: null, break_minutes: 0, break_started_at: null, rate_cents: 0, auto_closed: false, needs_review: false, created_at: ago(10) },
+    ],
+    expenses: [
+      { id: id(1401), firm_id: DEMO.firm, task_id: id(405), member_id: e2.member, amount_cents: 2380, description: "2 Säcke Fugenmörtel", receipt_path: null, reimburse: true, status: "pending", decided_by: null, decided_at: null, created_at: ago(22) },
+      { id: id(1402), firm_id: DEMO.firm, task_id: id(408), member_id: e2.member, amount_cents: 6450, description: "Farbe & Abdeckfolie", receipt_path: null, reimburse: false, status: "approved", decided_by: DEMO.boss, decided_at: ago(2), created_at: ago(30) },
+    ],
+    time_edits: [],
+    adjustments: [
+      { id: id(1501), firm_id: DEMO.firm, member_id: e1.member, amount_cents: 2500, reason: "Sonntagseinsatz Hausverwaltung", effective_date: day(0), created_by: DEMO.boss, created_at: ago(3) },
+    ],
     data_requests: [],
     task_statuses: [
       ...(["new", "in_progress", "review", "rework", "done"] as const).map((kind, i) => ({

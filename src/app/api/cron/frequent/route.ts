@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { serverEnv } from "@/lib/env";
 import { runReviewJobs } from "@/server/jobs/review";
+import { runShiftJobs } from "@/server/jobs/shifts";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -15,8 +16,8 @@ async function handle(req: Request) {
   if (!secret || req.headers.get("authorization") !== `Bearer ${secret}`) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
-  const review = await runReviewJobs();
-  return NextResponse.json({ ok: true, review });
+  const [review, shifts] = await Promise.all([runReviewJobs(), runShiftJobs()]);
+  return NextResponse.json({ ok: true, review, shifts });
 }
 
 export const GET = handle;

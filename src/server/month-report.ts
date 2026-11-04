@@ -15,6 +15,7 @@ export interface ReportRow {
   fixedCents: number;
   payoutCents: number;
   clientPriceCents: number;
+  materialsCents: number;
   profitCents: number;
 }
 
@@ -36,6 +37,7 @@ export async function buildPeriodReport(ctx: Ctx, period: Period) {
       fixedCents: t.fixed_pay_cents ?? 0,
       payoutCents: 0,
       clientPriceCents: fin.clientPrice.get(t.id) ?? 0,
+      materialsCents: fin.expensesByTask.get(t.id) ?? 0,
       profitCents: 0,
     });
   }
@@ -47,7 +49,7 @@ export async function buildPeriodReport(ctx: Ctx, period: Period) {
   }
   for (const r of byTask.values()) {
     r.payoutCents = r.hourlyCents + r.fixedCents;
-    r.profitCents = r.clientPriceCents - r.payoutCents;
+    r.profitCents = r.clientPriceCents - r.payoutCents - r.materialsCents;
   }
   const { data: members } = await ctx.supabase.from("members").select("*").eq("firm_id", ctx.firm.id);
   const memberById = new Map<string, Member>((members ?? []).map((m) => [m.id, m]));

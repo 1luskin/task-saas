@@ -42,6 +42,7 @@ const memberUpdate = z.object({
   status: memberStatus,
   pay_mode: payMode,
   hourly_rate: moneyInput,
+  hourly_basis: z.enum(["tasks", "shifts"]).default("tasks"),
 });
 
 export async function updateMember(id: string, raw: z.input<typeof memberUpdate>) {
@@ -73,6 +74,7 @@ export async function updateMember(id: string, raw: z.input<typeof memberUpdate>
           status: input.status,
           pay_mode: input.pay_mode,
           hourly_rate_cents: input.hourly_rate ?? 0,
+          hourly_basis: input.hourly_basis,
         })
         .eq("id", id),
     );

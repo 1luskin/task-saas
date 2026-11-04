@@ -62,6 +62,23 @@ export type Review = {
 export type FeatureFlag = { key: string; default_enabled: boolean; description: string | null; updated_at: string };
 export type FirmFeature = { firm_id: string; key: string; enabled: boolean; set_by: "admin" | "boss"; updated_at: string };
 export type AdminAudit = { id: string; admin_email: string; action: string; target: string | null; details: Record<string, unknown>; created_at: string };
+export type Expense = {
+  id: string; firm_id: string; task_id: string; member_id: string; amount_cents: number; description: string;
+  receipt_path: string | null; reimburse: boolean; status: "pending" | "approved" | "rejected";
+  decided_by: string | null; decided_at: string | null; created_at: string;
+};
+export type Shift = {
+  id: string; firm_id: string; member_id: string; started_at: string; ended_at: string | null; break_minutes: number;
+  break_started_at: string | null; rate_cents: number; auto_closed: boolean; needs_review: boolean; created_at: string;
+};
+export type TimeEdit = {
+  id: string; firm_id: string; member_id: string; kind: "shift" | "time_entry"; record_id: string; changed_by: string | null;
+  before: Record<string, unknown>; after: Record<string, unknown>; reason: string; created_at: string;
+};
+export type Adjustment = {
+  id: string; firm_id: string; member_id: string; amount_cents: number; reason: string; effective_date: string;
+  created_by: string | null; created_at: string;
+};
 export type Consent = {
   id: string;
   user_id: string | null;
@@ -104,6 +121,7 @@ export type Member = {
   notify_done: boolean;
   archived_at: string | null;
   is_demo: boolean;
+  hourly_basis: "tasks" | "shifts";
   created_at: string;
   updated_at: string;
 };
@@ -276,6 +294,10 @@ export interface Database {
       feature_flags: Table<FeatureFlag, "key">;
       firm_features: Table<FirmFeature, "firm_id" | "key" | "enabled">;
       admin_audit: Table<AdminAudit, "admin_email" | "action">;
+      expenses: Table<Expense, "task_id" | "member_id" | "amount_cents" | "description">;
+      shifts: Table<Shift, "firm_id" | "member_id" | "started_at">;
+      time_edits: Table<TimeEdit, "firm_id" | "member_id" | "kind" | "record_id" | "before" | "after" | "reason">;
+      adjustments: Table<Adjustment, "firm_id" | "member_id" | "amount_cents" | "reason" | "effective_date">;
       data_requests: Table<DataRequest, "firm_id" | "member_id" | "kind">;
       task_finance: Table<TaskFinance, "task_id">;
       checklist_items: Table<ChecklistItem, "task_id" | "text">;
@@ -316,6 +338,10 @@ export interface Database {
           id: string; name: string; created_at: string; plan: FirmPlan; trial_ends_at: string; is_demo: boolean;
           members: number; tasks: number; last_activity: string; owner_email: string | null; deletion_scheduled_for: string | null;
         }[];
+      };
+      edit_time_record: {
+        Args: { p_kind: "shift" | "time_entry"; p_id: string; p_started_at: string; p_ended_at: string | null; p_break_minutes: number; p_reason: string };
+        Returns: undefined;
       };
       invite_info: {
         Args: { p_token: string };

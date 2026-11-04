@@ -35,7 +35,9 @@ const DEFAULTS: Partial<Record<TableName, () => Row>> = {
     submitted_at: null, accepted_at: null, accepted_by: null, rating: null, rework_count: 0, review_reminded_at: null, custom_status_id: null }),
   task_statuses: () => ({ color: "slate", position: 0, is_system: false }),
   members: () => ({ email: null, phone: null, group_id: null, status: "active", pay_mode: "hourly", hourly_rate_cents: 0, locale: "de",
-    notify_overdue: true, notify_done: true, archived_at: null, user_id: null, is_demo: false }),
+    notify_overdue: true, notify_done: true, archived_at: null, user_id: null, is_demo: false, hourly_basis: "tasks" }),
+  shifts: () => ({ ended_at: null, break_minutes: 0, break_started_at: null, rate_cents: 0, auto_closed: false, needs_review: false }),
+  expenses: () => ({ receipt_path: null, reimburse: false, status: "pending", decided_by: null, decided_at: null }),
   invites: () => ({ token: Array.from(crypto.getRandomValues(new Uint8Array(18)), (b) => b.toString(16).padStart(2, "0")).join(""),
     role: "employee", group_id: null, created_by: null, expires_at: new Date(Date.now() + 14 * 864e5).toISOString(), max_uses: 50, used_count: 0, revoked: false }),
   checklist_items: () => ({ done: false, position: 0 }),
@@ -51,7 +53,7 @@ const DEFAULTS: Partial<Record<TableName, () => Row>> = {
   admin_audit: () => ({ details: {} }),
   data_requests: () => ({ status: "open", note: null, resolved_at: null }),
 };
-const CHILD_OF_TASK: TableName[] = ["checklist_items", "task_comments", "task_photos", "task_finance", "time_entries"];
+const CHILD_OF_TASK: TableName[] = ["checklist_items", "task_comments", "task_photos", "task_finance", "time_entries", "expenses"];
 const KEY: Partial<Record<TableName, string>> = { task_finance: "task_id", feature_flags: "key", plans: "id" };
 
 class Session {
@@ -94,6 +96,7 @@ class Session {
       case "feature_flags": return true;
       case "firm_features": return r.firm_id === firm;
       case "admin_audit": return false;
+      case "shifts": case "expenses": case "adjustments": case "time_edits": return r.firm_id === firm && (boss || r.member_id === me);
       case "data_requests": return r.firm_id === firm && (boss || r.member_id === me);
     }
   }
@@ -109,6 +112,10 @@ class Session {
       case "consents": return r.user_id === this.uid && (r.member_id == null || r.member_id === me);
       case "data_requests": return r.firm_id === this.firm && r.member_id === me && r.status === "open";
       case "firm_features": return this.boss && r.firm_id === this.firm && r.set_by === "boss";
+      case "shifts": return r.firm_id === this.firm && r.member_id === me;
+      case "expenses": return this.taskVisible(r.task_id) && r.member_id === me && r.status === "pending";
+      case "adjustments": return this.boss && r.firm_id === this.firm;
+      case "time_edits": return false;
       case "push_subscriptions": return r.user_id === this.uid && r.member_id === me;
       case "checklist_items": return this.boss && this.taskVisible(r.task_id);
       default: return this.boss && r.firm_id === this.firm && this.visible(table, r);
@@ -119,8 +126,9 @@ class Session {
     if (this.admin) return null;
     const changed = (allowed: string[]) => Object.keys(next).some((k) => !allowed.includes(k) && JSON.stringify(next[k]) !== JSON.stringify(old[k]));
     if (this.boss) {
+      if (table === "shifts" && old.ended_at) return deny();
       if (table === "task_statuses" && old.is_system && (("kind" in next && next.kind !== old.kind) || ("is_system" in next && next.is_system !== old.is_system))) return deny("system status");
-      if (["firms", "groups", "members", "invites", "task_templates", "tasks", "task_finance", "checklist_items", "time_entries", "task_requests", "task_statuses"].includes(table)) return null;
+      if (["firms", "groups", "members", "invites", "task_templates", "tasks", "task_finance", "checklist_items", "time_entries", "task_requests", "task_statuses", "expenses"].includes(table)) return null;
     }
     switch (table) {
       case "tasks":
@@ -137,6 +145,9 @@ class Session {
         if (old.member_id !== this.me?.id || old.ended_at) return deny();
         return changed(["ended_at"]) ? deny() : null;
       case "push_subscriptions": return null;
+      case "shifts":
+        if (old.member_id !== this.me?.id || old.ended_at) return deny();
+        return changed(["ended_at", "break_minutes", "break_started_at"]) ? deny() : null;
       default: return deny();
     }
   }
@@ -148,6 +159,8 @@ class Session {
       case "task_photos": return this.boss || r.uploaded_by === me;
       case "task_requests": return this.boss || (r.created_by === me && r.status === "pending");
       case "task_statuses": return this.boss && !r.is_system;
+      case "expenses": return this.boss || (r.member_id === me && r.status === "pending");
+      case "shifts": case "time_edits": case "adjustments": return false;
       case "push_subscriptions": return r.user_id === this.uid;
       default: return this.boss;
     }
@@ -191,10 +204,13 @@ function applyTriggers(s: Session, table: TableName, row: Row, old: Row | null):
       row.rating = null;
     }
   }
-  if (table === "time_entries" && !old) {
+  if ((table === "time_entries" || table === "shifts") && !old) {
     const m = db.members.find((x) => x.id === row.member_id);
     if (!m || m.firm_id !== row.firm_id) return { message: "invalid member", code: "23514" };
-    row.rate_cents = m.pay_mode === "hourly" || m.pay_mode === "both" ? m.hourly_rate_cents : 0;
+    const basis = table === "shifts" ? "shifts" : "tasks";
+    row.rate_cents = (m.pay_mode === "hourly" || m.pay_mode === "both") && m.hourly_basis === basis ? m.hourly_rate_cents : 0;
+    if (table === "shifts" && db.shifts.some((x) => x.member_id === row.member_id && !x.ended_at))
+      return { message: "duplicate key value violates unique constraint \"shifts_one_open\"", code: "23505" };
   }
   if (old && "updated_at" in old) row.updated_at = new Date().toISOString();
   return null;
@@ -420,6 +436,27 @@ export function createFakeClient(uid: string | null, admin = false) {
           owner_email: f.contact_email, deletion_scheduled_for: f.deletion_scheduled_for,
         }));
         return { data, error: null };
+      }
+      if (fn === "edit_time_record") {
+        if (!s.boss) return { data: null, error: deny() };
+        if (String(args.p_reason ?? "").trim().length < 3) return { data: null, error: { message: "reason required", code: "22023" } };
+        const coll = (args.p_kind === "shift" ? s.db.shifts : s.db.time_entries) as unknown as Row[];
+        const rec = coll.find((x) => x.id === args.p_id);
+        if (!rec || rec.firm_id !== s.firm) return { data: null, error: deny("not found") };
+        const before = clone(rec);
+        rec.started_at = args.p_started_at;
+        rec.ended_at = args.p_ended_at;
+        if (args.p_kind === "shift") {
+          rec.break_minutes = Math.max(0, Number(args.p_break_minutes ?? 0));
+          rec.break_started_at = null;
+          rec.needs_review = false;
+        }
+        s.db.time_edits.push({
+          id: uuid(), firm_id: rec.firm_id as string, member_id: rec.member_id as string, kind: args.p_kind as "shift" | "time_entry",
+          record_id: rec.id as string, changed_by: s.me?.id as string, before, after: clone(rec), reason: String(args.p_reason).trim(),
+          created_at: new Date().toISOString(),
+        });
+        return { data: null, error: null };
       }
       if (fn === "published_reviews") {
         const list = s.db.reviews
