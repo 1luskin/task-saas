@@ -18,9 +18,9 @@ export interface CalTask {
 }
 
 const CHIP: Record<CalTask["status"], string> = {
-  new: "bg-[#eceef0] text-[#4b535b] border-[#d9dce0]",
-  in_progress: "bg-accent-soft text-accent border-[#c9d3dc]",
-  done: "bg-ok-soft text-ok border-[#cdd8d0] line-through decoration-ok/40",
+  new: "bg-surface-3 text-ink-2",
+  in_progress: "bg-accent-soft text-link",
+  done: "bg-ok-soft text-ok line-through decoration-ok/40",
 };
 
 export function Calendar({
@@ -91,7 +91,7 @@ export function Calendar({
         </button>
         <div className="inline-flex rounded-[10px] bg-card p-0.5">
           {(["month", "week"] as const).map((v) => (
-            <button key={v} onClick={() => go({ view: v })} className={cx("min-h-9 rounded-[8px] px-3 text-sm font-medium", view === v ? "bg-surface shadow-sm" : "text-muted")}>
+            <button key={v} onClick={() => go({ view: v })} className={cx("min-h-9 rounded-[8px] px-3 text-sm font-medium", view === v ? "bg-surface-3 text-ink" : "text-muted")}>
               {t(`calendar.${v}`)}
             </button>
           ))}
@@ -118,7 +118,7 @@ export function Calendar({
               type="button"
               onClick={() => setSelected(isSel ? null : d)}
               className={cx(
-                "group flex flex-col items-stretch gap-1 border-line/60 p-1 text-left transition hover:bg-card",
+                "group flex flex-col items-stretch gap-1 border-line/50 p-1 text-left transition hover:bg-card",
                 i % 7 !== 6 && "border-r",
                 i < days.length - 7 && "border-b",
                 view === "week" ? "min-h-56" : compact ? "min-h-[88px]" : "min-h-28",
@@ -129,7 +129,7 @@ export function Calendar({
               <span
                 className={cx(
                   "mx-auto flex size-7 items-center justify-center rounded-full text-sm tabular-nums lg:mx-0",
-                  isToday ? "bg-accent font-semibold text-white" : inMonth ? "text-ink" : "text-muted/60",
+                  isToday ? "bg-accent-2 font-semibold text-bg" : inMonth ? "text-ink" : "text-muted/60",
                 )}
               >
                 {Number(d.slice(8, 10))}
@@ -146,9 +146,9 @@ export function Calendar({
                     key={task.id}
                     title={`${task.assigneeName ?? "—"}: ${task.title}`}
                     className={cx(
-                      "flex items-center gap-1 truncate rounded-[6px] border px-1 py-0.5 text-[11px] leading-tight",
-                      task.overdue ? "border-danger/30 bg-danger-soft text-danger" : CHIP[task.status],
-                      task.priority === "urgent" && "border-l-[3px] border-l-danger",
+                      "flex items-center gap-1 truncate rounded-[6px] px-1 py-0.5 text-[11px] leading-tight",
+                      task.overdue ? "bg-danger-soft text-danger" : CHIP[task.status],
+                      task.priority === "urgent" && "ring-1 ring-danger/50",
                     )}
                   >
                     <span className="shrink-0 font-semibold">{initials(task.assigneeName)}</span>
@@ -175,7 +175,7 @@ export function Calendar({
                   <Link href={`${taskHref}${task.id}`} className="flex min-h-12 items-center gap-2 rounded-[12px] bg-card px-3 py-2 hover:bg-accent-soft/50 lg:min-h-10">
                     <span className={cx("size-2 shrink-0 rounded-full", task.overdue ? "bg-danger" : STATUS_DOT[task.status])} />
                     <span className="min-w-0 flex-1 truncate">{task.title}</span>
-                    {task.priority === "urgent" && <span className="chip bg-danger text-white">!</span>}
+                    {task.priority === "urgent" && <span className="chip bg-danger-soft text-danger">!</span>}
                     <span className="shrink-0 text-xs text-muted">{task.assigneeName ?? "—"}</span>
                   </Link>
                 </li>

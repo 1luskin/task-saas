@@ -12,7 +12,7 @@ export function NavLink({ href, exact, children, variant }: { href: string; exac
         href={href}
         className={cx(
           "flex min-h-16 flex-1 flex-col items-center justify-center gap-0.5 text-[12px] font-medium",
-          active ? "text-accent" : "text-muted",
+          active ? "text-link" : "text-muted",
         )}
       >
         {children}
@@ -24,7 +24,7 @@ export function NavLink({ href, exact, children, variant }: { href: string; exac
       href={href}
       className={cx(
         "flex min-h-10 items-center gap-3 rounded-[12px] px-3 text-[15px] font-medium transition",
-        active ? "bg-surface text-ink shadow-sm" : "text-muted hover:bg-black/5 hover:text-ink",
+        active ? "bg-surface-3 text-ink" : "text-ink-2 hover:bg-white/5 hover:text-ink",
       )}
     >
       {children}

@@ -29,7 +29,7 @@ export function TaskDetail({
         {t("common.back")}
       </Link>
 
-      <div className={cx("card-white space-y-4 p-4 sm:p-6", task.priority === "urgent" && "border-l-4 border-l-danger", overdue && "border-danger/40")}>
+      <div className={cx("card-white space-y-4 p-4 sm:p-6", overdue && "border-danger/40")}>
         <div className="flex flex-wrap items-center gap-2">
           <StatusBadge status={task.status} label={t(`status.${task.status}`)} />
           {task.priority === "urgent" && <UrgentBadge label={t("priority.urgent")} />}
@@ -77,7 +77,7 @@ export function TaskDetail({
             <div><div className="text-muted">{t("task.timeSpent")}</div><div className="font-semibold">{formatDuration(d.pay.minutes)}</div></div>
             <div><div className="text-muted">{t("task.clientPrice")}</div><div className="font-semibold">{formatMoney(d.clientPriceCents, locale)}</div></div>
             <div><div className="text-muted">{t("task.payout")}</div><div className="font-semibold">{formatMoney(d.pay.totalCents + (task.status === "done" ? 0 : task.fixed_pay_cents ?? 0), locale)}</div></div>
-            <div><div className="text-muted">{t("task.profit")}</div><div className="font-semibold text-accent">{formatMoney(d.clientPriceCents - d.pay.totalCents - (task.status === "done" ? 0 : task.fixed_pay_cents ?? 0), locale)}</div></div>
+            <div><div className="text-muted">{t("task.profit")}</div><div className="font-semibold text-link">{formatMoney(d.clientPriceCents - d.pay.totalCents - (task.status === "done" ? 0 : task.fixed_pay_cents ?? 0), locale)}</div></div>
           </div>
         ) : (
           (d.pay.totalCents > 0 || Boolean(task.fixed_pay_cents)) && (
@@ -102,10 +102,10 @@ export function TaskDetail({
           {task.address && (
             <div>
               <div className="mb-1 font-medium">{t("task.address")}</div>
-              <a href={mapUrl!} target="_blank" rel="noreferrer" className="flex min-h-12 items-center gap-2 rounded-[14px] bg-card px-3 text-accent">
+              <a href={mapUrl!} target="_blank" rel="noreferrer" className="flex min-h-12 items-center gap-2 rounded-[14px] bg-card px-3 text-link">
                 <IconPin className="size-5 shrink-0" />
                 <span className="flex-1">{task.address}</span>
-                <span className="text-sm">{t("task.openMap")} ↗</span>
+                <span className="text-sm">{t("task.openMap")}</span>
               </a>
             </div>
           )}

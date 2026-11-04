@@ -46,7 +46,7 @@ export default async function ProfilePage() {
               {(requests ?? []).map((r) => (
                 <li key={r.id} className="flex min-h-12 items-center justify-between gap-2 rounded-[12px] bg-card px-3">
                   <span className="min-w-0 truncate">{r.title} <span className="text-sm text-muted">· {formatDate(r.created_at.slice(0, 10), locale, { day: "2-digit", month: "2-digit" })}</span></span>
-                  <span className={r.status === "approved" ? "chip bg-ok-soft text-ok" : r.status === "rejected" ? "chip bg-danger-soft text-danger" : "chip bg-accent-soft text-accent"}>
+                  <span className={r.status === "approved" ? "chip bg-ok-soft text-ok" : r.status === "rejected" ? "chip bg-danger-soft text-danger" : "chip bg-accent-soft text-link"}>
                     {t(`requests.${r.status}`)}
                   </span>
                 </li>

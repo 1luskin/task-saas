@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { tap } from "@/lib/haptics";
 import { useI18n } from "@/i18n/client";
 import { enqueue, overlayTask, useQueue } from "@/lib/offline/queue";
 import { addChecklistItem, deleteChecklistItem } from "@/server/actions/tasks";
@@ -31,14 +32,14 @@ export function Checklist({
             <li key={i.id} className="flex items-center gap-2">
               <button
                 type="button"
-                onClick={() => enqueue({ op: "checklist", taskId, itemId: i.id, done: !done })}
+                onClick={() => { tap(); enqueue({ op: "checklist", taskId, itemId: i.id, done: !done }); }}
                 className={cx(
                   "flex min-h-14 flex-1 items-center gap-3 rounded-[14px] border px-3 text-left transition lg:min-h-11",
                   done ? "border-ok/30 bg-ok-soft" : "border-line bg-surface",
                 )}
               >
-                <span className={cx("flex size-7 shrink-0 items-center justify-center rounded-[8px] border-2", done ? "border-ok bg-ok text-white" : "border-line")}>
-                  {done && <IconCheck className="size-5" />}
+                <span className={cx("flex size-7 shrink-0 items-center justify-center rounded-[8px] border-2", done ? "border-ok bg-ok text-bg" : "border-line")}>
+                  {done && <IconCheck className="check-pop size-5" />}
                 </span>
                 <span className={cx(done && "text-muted line-through")}>{i.text}</span>
               </button>

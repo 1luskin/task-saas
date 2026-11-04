@@ -3,6 +3,7 @@ import { Avatar, OverdueBadge, StatusBadge, UrgentBadge, cx } from "../ui";
 import { formatDate, isOverdue } from "@/lib/dates";
 import type { Task } from "@/lib/supabase/types";
 import type { TFunction } from "@/i18n/config";
+import { IconChecklist } from "../icons";
 
 export function TaskRow({
   task, href, assigneeName, checklist, t, locale, showAssignee = true,
@@ -20,9 +21,8 @@ export function TaskRow({
     <Link
       href={href}
       className={cx(
-        "flex min-h-16 items-center gap-3 rounded-[16px] border bg-surface px-4 py-3 transition hover:border-accent/40",
-        overdue ? "border-danger/40 bg-danger-soft/40" : "border-line/60",
-        task.priority === "urgent" && "border-l-4 border-l-danger",
+        "fade-up flex min-h-16 items-center gap-3 rounded-[14px] bg-surface px-4 py-3 transition hover:bg-card",
+        overdue && "ring-1 ring-danger/30",
       )}
     >
       <div className="min-w-0 flex-1">
@@ -37,7 +37,7 @@ export function TaskRow({
             {task.due_date ? formatDate(task.due_date, locale, { day: "2-digit", month: "2-digit" }) : t("task.noDue")}
             {task.due_time ? ` · ${task.due_time.slice(0, 5)}` : ""}
           </span>
-          {checklist && checklist.total > 0 && <span>☑ {t("task.progress", checklist)}</span>}
+          {checklist && checklist.total > 0 && <span className="inline-flex items-center gap-1 tabular-nums"><IconChecklist className="size-4" />{t("task.progress", checklist)}</span>}
         </div>
       </div>
       {showAssignee && (

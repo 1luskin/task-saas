@@ -32,7 +32,7 @@ export function RequestDecision({ id, dueDate, members }: { id: string; dueDate:
       <Field label={`${t("task.clientPrice")} (€)`}><Input inputMode="decimal" value={v.client_price} onChange={(e) => setV({ ...v, client_price: e.target.value })} /></Field>
       <Field label={`${t("task.fixedPay")} (€)`}><Input inputMode="decimal" value={v.fixed_pay} onChange={(e) => setV({ ...v, fixed_pay: e.target.value })} /></Field>
       <label className="flex min-h-12 items-center gap-2 sm:col-span-2">
-        <input type="checkbox" className="size-5 accent-[#9e3b37]" checked={v.priority === "urgent"} onChange={(e) => setV({ ...v, priority: e.target.checked ? "urgent" : "normal" })} />
+        <input type="checkbox" className="size-5 accent-[#f0b2ac]" checked={v.priority === "urgent"} onChange={(e) => setV({ ...v, priority: e.target.checked ? "urgent" : "normal" })} />
         {t("priority.urgent")}
       </label>
       <ErrorText error={error} />

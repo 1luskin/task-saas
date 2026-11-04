@@ -26,7 +26,7 @@ export default async function MoneyPage({ searchParams }: { searchParams: Promis
       <div className="grid grid-cols-3 gap-2">
         <div><div className="text-sm text-muted">{t("money.revenue")}</div><div className="text-lg font-semibold sm:text-2xl">{money(f.revenueCents)}</div></div>
         <div><div className="text-sm text-muted">{t("money.payouts")}</div><div className="text-lg font-semibold sm:text-2xl">{money(f.payoutCents)}</div></div>
-        <div><div className="text-sm text-muted">{t("money.profit")}</div><div className="text-lg font-semibold text-accent sm:text-2xl">{money(f.profitCents)}</div></div>
+        <div><div className="text-sm text-muted">{t("money.profit")}</div><div className="text-lg font-semibold text-link sm:text-2xl">{money(f.profitCents)}</div></div>
       </div>
     </div>
   );

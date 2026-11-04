@@ -5,6 +5,7 @@ import { getMembers } from "@/server/queries";
 import { EmptyState, PageTitle } from "@/components/ui";
 import { RequestDecision } from "./decision";
 import Link from "next/link";
+import { IconPin } from "@/components/icons";
 
 export default async function RequestsPage() {
   const ctx = await requireBossPage();
@@ -28,7 +29,7 @@ export default async function RequestsPage() {
             <div className="text-sm text-muted">{t("requests.from", { name: name(r.created_by) })} · {formatDate(r.created_at.slice(0, 10), locale)}</div>
             <div className="text-lg font-semibold">{r.title}</div>
             {r.description && <p className="mt-1 whitespace-pre-wrap text-muted">{r.description}</p>}
-            {r.address && <p className="mt-1 text-sm">📍 {r.address}</p>}
+            {r.address && <p className="mt-1 flex items-center gap-1 text-sm"><IconPin className="size-4 text-muted" />{r.address}</p>}
           </div>
           <RequestDecision id={r.id} dueDate={r.due_date ?? ""} members={active} />
         </div>
@@ -38,7 +39,7 @@ export default async function RequestsPage() {
           {done.map((r) => (
             <div key={r.id} className="flex min-h-12 items-center justify-between gap-2 px-4 py-2 text-sm">
               <span className="min-w-0 truncate">
-                {r.task_id ? <Link className="text-accent" href={`/boss/tasks/${r.task_id}`}>{r.title}</Link> : r.title}
+                {r.task_id ? <Link className="text-link" href={`/boss/tasks/${r.task_id}`}>{r.title}</Link> : r.title}
                 <span className="text-muted"> · {name(r.created_by)}</span>
               </span>
               <span className={r.status === "approved" ? "chip bg-ok-soft text-ok" : "chip bg-card text-muted"}>{t(`requests.${r.status}`)}</span>

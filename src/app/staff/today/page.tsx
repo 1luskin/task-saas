@@ -1,4 +1,6 @@
 import { requireStaffPage } from "@/lib/auth";
+import Link from "next/link";
+import { IconSun } from "@/components/icons";
 import { getI18n } from "@/i18n/server";
 import { isOverdue, todayISO, weekPeriod, formatDate } from "@/lib/dates";
 import { loadFinance } from "@/lib/finance";
@@ -50,12 +52,16 @@ export default async function TodayPage() {
         </div>
         <div className="card-white p-4">
           <div className="text-sm text-muted">{t("staff.weekEarnings")}</div>
-          <div className="mt-1 text-2xl font-semibold text-accent">{formatMoney(week, locale)}</div>
+          <div className="mt-1 text-2xl font-semibold text-link">{formatMoney(week, locale)}</div>
         </div>
       </div>
 
       <div className="space-y-3">
-        {tasks.length === 0 && <EmptyState>{t("staff.noTasksToday")}</EmptyState>}
+        {tasks.length === 0 && (
+          <EmptyState icon={<IconSun />} action={<Link href="/staff/tasks" className="btn-secondary">{t("staff.allTasks")}</Link>}>
+            {t("staff.noTasksToday")}
+          </EmptyState>
+        )}
         {tasks.map((task) => (
           <StaffTaskCard
             key={task.id}

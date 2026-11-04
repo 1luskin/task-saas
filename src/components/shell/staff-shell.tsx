@@ -16,7 +16,7 @@ export async function StaffShell({ firmName, children }: { firmName: string; chi
     <div className="min-h-dvh">
       <DemoBanner />
         <OfflineBanner />
-      <header className="pt-safe sticky top-0 z-30 border-b border-line/70 bg-bg/90 backdrop-blur">
+      <header className="pt-safe sticky top-0 z-30 bg-bg/90 backdrop-blur">
         <div className="mx-auto flex max-w-3xl items-center gap-3 px-4 py-2">
           <img src="/icons/icon.svg" alt="" className="size-8 rounded-[9px]" />
           <span className="flex-1 truncate font-semibold">{firmName}</span>

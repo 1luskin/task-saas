@@ -12,6 +12,7 @@ import { TaskRow } from "@/components/tasks/task-row";
 import { EmptyState, Stat } from "@/components/ui";
 import { IconPlus } from "@/components/icons";
 import type { Task } from "@/lib/supabase/types";
+import { IconChevronRight, IconTasks } from "@/components/icons";
 
 type SP = { status?: string; member?: string; priority?: string; group?: string; cal?: string; view?: string };
 
@@ -81,9 +82,9 @@ export default async function BossDashboard({ searchParams }: { searchParams: Pr
         </div>
 
         {pending > 0 && (
-          <Link href="/boss/requests" className="card flex min-h-12 items-center justify-between px-4 py-2 text-accent">
+          <Link href="/boss/requests" className="card flex min-h-12 items-center justify-between px-4 py-2 text-link">
             <span className="font-medium">{t("dashboard.pendingRequests", { n: pending })}</span>
-            <span>→</span>
+            <IconChevronRight className="size-5" />
           </Link>
         )}
 
@@ -99,7 +100,7 @@ export default async function BossDashboard({ searchParams }: { searchParams: Pr
         </Suspense>
         <div className="space-y-2">
           {tasks.length === 0 ? (
-            <EmptyState>{t("dashboard.noTasks")}</EmptyState>
+            <EmptyState icon={<IconTasks />} action={<Link href="/boss/tasks/new" className="btn-primary">{t("dashboard.newTask")}</Link>}>{t("dashboard.noTasks")}</EmptyState>
           ) : (
             tasks.map((task) => (
               <TaskRow key={task.id} task={task} href={`/boss/tasks/${task.id}`} assigneeName={nameOf(task.assignee_id)} checklist={progress.get(task.id)} t={t} locale={locale} />

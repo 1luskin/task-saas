@@ -15,7 +15,7 @@ export function FirmForm({ name }: { name: string }) {
       <Field label={t("settings.firmName")} className="min-w-0 flex-1">
         <Input value={v} onChange={(e) => { setV(e.target.value); setSaved(false); }} required maxLength={120} />
       </Field>
-      <button className="btn-primary" disabled={pending}>{saved ? `✓ ${t("common.saved")}` : t("common.save")}</button>
+      <button className="btn-primary" disabled={pending}>{saved ? t("common.saved") : t("common.save")}</button>
       <ErrorText error={error} />
     </form>
   );

@@ -17,7 +17,7 @@ export default async function MorePage() {
       <div className="card-white divide-y divide-line/70 overflow-hidden">
         {items.map((i) => (
           <Link key={i.href} href={i.href} className="flex min-h-14 items-center gap-3 px-4 hover:bg-card">
-            <i.icon className="size-6 text-accent" />
+            <i.icon className="size-6 text-link" />
             <span className="flex-1 text-[17px]">{i.label}</span>
             <IconChevronRight className="size-5 text-muted" />
           </Link>

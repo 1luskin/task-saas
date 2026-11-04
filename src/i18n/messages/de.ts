@@ -250,7 +250,7 @@ const de = {
   staff: {
     progress: "{done} von {total} erledigt",
     weekEarnings: "Verdienst diese Woche",
-    noTasksToday: "Heute keine Aufgaben. 👍",
+    noTasksToday: "Für heute ist alles erledigt. Feierabend!",
     upcoming: "Nächste 7 Tage",
     allTasks: "Alle meine Aufgaben",
     openTasks: "Offen",

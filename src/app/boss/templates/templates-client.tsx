@@ -132,7 +132,7 @@ export function TemplatesClient({ templates, members }: { templates: TaskTemplat
               <div className="min-w-0">
                 <div className="flex items-center gap-2 font-medium">
                   {tpl.title}
-                  {tpl.priority === "urgent" && <span className="chip bg-danger text-white">!</span>}
+                  {tpl.priority === "urgent" && <span className="chip bg-danger-soft text-danger">!</span>}
                 </div>
                 <div className="text-sm text-muted">{schedule(tpl)} · {name(tpl.assignee_id)}</div>
                 <div className="text-sm text-muted">

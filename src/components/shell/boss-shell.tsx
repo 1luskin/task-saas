@@ -29,9 +29,9 @@ export async function BossShell({
   ];
 
   return (
-    <div className="min-h-dvh lg:flex">
+    <div className="min-h-dvh lg:flex lg:gap-4 lg:p-4">
       {/* Seitenleiste (PC) */}
-      <aside className="sticky top-0 hidden h-dvh w-60 shrink-0 flex-col border-r border-line/70 bg-card/60 px-3 py-5 lg:flex">
+      <aside className="sticky top-4 hidden h-[calc(100dvh-2rem)] w-56 shrink-0 flex-col rounded-[18px] bg-surface px-2.5 py-4 lg:flex">
         <Link href="/boss" className="mb-6 flex items-center gap-2.5 px-2">
           <img src="/icons/icon.svg" alt="" className="size-8 rounded-[9px]" />
           <div className="min-w-0">
@@ -66,14 +66,14 @@ export async function BossShell({
         <DemoBanner />
         <OfflineBanner />
         {/* Kopfzeile (Handy) */}
-        <header className="pt-safe sticky top-0 z-30 flex items-center justify-between border-b border-line/70 bg-bg/90 px-4 py-2 backdrop-blur lg:hidden">
+        <header className="pt-safe sticky top-0 z-30 flex items-center justify-between bg-bg/90 px-4 py-2 backdrop-blur lg:hidden">
           <span className="truncate font-semibold">{firmName}</span>
           <Link href="/boss/requests" className="btn-ghost relative !px-3" aria-label={t("nav.requests")}>
             <IconInbox />
             {pendingRequests > 0 && <span className="absolute right-1.5 top-1.5 size-2.5 rounded-full bg-danger" />}
           </Link>
         </header>
-        <main className="mx-auto w-full max-w-[1600px] px-4 pb-28 pt-4 lg:px-6 lg:pb-8 lg:pt-6">{children}</main>
+        <main className="mx-auto w-full max-w-[1600px] px-4 pb-28 pt-4 lg:px-0 lg:pb-4 lg:pt-0">{children}</main>
       </div>
 
       {/* Untere Navigation (Handy) */}

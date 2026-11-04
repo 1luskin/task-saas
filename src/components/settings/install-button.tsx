@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useI18n } from "@/i18n/client";
+import { IconDownload } from "../icons";
 
 type BIPEvent = Event & { prompt: () => Promise<void>; userChoice: Promise<unknown> };
 
@@ -19,7 +20,8 @@ export function InstallButton() {
   if (!evt) return null;
   return (
     <button className="btn-secondary w-full" onClick={async () => { await evt.prompt(); setEvt(null); }}>
-      ⤓ {t("settings.installHint")}
+      <IconDownload className="size-5" />
+      {t("settings.installHint")}
     </button>
   );
 }

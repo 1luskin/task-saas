@@ -3,7 +3,7 @@ try {
   importScripts("/sw-config.js");
 } catch (_) {}
 const APP_NAME = self.__APP_NAME || "App";
-const VERSION = "v1";
+const VERSION = "v2";
 const PAGE_CACHE = `pages-${VERSION}`;
 const STATIC_CACHE = `static-${VERSION}`;
 const PRECACHE = ["/offline", "/icons/icon.svg", "/icons/icon-192.png"];

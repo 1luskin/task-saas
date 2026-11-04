@@ -40,7 +40,7 @@ export default async function StaffTasksPage({ searchParams }: { searchParams: P
               <div key={d} className={cx("card-white w-[136px] shrink-0 snap-start p-3", d === today && "border-accent")}>
                 <div className="flex items-baseline justify-between">
                   <span className="text-sm text-muted">{wd}</span>
-                  <span className={cx("text-lg font-semibold", d === today && "text-accent")}>{Number(d.slice(8))}</span>
+                  <span className={cx("text-lg font-semibold", d === today && "text-link")}>{Number(d.slice(8))}</span>
                 </div>
                 <ul className="mt-2 space-y-1">
                   {list.length === 0 && <li className="text-sm text-muted/70">—</li>}
@@ -61,8 +61,8 @@ export default async function StaffTasksPage({ searchParams }: { searchParams: P
 
       <section>
         <div className="mb-3 grid grid-cols-2 gap-1 rounded-[14px] bg-card p-1">
-          <Link href="/staff/tasks" className={cx("btn !min-h-11", !showDone ? "bg-surface shadow-sm" : "text-muted")}>{t("staff.openTasks")}</Link>
-          <Link href="/staff/tasks?tab=done" className={cx("btn !min-h-11", showDone ? "bg-surface shadow-sm" : "text-muted")}>{t("staff.doneTasks")}</Link>
+          <Link href="/staff/tasks" className={cx("btn !min-h-11", !showDone ? "bg-surface-3 text-ink" : "text-muted")}>{t("staff.openTasks")}</Link>
+          <Link href="/staff/tasks?tab=done" className={cx("btn !min-h-11", showDone ? "bg-surface-3 text-ink" : "text-muted")}>{t("staff.doneTasks")}</Link>
         </div>
         <div className="space-y-2">
           {tasks.length === 0 && <EmptyState>{t("dashboard.noTasks")}</EmptyState>}

@@ -53,7 +53,7 @@ export function InvitePanel({
               </div>
               <div className="truncate rounded-[10px] bg-surface px-2 py-1.5 font-mono text-xs">{url(i.token)}</div>
               <div className="grid grid-cols-2 gap-2">
-                <a href={wa(i.token)} target="_blank" rel="noreferrer" className="btn bg-[#5f7f6b] text-white !min-h-11 text-sm">
+                <a href={wa(i.token)} target="_blank" rel="noreferrer" className="btn-primary !min-h-11 text-sm">
                   {t("employees.shareWhatsApp")}
                 </a>
                 <button className="btn-secondary !min-h-11 text-sm" onClick={() => copy(i.token)}>

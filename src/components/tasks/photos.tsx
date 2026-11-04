@@ -67,7 +67,7 @@ export function Photos({
             )}
             {(isBoss || p.uploaded_by === myMemberId) && (
               <button
-                className="absolute right-1 top-1 rounded-full bg-black/50 p-1.5 text-white"
+                className="absolute right-1 top-1 rounded-full bg-white/50 p-1.5 text-white"
                 onClick={async () => {
                   if (!confirm(t("common.confirmDelete"))) return;
                   await deletePhoto(p.id);
@@ -87,7 +87,7 @@ export function Photos({
           type="button"
           onClick={() => input.current?.click()}
           disabled={busy}
-          className="flex aspect-square flex-col items-center justify-center gap-1 rounded-[12px] border-2 border-dashed border-line text-sm text-muted hover:border-accent hover:text-accent"
+          className="flex aspect-square flex-col items-center justify-center gap-1 rounded-[12px] border-2 border-dashed border-line text-sm text-muted hover:border-accent hover:text-link"
         >
           <IconCamera />
           {busy ? t("task.uploading") : t("task.addPhoto")}

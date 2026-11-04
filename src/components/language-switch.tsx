@@ -29,7 +29,7 @@ export function LanguageSwitch({ persist = false, large = false }: { persist?: b
           className={cx(
             "rounded-[9px] px-3 text-sm font-medium transition",
             large ? "min-h-12 flex-1" : "min-h-9",
-            l === locale ? "bg-surface shadow-sm text-ink" : "text-muted",
+            l === locale ? "bg-surface-3 text-ink text-ink" : "text-muted",
           )}
         >
           {large ? LOCALE_LABELS[l] : l.toUpperCase()}

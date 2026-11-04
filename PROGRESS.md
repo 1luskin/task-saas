@@ -17,14 +17,14 @@
 ## Исправить обязательно
 - [ ] A. Сотрудник не ставит «done» сам — только «На проверку» (триггер, applyOp, fake-client)
 - [ ] B. Начисление (часы и фикс) только после приёмки (accepted_at): earnings, finance, Excel, PDF, экраны, тесты
-- [ ] C. Permissions-Policy geolocation=(self), camera=(self); HSTS; CSP
+- [ ] C. Permissions-Policy geolocation=(self), camera=(self); HSTS; CSP  _(Permissions-Policy и HSTS готовы, CSP с nonce — этап 4)_
 - [ ] D. Запрос и проверка OTP-кода на сервере с rate limit
 - [ ] E. `members.user_id unique` → решение для демо-фирмы
 - [ ] F. /api/cron/frequent (CRON_SECRET) каждые 15 мин через pg_cron + pg_net (выключено без настроек), ежедневный cron оставить
-- [ ] G. PDF: шрифты Golos Text + Geologica вместо Inter, outputFileTracingIncludes
-- [ ] H. Убрать эмодзи (👍, ⚠, ⤓ …)
+- [x] G. PDF: шрифты Golos Text + Geologica вместо Inter, outputFileTracingIncludes
+- [x] H. Убрать эмодзи (👍, ⚠, ⤓ …)
 - [ ] I. `/` — лендинг для гостей, залогиненных — в приложение
-- [ ] J. manifest/layout theme/background тёмные (#1E2125)
+- [x] J. manifest/layout theme/background тёмные (#1E2125)
 
 ## Этап 0. Подготовка
 - [x] Ветка main, PROGRESS.md, DECISIONS.md
@@ -33,23 +33,23 @@
 - [x] APP_NAME в одном месте
 
 ## Этап 1. Дизайн (по design/*.dc.html)
-- [ ] Токены тёмной темы (CSS-переменные + @theme), статусы
-- [ ] Шрифты Geologica + Golos Text через next/font/google, удалить Inter/@fontsource, tabular-nums
-- [ ] Радиусы, кнопки (ПК 40–46px, телефон ≥52px, главная во всю ширину внизу)
-- [ ] lucide-react вместо icons.tsx
+- [x] Токены тёмной темы (CSS-переменные + @theme), статусы
+- [x] Шрифты Geologica + Golos Text через next/font/google, удалить Inter/@fontsource, tabular-nums
+- [x] Радиусы, кнопки (ПК 40–46px, телефон ≥52px, главная во всю ширину внизу)
+- [x] lucide-react вместо icons.tsx
 - [ ] ПК начальника: меню ~224px + карточка пробного периода; центр: поиск Ctrl+K, «Смотреть как работник», «+ Новая задача», 4 KPI, список задач; справа календарь + задачи дня + лента событий
 - [ ] Страница календаря: месяц/неделя/день, отпуск штриховкой, drag&drop
 - [ ] Канбан с панелью массовых действий
 - [ ] Задача (ПК): «Ждёт вашей проверки», чек-лист, фото до/после, файлы, комментарии с @, мета, деньги, геометка
 - [ ] Телефон сотрудника: смена с таймером, пауза, прогресс дня, заработок недели, карточки с большой кнопкой
 - [ ] Мобильная версия начальника в новом стиле без горизонтального скролла
-- [ ] Переходы 150–220ms, prefers-reduced-motion, галочка «щёлкает»
-- [ ] Скелетоны (loading.tsx)
-- [ ] Пустые состояния: иконка + фраза + кнопка
+- [x] Переходы 150–220ms, prefers-reduced-motion, галочка «щёлкает»
+- [x] Скелетоны (loading.tsx)
+- [x] Пустые состояния: иконка + фраза + кнопка
 - [ ] Аватарки: инициалы + загрузка фото (бакет avatars, приватный)
-- [ ] navigator.vibrate(10)
-- [ ] PWA: тёмные цвета, новые иконки, iOS splash
-- [ ] Без праздничных анимаций
+- [x] navigator.vibrate(10)
+- [x] PWA: тёмные цвета, новые иконки, iOS splash
+- [x] Без праздничных анимаций
 
 ## Этап 2. Статусы и проверка работы
 - [ ] Этапы new → in_progress → review → done + rework; права переходов

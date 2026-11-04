@@ -26,7 +26,7 @@ export function RequestForm() {
         <Field label={t("task.dueDate")}><Input type="date" value={v.due_date} onChange={(e) => setV({ ...v, due_date: e.target.value })} /></Field>
       </div>
       <ErrorText error={error} />
-      <button className="btn-primary btn-xl w-full" disabled={pending}>{sent ? `✓ ${t("requests.sent")}` : t("requests.submit")}</button>
+      <button className="btn-primary btn-xl w-full" disabled={pending}>{sent ? t("requests.sent") : t("requests.submit")}</button>
     </form>
   );
 }

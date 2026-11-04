@@ -24,7 +24,7 @@ export default async function ReportsPage() {
       <div className="card-white p-4">
         <div className="mb-1 font-semibold">{title}</div>
         <div className="mb-4 text-sm text-muted">
-          {t("money.profit")}: <span className="font-semibold text-accent">{formatMoney(f.profitCents, locale)}</span> · {t("money.payouts")}: {formatMoney(f.payoutCents, locale)}
+          {t("money.profit")}: <span className="font-semibold text-link">{formatMoney(f.profitCents, locale)}</span> · {t("money.payouts")}: {formatMoney(f.payoutCents, locale)}
         </div>
         <div className="space-y-2.5">
           {rows.map((r) => (

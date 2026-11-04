@@ -80,7 +80,7 @@ export function TaskForm({
                 key={p}
                 type="button"
                 onClick={() => set("priority", p)}
-                className={cx("btn border", v.priority === p ? (p === "urgent" ? "border-danger bg-danger text-white" : "border-accent bg-accent text-white") : "border-line bg-surface")}
+                className={cx("btn border", v.priority === p ? (p === "urgent" ? "border-danger bg-danger-soft text-danger" : "border-accent bg-accent text-white") : "border-line bg-surface")}
               >
                 {t(`priority.${p}`)}
               </button>

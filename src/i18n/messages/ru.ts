@@ -252,7 +252,7 @@ const ru: Messages = {
   staff: {
     progress: "{done} из {total} сделано",
     weekEarnings: "Заработок за неделю",
-    noTasksToday: "На сегодня задач нет. 👍",
+    noTasksToday: "На сегодня всё, отдыхай.",
     upcoming: "Ближайшие 7 дней",
     allTasks: "Все мои задачи",
     openTasks: "Открытые",

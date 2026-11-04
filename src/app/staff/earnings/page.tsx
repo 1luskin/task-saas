@@ -23,7 +23,7 @@ export default async function EarningsPage() {
   const card = ({ title, e }: { title: string; e: typeof w }) => (
     <div className="card-white p-4">
       <div className="text-sm text-muted">{title}</div>
-      <div className="mt-1 text-3xl font-semibold text-accent">{formatMoney(e?.totalCents ?? 0, locale)}</div>
+      <div className="mt-1 text-3xl font-semibold text-link">{formatMoney(e?.totalCents ?? 0, locale)}</div>
       <div className="mt-2 space-y-0.5 text-sm text-muted">
         <div>{t("staff.hourly")}: {formatDuration(e?.minutes ?? 0)} · {formatMoney(e?.hourlyCents ?? 0, locale)}</div>
         <div>{t("staff.fixed")}: {formatMoney(e?.fixedCents ?? 0, locale)}</div>

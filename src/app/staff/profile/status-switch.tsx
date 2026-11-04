@@ -17,7 +17,7 @@ export function StatusSwitch({ initial }: { initial: MemberStatus }) {
           key={v}
           disabled={pending}
           onClick={() => { setS(v); run(() => updateMyProfile({ status: v })); }}
-          className={cx("btn border !px-2 text-[15px]", s === v ? (v === "active" ? "border-accent bg-accent text-white" : "border-danger bg-danger text-white") : "border-line bg-surface")}
+          className={cx("btn border !px-2 text-[15px]", s === v ? (v === "active" ? "border-accent bg-accent text-white" : "border-danger bg-danger-soft text-danger") : "border-line bg-surface")}
         >
           {t(`memberStatus.${v}`)}
         </button>

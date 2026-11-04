@@ -36,8 +36,10 @@ export async function GET(req: Request) {
   const pdf = await PDFDocument.create();
   pdf.registerFontkit(fontkit);
   const fontDir = path.join(process.cwd(), "assets", "fonts");
-  const regular = await pdf.embedFont(await readFile(path.join(fontDir, "Inter_400Regular.ttf")), { subset: true });
-  const bold = await pdf.embedFont(await readFile(path.join(fontDir, "Inter_700Bold.ttf")), { subset: true });
+  // Golos Text (Text) + Geologica (Überschriften) – beide mit Kyrillisch und Umlauten
+  const regular = await pdf.embedFont(await readFile(path.join(fontDir, "GolosText-Regular.ttf")), { subset: true });
+  const semibold = await pdf.embedFont(await readFile(path.join(fontDir, "GolosText-SemiBold.ttf")), { subset: true });
+  const display = await pdf.embedFont(await readFile(path.join(fontDir, "Geologica-SemiBold.ttf")), { subset: true });
 
   const W = 595.28, H = 841.89, M = 48; // A4
   let page: PDFPage = pdf.addPage([W, H]);
@@ -64,7 +66,7 @@ export async function GET(req: Request) {
   const hr = () => page.drawLine({ start: { x: M, y: y + 4 }, end: { x: W - M, y: y + 4 }, thickness: 0.5, color: LINE });
 
   // Kopf
-  text(ctx.firm.name, M, { f: bold, size: 18 });
+  text(ctx.firm.name, M, { f: display, size: 18 });
   y -= 22;
   text(`${t("reports.pdfTitle")} · ${formatDate(period.from, locale)} – ${formatDate(addDays(period.to, -1), locale)}`, M, { size: 11, color: MUTED });
   y -= 30;
@@ -82,13 +84,13 @@ export async function GET(req: Request) {
     const yy = y;
     text(label, M + i * kw + 12, { size: 8, color: MUTED });
     y -= 18;
-    text(value, M + i * kw + 12, { f: bold, size: 13, color: i === 2 ? ACCENT : TEXT });
+    text(value, M + i * kw + 12, { f: semibold, size: 13, color: i === 2 ? ACCENT : TEXT });
     y = yy;
   });
   y -= 60;
 
   // Pro Mitarbeiter
-  text(t("money.perEmployee"), M, { f: bold, size: 12 });
+  text(t("money.perEmployee"), M, { f: display, size: 12 });
   y -= 18;
   const c1 = [M, M + 230, M + 310, M + 400, W - M];
   text(t("export.employee"), c1[0]!, { size: 8, color: MUTED });
@@ -109,7 +111,7 @@ export async function GET(req: Request) {
 
   // Aufgaben
   ensure(40);
-  text(t("export.sheetTasks"), M, { f: bold, size: 12 });
+  text(t("export.sheetTasks"), M, { f: display, size: 12 });
   y -= 18;
   const c2 = [M, M + 60, M + 250, M + 410, M + 480, W - M];
   const heads = [t("export.date"), t("export.task"), t("export.employee"), t("export.payout"), t("export.clientPrice"), t("export.profit")];

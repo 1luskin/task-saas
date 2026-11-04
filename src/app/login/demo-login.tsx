@@ -2,6 +2,7 @@ import { demoLogin, demoReset } from "@/server/actions/demo";
 import { getI18n } from "@/i18n/server";
 import { demoDb } from "@/lib/demo/fake-client";
 import { Avatar } from "@/components/ui";
+import { IconChevronRight } from "@/components/icons";
 
 /** Demo-Modus: Rolle wählen statt E-Mail-Code */
 export async function DemoLogin() {
@@ -26,7 +27,7 @@ export async function DemoLogin() {
                   {m.status !== "active" && ` · ${t(`memberStatus.${m.status}`)}`}
                 </span>
               </span>
-              <span className="text-accent">→</span>
+              <IconChevronRight className="size-5 text-link" />
             </button>
           </form>
         ))}

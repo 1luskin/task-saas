@@ -30,7 +30,7 @@ export function MemberCard({ member: m, groups, isSelf, tasksDoneMonth }: { memb
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-1.5">
             <span className="font-medium">{m.full_name}</span>
-            {m.role === "boss" && <span className="chip bg-accent-soft text-accent">{t("role.boss")}</span>}
+            {m.role === "boss" && <span className="chip bg-accent-soft text-link">{t("role.boss")}</span>}
             {unavailable && <span className="chip bg-danger-soft text-danger">{t(`memberStatus.${m.status}`)}</span>}
             {group && <span className="chip bg-card text-muted">{group.name}</span>}
           </div>

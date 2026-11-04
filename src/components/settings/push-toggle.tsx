@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useI18n } from "@/i18n/client";
 import { currentSubscription, disablePush, enablePush, pushSupported } from "@/lib/offline/push-client";
+import { IconCheck } from "../icons";
 
 export function PushToggle() {
   const { t } = useI18n();
@@ -28,7 +29,7 @@ export function PushToggle() {
   if (state === "denied") return <p className="text-sm text-danger">{t("settings.pushDenied")}</p>;
   return (
     <div className="flex flex-wrap items-center gap-3">
-      {state === "on" && <span className="chip bg-ok-soft text-ok">✓ {t("settings.pushOn")}</span>}
+      {state === "on" && <span className="chip bg-ok-soft text-ok"><IconCheck className="size-3.5" />{t("settings.pushOn")}</span>}
       <button
         className={state === "on" ? "btn-secondary" : "btn-primary"}
         disabled={state === "loading"}

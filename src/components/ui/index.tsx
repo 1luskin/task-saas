@@ -31,14 +31,21 @@ export function Textarea({ className, ...p }: React.TextareaHTMLAttributes<HTMLT
 
 export function Select({ className, children, ...p }: React.SelectHTMLAttributes<HTMLSelectElement>) {
   return (
-    <select className={cx("input appearance-none bg-[length:16px] bg-[right_14px_center] bg-no-repeat pr-10", className)} style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%236a7178'%3E%3Cpath d='M5.5 7.5 10 12l4.5-4.5'/%3E%3C/svg%3E\")" }} {...p}>
+    <select className={cx("input appearance-none bg-[length:16px] bg-[right_14px_center] bg-no-repeat pr-10", className)} style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%23a0a8b1'%3E%3Cpath d='M5.5 7.5 10 12l4.5-4.5'/%3E%3C/svg%3E\")" }} {...p}>
       {children}
     </select>
   );
 }
 
-export function EmptyState({ children }: { children: React.ReactNode }) {
-  return <div className="px-4 py-10 text-center text-muted">{children}</div>;
+/** Leerer Zustand: Icon + ein Satz + optional eine Aktion */
+export function EmptyState({ children, icon, action }: { children: React.ReactNode; icon?: React.ReactNode; action?: React.ReactNode }) {
+  return (
+    <div className="flex flex-col items-center gap-3 px-4 py-10 text-center text-muted">
+      {icon && <span className="flex size-12 items-center justify-center rounded-full bg-card text-link">{icon}</span>}
+      <p>{children}</p>
+      {action}
+    </div>
+  );
 }
 
 export function PageTitle({ children, actions }: { children: React.ReactNode; actions?: React.ReactNode }) {
@@ -51,8 +58,8 @@ export function PageTitle({ children, actions }: { children: React.ReactNode; ac
 }
 
 const STATUS_STYLE: Record<string, string> = {
-  new: "bg-[#e9ebee] text-[#59626b]",
-  in_progress: "bg-accent-soft text-accent",
+  new: "bg-surface-3 text-ink-2",
+  in_progress: "bg-accent-soft text-link",
   done: "bg-ok-soft text-ok",
 };
 export const STATUS_DOT: Record<string, string> = {
@@ -71,7 +78,7 @@ export function StatusBadge({ status, label }: { status: string; label: string }
 }
 
 export function UrgentBadge({ label }: { label: string }) {
-  return <span className="chip bg-danger text-white">⚑ {label}</span>;
+  return <span className="chip bg-danger-soft font-semibold text-danger">{label}</span>;
 }
 
 export function OverdueBadge({ label }: { label: string }) {
@@ -86,7 +93,7 @@ export function initials(name: string | null | undefined): string {
 
 export function Avatar({ name, className }: { name: string | null | undefined; className?: string }) {
   return (
-    <span className={cx("inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-accent-soft text-xs font-semibold text-accent", className)}>
+    <span className={cx("inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-accent-soft text-xs font-semibold text-link", className)}>
       {initials(name)}
     </span>
   );
@@ -96,7 +103,7 @@ export function Stat({ label, value, tone, href }: { label: string; value: React
   const inner = (
     <>
       <div className="text-sm leading-tight text-muted">{label}</div>
-      <div className={cx("mt-1 whitespace-nowrap text-2xl font-semibold tracking-tight sm:text-3xl", tone === "danger" && "text-danger", tone === "accent" && "text-accent")}>{value}</div>
+      <div className={cx("mt-1 whitespace-nowrap text-2xl font-semibold tracking-tight sm:text-3xl", tone === "danger" && "text-danger", tone === "accent" && "text-link")}>{value}</div>
     </>
   );
   return href ? (
