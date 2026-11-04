@@ -42,7 +42,18 @@ export async function GET(req: Request) {
   const { data: templates, error: tErr } = await admin.from("task_templates").select("*").eq("active", true);
   if (tErr) return NextResponse.json({ error: tErr.message }, { status: 500 });
 
+  // Feature-Flag "templates": global aus oder für die Firma ausgeschaltet → überspringen
+  const [{ data: tplFlag }, { data: tplOff }] = await Promise.all([
+    admin.from("feature_flags").select("default_enabled").eq("key", "templates").maybeSingle(),
+    admin.from("firm_features").select("firm_id, enabled").eq("key", "templates"),
+  ]);
+  const tplEnabled = (firmId: string) => {
+    const o = (tplOff ?? []).find((x) => x.firm_id === firmId);
+    return o ? o.enabled : tplFlag?.default_enabled !== false;
+  };
+
   for (const tpl of templates ?? []) {
+    if (!tplEnabled(tpl.firm_id)) continue;
     if (!templateDueToday(tpl, today)) continue;
     // Atomar "beanspruchen", damit doppelte Cron-Läufe keine Duplikate erzeugen
     const { data: claimed } = await admin

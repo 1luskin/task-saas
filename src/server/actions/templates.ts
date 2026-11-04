@@ -1,5 +1,6 @@
 "use server";
 
+import { assertFeature } from "@/lib/features";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { assertBoss, assertWritable } from "@/lib/auth";
@@ -29,6 +30,7 @@ export type TemplateInput = z.input<typeof templateInput>;
 export async function saveTemplate(id: string | null, raw: TemplateInput) {
   return runAction(async () => {
     const ctx = await assertBoss();
+    await assertFeature(ctx, "templates");
     assertWritable(ctx);
     const input = templateInput.parse(raw);
     const row = {
@@ -55,6 +57,7 @@ export async function saveTemplate(id: string | null, raw: TemplateInput) {
 export async function deleteTemplate(id: string) {
   return runAction(async () => {
     const ctx = await assertBoss();
+    await assertFeature(ctx, "templates");
     check(await ctx.supabase.from("task_templates").delete().eq("id", uuid.parse(id)));
     revalidatePath("/boss/templates");
   });
@@ -63,6 +66,7 @@ export async function deleteTemplate(id: string) {
 export async function setTemplateActive(id: string, active: boolean) {
   return runAction(async () => {
     const ctx = await assertBoss();
+    await assertFeature(ctx, "templates");
     check(await ctx.supabase.from("task_templates").update({ active: z.boolean().parse(active) }).eq("id", uuid.parse(id)));
     revalidatePath("/boss/templates");
   });

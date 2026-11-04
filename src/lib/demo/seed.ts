@@ -100,6 +100,12 @@ export function createSeed(): DemoDb {
     site_content: [],
     plans: [{ id: "start", price_cents: null, position: 0, updated_at: now }, { id: "pro", price_cents: null, position: 1, updated_at: now }],
     reviews: [],
+    feature_flags: ([
+      ["templates", true], ["requests", true], ["reports", true], ["excel_export", true], ["custom_statuses", true], ["demo_firm", true],
+      ["kanban", true], ["clients", true], ["expenses", true], ["shifts", true], ["geolocation", false], ["invoices", false], ["public_form", false],
+    ] as const).map(([key, on]) => ({ key, default_enabled: on, description: null, updated_at: now })),
+    firm_features: [],
+    admin_audit: [],
     data_requests: [],
     task_statuses: [
       ...(["new", "in_progress", "review", "rework", "done"] as const).map((kind, i) => ({

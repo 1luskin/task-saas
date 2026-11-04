@@ -1,5 +1,6 @@
 "use server";
 
+import { assertFeature } from "@/lib/features";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { assertBoss, assertWritable } from "@/lib/auth";
@@ -12,6 +13,7 @@ const kind = z.enum(["new", "in_progress", "review", "rework", "done"]);
 export async function saveTaskStatus(id: string | null, raw: { name: string; color: string; kind?: string; position?: number }) {
   return runAction(async () => {
     const ctx = await assertBoss();
+    await assertFeature(ctx, "custom_statuses");
     assertWritable(ctx);
     const input = z.object({ name: z.string().trim().min(1).max(40), color, kind: kind.optional(), position: z.number().int().min(0).max(999).optional() }).parse(raw);
     if (id) {

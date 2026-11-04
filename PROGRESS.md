@@ -11,7 +11,7 @@
 - [ ] Тесты по ходу (деньги, права, статусы, лимиты)
 - [ ] Демо-режим показывает ВСЕ новые экраны (seed.ts + fake-client.ts)
 - [ ] Тексты DE + RU, часовой пояс фирмы, деньги de-DE, суммы в центах _(часовой пояс сейчас везде Europe/Berlin — firms.timezone пока не используется в расчётах)_
-- [ ] Крупные фичи — за feature flag
+- [ ] Крупные фичи — за feature flag _(инфраструктура готова: `assertFeature`/`isEnabled`, флаги для будущих фич уже заведены — kanban, clients, expenses, shifts, geolocation, invoices, public_form)_
 - [x] APP_NAME в одном месте (`src/config/app.ts`)
 
 ## Исправить обязательно
@@ -96,12 +96,12 @@
 - [x] SEO: metadata, sitemap, robots, OG-картинка, hreflang, noindex приватного
 
 ## Этап 7. Суперадмин /admin
-- [ ] Доступ по SUPERADMIN_EMAILS, service role только на сервере
-- [ ] Фирмы: список, +14 дней, блок/разблок
-- [ ] Статистика
-- [ ] Тарифы, тексты лендинга, модерация отзывов
-- [ ] Feature flags (feature_flags + firm_features, isEnabled)
-- [ ] admin_audit
+- [x] Доступ по SUPERADMIN_EMAILS, service role только на сервере
+- [x] Фирмы: список, +14 дней, блок/разблок
+- [x] Статистика
+- [x] Тарифы, тексты лендинга, модерация отзывов
+- [x] Feature flags (feature_flags + firm_features, isEnabled)
+- [x] admin_audit
 
 ## Этап 8. Настройки начальника
 - [ ] Логотип, свои статусы, видимые поля задачи, ставки, группы, язык, уведомления по типам, фичи, авто-приёмка, авто-закрытие смены, журнал входов, «выйти со всех устройств»

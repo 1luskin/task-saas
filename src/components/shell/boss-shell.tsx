@@ -8,6 +8,7 @@ import { isDemo } from "@/lib/demo/mode";
 import { DemoFirmBar } from "../demo/demo-firm-bar";
 import { ExpiredBanner, TrialCard } from "../trial/trial";
 import type { Ctx } from "@/lib/auth";
+import { loadFeatures, type FeatureKey } from "@/lib/features";
 import { LogoutButton } from "../logout-button";
 import { Avatar } from "../ui";
 import {
@@ -20,17 +21,19 @@ export async function BossShell({
   const firmName = ctx.firm.name;
   const userName = ctx.member.full_name;
   const { t } = await getI18n();
+  const features = await loadFeatures(ctx);
+  const on = (k: FeatureKey) => features.get(k)?.enabled !== false;
   const items = [
     { href: "/boss", exact: true, label: t("nav.tasks"), icon: IconTasks },
     { href: "/boss/calendar", label: t("nav.calendar"), icon: IconCalendar },
     { href: "/boss/employees", label: t("nav.employees"), icon: IconUsers },
     { href: "/boss/money", label: t("nav.money"), icon: IconEuro },
-    { href: "/boss/templates", label: t("nav.templates"), icon: IconRepeat },
-    { href: "/boss/reports", label: t("nav.reports"), icon: IconChart },
+    ...(on("templates") ? [{ href: "/boss/templates", label: t("nav.templates"), icon: IconRepeat }] : []),
+    ...(on("reports") ? [{ href: "/boss/reports", label: t("nav.reports"), icon: IconChart }] : []),
     { href: "/boss/settings", label: t("nav.settings"), icon: IconSettings },
   ];
   const secondary = [
-    { href: "/boss/requests", label: t("nav.requests"), icon: IconInbox, badge: pendingRequests },
+    ...(on("requests") ? [{ href: "/boss/requests", label: t("nav.requests"), icon: IconInbox, badge: pendingRequests }] : []),
     { href: "/boss/archive", label: t("nav.archive"), icon: IconArchive, badge: 0 },
   ];
 

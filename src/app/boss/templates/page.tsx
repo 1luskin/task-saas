@@ -1,11 +1,14 @@
 import { requireBossPage } from "@/lib/auth";
 import { getI18n } from "@/i18n/server";
 import { getMembers } from "@/server/queries";
+import { isEnabled } from "@/lib/features";
+import { notFound } from "next/navigation";
 import { PageTitle } from "@/components/ui";
 import { TemplatesClient } from "./templates-client";
 
 export default async function TemplatesPage() {
   const ctx = await requireBossPage();
+  if (!(await isEnabled(ctx, "templates"))) notFound();
   const { t } = await getI18n();
   const [{ data: templates }, members] = await Promise.all([
     ctx.supabase.from("task_templates").select("*").eq("firm_id", ctx.firm.id).order("created_at"),

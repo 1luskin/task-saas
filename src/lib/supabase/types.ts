@@ -47,6 +47,9 @@ export type Review = {
   moderation: "pending" | "approved" | "rejected";
   created_at: string;
 };
+export type FeatureFlag = { key: string; default_enabled: boolean; description: string | null; updated_at: string };
+export type FirmFeature = { firm_id: string; key: string; enabled: boolean; set_by: "admin" | "boss"; updated_at: string };
+export type AdminAudit = { id: string; admin_email: string; action: string; target: string | null; details: Record<string, unknown>; created_at: string };
 export type Consent = {
   id: string;
   user_id: string | null;
@@ -258,6 +261,9 @@ export interface Database {
       site_content: Table<SiteContent, "key" | "locale">;
       plans: Table<PlanRow, "id">;
       reviews: Table<Review, "firm_id" | "rating">;
+      feature_flags: Table<FeatureFlag, "key">;
+      firm_features: Table<FirmFeature, "firm_id" | "key" | "enabled">;
+      admin_audit: Table<AdminAudit, "admin_email" | "action">;
       data_requests: Table<DataRequest, "firm_id" | "member_id" | "kind">;
       task_finance: Table<TaskFinance, "task_id">;
       checklist_items: Table<ChecklistItem, "task_id" | "text">;
@@ -291,6 +297,13 @@ export interface Database {
       published_reviews: {
         Args: { p_limit?: number };
         Returns: { client_name: string; rating: number; comment: string; created_at: string }[];
+      };
+      admin_firm_overview: {
+        Args: Record<string, never>;
+        Returns: {
+          id: string; name: string; created_at: string; plan: FirmPlan; trial_ends_at: string; is_demo: boolean;
+          members: number; tasks: number; last_activity: string; owner_email: string | null; deletion_scheduled_for: string | null;
+        }[];
       };
       invite_info: {
         Args: { p_token: string };

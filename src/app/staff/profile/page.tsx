@@ -9,6 +9,7 @@ import { Avatar } from "@/components/ui";
 import { StatusSwitch } from "./status-switch";
 import { RequestForm } from "./request-form";
 import { MyData } from "./my-data";
+import { isEnabled } from "@/lib/features";
 import { LegalFooter } from "@/components/legal/legal-footer";
 
 export default async function ProfilePage() {
@@ -20,6 +21,7 @@ export default async function ProfilePage() {
     .eq("created_by", ctx.member.id)
     .order("created_at", { ascending: false })
     .limit(20);
+  const requestsOn = await isEnabled(ctx, "requests");
   const { data: dataReqs } = await ctx.supabase.from("data_requests").select("id").eq("member_id", ctx.member.id).eq("status", "open");
 
   return (
@@ -38,7 +40,7 @@ export default async function ProfilePage() {
         <p className="text-sm text-muted">{t("staff.statusHint")}</p>
       </section>
 
-      <section className="card-white space-y-3 p-4">
+      {requestsOn && <section className="card-white space-y-3 p-4">
         <h2 className="font-semibold">{t("requests.new")}</h2>
         <p className="text-sm text-muted">{t("requests.newHint")}</p>
         <RequestForm />
@@ -57,7 +59,7 @@ export default async function ProfilePage() {
             </ul>
           </div>
         )}
-      </section>
+      </section>}
 
       <section className="card-white space-y-3 p-4">
         <h2 className="font-semibold">{t("settings.notifications")}</h2>

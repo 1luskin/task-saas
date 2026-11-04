@@ -1,5 +1,6 @@
 "use server";
 
+import { assertFeature } from "@/lib/features";
 import { after } from "next/server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
@@ -18,6 +19,7 @@ const requestInput = z.object({
 export async function createRequest(raw: z.input<typeof requestInput>) {
   return runAction(async () => {
     const ctx = await assertMember();
+    await assertFeature(ctx, "requests");
     assertWritable(ctx);
     const input = requestInput.parse(raw);
     check(
@@ -43,6 +45,7 @@ const approveInput = z.object({
 export async function approveRequest(id: string, raw: z.input<typeof approveInput>) {
   return runAction(async () => {
     const ctx = await assertBoss();
+    await assertFeature(ctx, "requests");
     assertWritable(ctx);
     uuid.parse(id);
     const input = approveInput.parse(raw);

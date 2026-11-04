@@ -47,10 +47,12 @@ const DEFAULTS: Partial<Record<TableName, () => Row>> = {
   task_comments: () => ({ author_id: null }),
   task_photos: () => ({ uploaded_by: null }),
   consents: () => ({ member_id: null }),
+  firm_features: () => ({ set_by: "boss" }),
+  admin_audit: () => ({ details: {} }),
   data_requests: () => ({ status: "open", note: null, resolved_at: null }),
 };
 const CHILD_OF_TASK: TableName[] = ["checklist_items", "task_comments", "task_photos", "task_finance", "time_entries"];
-const KEY: Partial<Record<TableName, string>> = { task_finance: "task_id" };
+const KEY: Partial<Record<TableName, string>> = { task_finance: "task_id", feature_flags: "key", plans: "id" };
 
 class Session {
   constructor(public uid: string | null, public admin: boolean) {}
@@ -89,6 +91,9 @@ class Session {
       case "push_subscriptions": case "user_settings": case "login_events": return r.user_id === this.uid;
       case "consents": return r.user_id === this.uid || (boss && this.db.members.some((m) => m.id === r.member_id && m.firm_id === firm));
       case "reviews": return r.firm_id === firm && boss;
+      case "feature_flags": return true;
+      case "firm_features": return r.firm_id === firm;
+      case "admin_audit": return false;
       case "data_requests": return r.firm_id === firm && (boss || r.member_id === me);
     }
   }
@@ -103,6 +108,7 @@ class Session {
       case "task_requests": return r.firm_id === this.firm && r.created_by === me && r.status === "pending";
       case "consents": return r.user_id === this.uid && (r.member_id == null || r.member_id === me);
       case "data_requests": return r.firm_id === this.firm && r.member_id === me && r.status === "open";
+      case "firm_features": return this.boss && r.firm_id === this.firm && r.set_by === "boss";
       case "push_subscriptions": return r.user_id === this.uid && r.member_id === me;
       case "checklist_items": return this.boss && this.taskVisible(r.task_id);
       default: return this.boss && r.firm_id === this.firm && this.visible(table, r);
@@ -404,6 +410,16 @@ export function createFakeClient(uid: string | null, admin = false) {
         if (fn === "finish_onboarding") us.onboarding_done = true;
         else if (!us.hints_dismissed.includes(String(args.p_key).slice(0, 40))) us.hints_dismissed.push(String(args.p_key).slice(0, 40));
         return { data: null, error: null };
+      }
+      if (fn === "admin_firm_overview" && admin) {
+        const data = s.db.firms.filter((f) => !f.is_demo).map((f) => ({
+          id: f.id, name: f.name, created_at: f.created_at, plan: f.plan, trial_ends_at: f.trial_ends_at, is_demo: f.is_demo,
+          members: s.db.members.filter((m) => m.firm_id === f.id && !m.archived_at).length,
+          tasks: s.db.tasks.filter((t) => t.firm_id === f.id).length,
+          last_activity: [f.created_at, ...s.db.tasks.filter((t) => t.firm_id === f.id).map((t) => t.updated_at)].sort().at(-1)!,
+          owner_email: f.contact_email, deletion_scheduled_for: f.deletion_scheduled_for,
+        }));
+        return { data, error: null };
       }
       if (fn === "published_reviews") {
         const list = s.db.reviews

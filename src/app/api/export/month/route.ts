@@ -4,6 +4,7 @@ import { AuthError, assertBoss } from "@/lib/auth";
 import { getI18n } from "@/i18n/server";
 import { monthPeriod, todayISO, formatDate } from "@/lib/dates";
 import { buildPeriodReport } from "@/server/month-report";
+import { isEnabled } from "@/lib/features";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -17,6 +18,7 @@ export async function GET(req: Request) {
     if (e instanceof AuthError) return NextResponse.json({ error: e.code }, { status: e.code === "forbidden" ? 403 : 401 });
     throw e;
   }
+  if (!(await isEnabled(ctx, "excel_export"))) return NextResponse.json({ error: "feature_disabled" }, { status: 403 });
   const { t, locale } = await getI18n();
   const monthParam = new URL(req.url).searchParams.get("month");
   const month = monthParam && /^\d{4}-\d{2}$/.test(monthParam) ? monthParam : todayISO().slice(0, 7);

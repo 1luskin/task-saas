@@ -8,6 +8,7 @@ import { getI18n } from "@/i18n/server";
 import { addDays, formatDate, formatDuration, todayISO, weekPeriod } from "@/lib/dates";
 import { formatMoney } from "@/lib/money";
 import { buildPeriodReport } from "@/server/month-report";
+import { isEnabled } from "@/lib/features";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -26,6 +27,7 @@ export async function GET(req: Request) {
     if (e instanceof AuthError) return NextResponse.json({ error: e.code }, { status: e.code === "forbidden" ? 403 : 401 });
     throw e;
   }
+  if (!(await isEnabled(ctx, "reports"))) return NextResponse.json({ error: "feature_disabled" }, { status: 403 });
   const { t, locale } = await getI18n();
   const wp = new URL(req.url).searchParams.get("week");
   const period = weekPeriod(wp && /^\d{4}-\d{2}-\d{2}$/.test(wp) ? wp : todayISO());
