@@ -21,8 +21,8 @@ export interface MemberOption {
 const ALL_FIELDS: TaskFields = { description: true, address: true, due_time: true, checklist: true, client_price: true, fixed_pay: true, photos: true };
 
 export function TaskForm({
-  taskId, initial, members, onDone, fields = ALL_FIELDS,
-}: { taskId?: string; initial: TaskFormValues; members: MemberOption[]; onDone?: () => void; fields?: TaskFields }) {
+  taskId, initial, members, onDone, fields = ALL_FIELDS, clients = [],
+}: { taskId?: string; initial: TaskFormValues; members: MemberOption[]; onDone?: () => void; fields?: TaskFields; clients?: { id: string; name: string }[] }) {
   const { t } = useI18n();
   const router = useRouter();
   const { run, pending, error } = useAction();
@@ -46,6 +46,7 @@ export function TaskForm({
       client_price: v.client_price,
       fixed_pay: showFixed ? v.fixed_pay : "",
       checklist: taskId ? [] : v.checklist.split("\n").map((s) => s.trim()).filter(Boolean),
+      client_id: v.client_id || null,
     };
     run(() => (taskId ? updateTask(taskId, payload) : createTask(payload)), {
       onOk: (r) => {
@@ -112,6 +113,14 @@ export function TaskForm({
         {fields.due_time && (
           <Field label={`${t("task.dueTime")} (${t("common.optional")})`}>
             <Input type="time" value={v.due_time} onChange={(e) => set("due_time", e.target.value)} />
+          </Field>
+        )}
+        {clients.length > 0 && (
+          <Field label={t("clients.client")}>
+            <Select value={v.client_id ?? ""} onChange={(e) => set("client_id", e.target.value)}>
+              <option value="">{t("clients.noClient")}</option>
+              {clients.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </Select>
           </Field>
         )}
         {taskId && (

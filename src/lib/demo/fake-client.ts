@@ -32,7 +32,8 @@ const deny = (msg = "not allowed"): Err => ({ message: msg, code: "42501" });
 const DEFAULTS: Partial<Record<TableName, () => Row>> = {
   tasks: () => ({ description: null, address: null, assignee_id: null, due_date: null, due_time: null, status: "new", priority: "normal",
     fixed_pay_cents: null, template_id: null, created_by: null, completed_at: null, overdue_notified_at: null,
-    submitted_at: null, accepted_at: null, accepted_by: null, rating: null, rework_count: 0, review_reminded_at: null, custom_status_id: null }),
+    submitted_at: null, accepted_at: null, accepted_by: null, rating: null, rework_count: 0, review_reminded_at: null, custom_status_id: null,
+    client_id: null, accepted_via: null }),
   task_statuses: () => ({ color: "slate", position: 0, is_system: false }),
   members: () => ({ email: null, phone: null, group_id: null, status: "active", pay_mode: "hourly", hourly_rate_cents: 0, locale: "de",
     notify_overdue: true, notify_done: true, archived_at: null, user_id: null, is_demo: false, hourly_basis: "tasks" }),
@@ -47,13 +48,16 @@ const DEFAULTS: Partial<Record<TableName, () => Row>> = {
     client_price_cents: null, fixed_pay_cents: null, checklist: [], active: true, last_run_on: null }),
   time_entries: () => ({ ended_at: null, rate_cents: 0 }),
   task_comments: () => ({ author_id: null }),
-  task_photos: () => ({ uploaded_by: null }),
+  task_photos: () => ({ uploaded_by: null, kind: "general" }),
+  clients: () => ({ email: null, phone: null, address: null, notes: null, hide_price: false }),
+  task_links: () => ({ token: Array.from(crypto.getRandomValues(new Uint8Array(32)), (b) => b.toString(16).padStart(2, "0")).join(""), expires_at: new Date(Date.now() + 60 * 864e5).toISOString(), revoked: false, created_by: null }),
+  inbound_requests: () => ({ address: null, status: "new", task_id: null, client_id: null }),
   consents: () => ({ member_id: null }),
   firm_features: () => ({ set_by: "boss" }),
   admin_audit: () => ({ details: {} }),
   data_requests: () => ({ status: "open", note: null, resolved_at: null }),
 };
-const CHILD_OF_TASK: TableName[] = ["checklist_items", "task_comments", "task_photos", "task_finance", "time_entries", "expenses"];
+const CHILD_OF_TASK: TableName[] = ["checklist_items", "task_comments", "task_photos", "task_finance", "time_entries", "expenses", "task_links"];
 const KEY: Partial<Record<TableName, string>> = { task_finance: "task_id", feature_flags: "key", plans: "id" };
 
 class Session {
@@ -97,6 +101,7 @@ class Session {
       case "firm_features": return r.firm_id === firm;
       case "admin_audit": return false;
       case "shifts": case "expenses": case "adjustments": case "time_edits": return r.firm_id === firm && (boss || r.member_id === me);
+      case "clients": case "task_links": case "inbound_requests": return r.firm_id === firm && boss;
       case "data_requests": return r.firm_id === firm && (boss || r.member_id === me);
     }
   }
@@ -116,6 +121,9 @@ class Session {
       case "expenses": return this.taskVisible(r.task_id) && r.member_id === me && r.status === "pending";
       case "adjustments": return this.boss && r.firm_id === this.firm;
       case "time_edits": return false;
+      case "clients": return this.boss && r.firm_id === this.firm;
+      case "task_links": return this.boss && this.taskVisible(r.task_id);
+      case "inbound_requests": return false;
       case "push_subscriptions": return r.user_id === this.uid && r.member_id === me;
       case "checklist_items": return this.boss && this.taskVisible(r.task_id);
       default: return this.boss && r.firm_id === this.firm && this.visible(table, r);
@@ -128,7 +136,7 @@ class Session {
     if (this.boss) {
       if (table === "shifts" && old.ended_at) return deny();
       if (table === "task_statuses" && old.is_system && (("kind" in next && next.kind !== old.kind) || ("is_system" in next && next.is_system !== old.is_system))) return deny("system status");
-      if (["firms", "groups", "members", "invites", "task_templates", "tasks", "task_finance", "checklist_items", "time_entries", "task_requests", "task_statuses", "expenses"].includes(table)) return null;
+      if (["firms", "groups", "members", "invites", "task_templates", "tasks", "task_finance", "checklist_items", "time_entries", "task_requests", "task_statuses", "expenses", "clients", "task_links", "inbound_requests"].includes(table)) return null;
     }
     switch (table) {
       case "tasks":
@@ -160,6 +168,8 @@ class Session {
       case "task_requests": return this.boss || (r.created_by === me && r.status === "pending");
       case "task_statuses": return this.boss && !r.is_system;
       case "expenses": return this.boss || (r.member_id === me && r.status === "pending");
+      case "clients": return this.boss;
+      case "task_links": case "inbound_requests": return false;
       case "shifts": case "time_edits": case "adjustments": return false;
       case "push_subscriptions": return r.user_id === this.uid;
       default: return this.boss;
@@ -296,6 +306,7 @@ class Query implements PromiseLike<Result> {
   lte(c: string, v: unknown) { this.preds.push(opPred(c, "lte", v)); return this; }
   is(c: string, v: unknown) { this.preds.push(opPred(c, "is", v)); return this; }
   in(c: string, v: unknown[]) { this.preds.push(opPred(c, "in", v)); return this; }
+  not(c: string, op: string, v: unknown) { const p = opPred(c, op, v); this.preds.push((r) => !p(r)); return this; }
   or(expr: string) { this.preds.push(parseOr(expr)); return this; }
   order(col: string, o: { ascending?: boolean; nullsFirst?: boolean } = {}) {
     const asc = o.ascending ?? true;

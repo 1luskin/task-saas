@@ -15,6 +15,8 @@ import { logoUrl } from "@/lib/logo";
 import { logoutAllDevices } from "@/server/actions/settings";
 import { formatDateTime } from "@/lib/dates";
 import Link from "next/link";
+import { PublicSlugForm } from "@/components/clients/inbound";
+import { serverEnv } from "@/lib/env";
 import { LegalFooter } from "@/components/legal/legal-footer";
 
 export default async function SettingsPage() {
@@ -42,6 +44,11 @@ export default async function SettingsPage() {
         <TaskFieldsForm initial={ctx.firm.task_fields} />
         <p className="text-sm text-muted">{t("settings2.rates")} <Link href="/boss/employees" className="text-link">→ {t("nav.employees")}</Link></p>
       </section>
+      {features.find((f) => f.key === "public_form")?.enabled && (
+        <section className="card-white p-4">
+          <PublicSlugForm slug={ctx.firm.public_slug} appUrl={serverEnv().NEXT_PUBLIC_APP_URL.replace(/\/$/, "")} />
+        </section>
+      )}
       <section className="card-white space-y-4 p-4">
         <FeaturesForm features={features} />
         <ShiftAutocloseForm hours={ctx.firm.shift_autoclose_hours} />

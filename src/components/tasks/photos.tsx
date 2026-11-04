@@ -24,11 +24,12 @@ async function compress(file: File): Promise<Blob> {
 
 export function Photos({
   taskId, firmId, photos, myMemberId, isBoss,
-}: { taskId: string; firmId: string; photos: { id: string; url: string | null; uploaded_by: string | null }[]; myMemberId: string; isBoss: boolean }) {
+}: { taskId: string; firmId: string; photos: { id: string; url: string | null; uploaded_by: string | null; kind?: string }[]; myMemberId: string; isBoss: boolean }) {
   const { t } = useI18n();
   const router = useRouter();
   const input = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
+  const [kind, setKind] = useState<"general" | "before" | "after">("general");
   const [error, setError] = useState<string | null>(null);
 
   async function upload(files: FileList | null) {
@@ -42,7 +43,7 @@ export function Photos({
         const path = `${firmId}/${taskId}/${crypto.randomUUID()}.jpg`;
         const { error } = await supabase.storage.from("task-photos").upload(path, blob, { contentType: "image/jpeg" });
         if (error) throw error;
-        const r = await registerPhoto(taskId, path);
+        const r = await registerPhoto(taskId, path, kind);
         if (!r.ok) throw new Error(r.error);
       }
       router.refresh();
@@ -56,7 +57,16 @@ export function Photos({
 
   return (
     <div>
-      <div className="mb-2 font-medium">{t("task.photos")}</div>
+      <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+        <span className="font-medium">{t("task.photos")}</span>
+        <div className="inline-flex rounded-[10px] bg-card p-0.5" role="radiogroup" aria-label={t("task.photos")}>
+          {(["general", "before", "after"] as const).map((k) => (
+            <button key={k} type="button" role="radio" aria-checked={kind === k} onClick={() => setKind(k)} className={`min-h-9 rounded-[8px] px-3 text-sm ${kind === k ? "bg-surface-3 text-ink" : "text-muted"}`}>
+              {k === "general" ? t("task.photos") : k === "before" ? t("cl.before") : t("cl.after")}
+            </button>
+          ))}
+        </div>
+      </div>
       <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
         {photos.map((p) => (
           <div key={p.id} className="group relative aspect-square overflow-hidden rounded-[12px] bg-card">
@@ -65,6 +75,7 @@ export function Photos({
                 <img src={p.url} alt="" className="size-full object-cover" loading="lazy" />
               </a>
             )}
+            {p.kind && p.kind !== "general" && <span className="absolute bottom-1 left-1 rounded-full bg-black/60 px-2 py-0.5 text-xs text-white">{p.kind === "before" ? t("cl.before") : t("cl.after")}</span>}
             {(isBoss || p.uploaded_by === myMemberId) && (
               <button
                 className="absolute right-1 top-1 rounded-full bg-white/50 p-1.5 text-white"

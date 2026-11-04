@@ -6,6 +6,9 @@ export type DemoDb = { [K in keyof Tables]: Tables[K]["Row"][] } & { users: { id
 
 /** Feste IDs, damit Links stabil bleiben */
 const id = (n: number) => `00000000-0000-4000-8000-${n.toString().padStart(12, "0")}`;
+/** Fester Kunden-Link der Demo-Aufgabe "Badfliesen verfugen" */
+export const DEMO_LINK_TOKEN = "d3m0".repeat(16);
+
 export const DEMO = {
   firm: id(1),
   bossUser: id(101),
@@ -45,22 +48,22 @@ export function createSeed(): DemoDb {
     id: id(400 + n), firm_id: DEMO.firm, description: null, address: null, assignee_id: null, due_date: null, due_time: null,
     status: "new", priority: "normal", fixed_pay_cents: null, template_id: null, created_by: DEMO.boss,
     completed_at: null, overdue_notified_at: null, submitted_at: null, accepted_at: null, accepted_by: null, rating: null,
-    rework_count: 0, review_reminded_at: null, custom_status_id: null, created_at: at(-7, 8), updated_at: now, ...o,
+    rework_count: 0, review_reminded_at: null, custom_status_id: null, client_id: null, accepted_via: null, created_at: at(-7, 8), updated_at: now, ...o,
   });
 
   const tasks: Tables["tasks"]["Row"][] = [
-    task(1, { title: "Treppenhaus reinigen – Haus A", assignee_id: e1.member, due_date: day(0), due_time: "09:00", status: "in_progress",
+    task(1, { title: "Treppenhaus reinigen – Haus A", client_id: id(1601), assignee_id: e1.member, due_date: day(0), due_time: "09:00", status: "in_progress",
       address: "Karl-Marx-Allee 12, 10243 Berlin", description: "Alle Etagen wischen, Geländer abwischen, Fenster im EG." }),
     task(2, { title: "Büro Fenster 2. OG", assignee_id: e1.member, due_date: day(0), due_time: "13:00", priority: "urgent",
       address: "Friedrichstr. 88, 10117 Berlin", description: "Kunde kommt um 16 Uhr – unbedingt vorher fertig." }),
-    task(3, { title: "Grundreinigung Praxis Dr. Klein", assignee_id: e1.member, due_date: day(-2), status: "rework", rework_count: 1,
+    task(3, { title: "Grundreinigung Praxis Dr. Klein", client_id: id(1602), assignee_id: e1.member, due_date: day(-2), status: "rework", rework_count: 1,
       address: "Schönhauser Allee 40, 10435 Berlin" }),
     task(4, { title: "Trockenbauwand Küche stellen", assignee_id: e2.member, due_date: day(1), fixed_pay_cents: 18000,
       address: "Sonnenallee 150, 12059 Berlin", description: "Material liegt im Keller. Maße siehe Foto im Chat." }),
-    task(5, { title: "Badfliesen verfugen", assignee_id: e2.member, due_date: day(-1), status: "review", submitted_at: ago(20), priority: "urgent",
+    task(5, { title: "Badfliesen verfugen", client_id: id(1601), assignee_id: e2.member, due_date: day(-1), status: "review", submitted_at: ago(20), priority: "urgent",
       fixed_pay_cents: 9000, address: "Hermannstr. 3, 12049 Berlin" }),
     task(6, { title: "Lager-Inventur Regal A–F", assignee_id: e2.member, due_date: day(3), fixed_pay_cents: 6000 }),
-    task(7, { title: "Treppenhaus reinigen – Haus B", assignee_id: e1.member, due_date: day(0), status: "done",
+    task(7, { title: "Treppenhaus reinigen – Haus B", client_id: id(1601), assignee_id: e1.member, due_date: day(0), status: "done",
       completed_at: ago(2), accepted_at: ago(2), accepted_by: DEMO.boss, rating: 5, address: "Karl-Marx-Allee 14, 10243 Berlin" }),
     task(8, { title: "Malerarbeiten Flur", assignee_id: e2.member, due_date: day(0), status: "done", fixed_pay_cents: 25000,
       completed_at: ago(1), accepted_at: ago(1), accepted_by: DEMO.boss, rating: 4 }),
@@ -93,7 +96,7 @@ export function createSeed(): DemoDb {
     ],
     firms: [{ id: DEMO.firm, name: "Glanz & Bau Service GmbH", timezone: "Europe/Berlin", auto_accept_days: 3,
       trial_ends_at: new Date(Date.now() + 9 * 864e5).toISOString(), plan: "trial", is_demo: false, contact_email: "chefin@demo.de",
-      deletion_requested_at: null, deletion_scheduled_for: null, logo_path: null, shift_autoclose_hours: 12,
+      deletion_requested_at: null, deletion_scheduled_for: null, logo_path: null, shift_autoclose_hours: 12, public_slug: "glanz-bau",
       task_fields: { description: true, address: true, due_time: true, checklist: true, client_price: true, fixed_pay: true, photos: true }, created_at: ago(5 * 24) }],
     user_settings: [],
     login_events: [],
@@ -117,6 +120,16 @@ export function createSeed(): DemoDb {
       { id: id(1402), firm_id: DEMO.firm, task_id: id(408), member_id: e2.member, amount_cents: 6450, description: "Farbe & Abdeckfolie", receipt_path: null, reimburse: false, status: "approved", decided_by: DEMO.boss, decided_at: ago(2), created_at: ago(30) },
     ],
     time_edits: [],
+    clients: [
+      { id: id(1601), firm_id: DEMO.firm, name: "Hausverwaltung Schmidt", email: "kontakt@hv-schmidt.invalid", phone: "+49 30 1234567", address: "Karl-Marx-Allee 12, 10243 Berlin", notes: null, hide_price: false, created_at: now },
+      { id: id(1602), firm_id: DEMO.firm, name: "Praxis Dr. Klein", email: "praxis@klein.invalid", phone: null, address: "Schönhauser Allee 40, 10435 Berlin", notes: null, hide_price: true, created_at: now },
+    ],
+    task_links: [
+      { id: id(1701), firm_id: DEMO.firm, task_id: id(405), token: DEMO_LINK_TOKEN, expires_at: new Date(Date.now() + 60 * 864e5).toISOString(), revoked: false, created_by: DEMO.boss, created_at: now },
+    ],
+    inbound_requests: [
+      { id: id(1801), firm_id: DEMO.firm, name: "Maria Hoffmann", contact: "0171 2345678", address: "Boxhagener Str. 20, 10245 Berlin", message: "Bitte Angebot für Endreinigung nach Umzug, 3 Zimmer, ca. 75 m².", status: "new", task_id: null, client_id: null, created_at: ago(5) },
+    ],
     adjustments: [
       { id: id(1501), firm_id: DEMO.firm, member_id: e1.member, amount_cents: 2500, reason: "Sonntagseinsatz Hausverwaltung", effective_date: day(0), created_by: DEMO.boss, created_at: ago(3) },
     ],

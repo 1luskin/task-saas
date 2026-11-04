@@ -33,6 +33,7 @@ export type Firm = {
   deletion_requested_at: string | null;
   deletion_scheduled_for: string | null;
   logo_path: string | null;
+  public_slug: string | null;
   task_fields: TaskFields;
   shift_autoclose_hours: number;
   created_at: string;
@@ -78,6 +79,15 @@ export type TimeEdit = {
 export type Adjustment = {
   id: string; firm_id: string; member_id: string; amount_cents: number; reason: string; effective_date: string;
   created_by: string | null; created_at: string;
+};
+export type Client = {
+  id: string; firm_id: string; name: string; email: string | null; phone: string | null; address: string | null;
+  notes: string | null; hide_price: boolean; created_at: string;
+};
+export type TaskLink = { id: string; firm_id: string; task_id: string; token: string; expires_at: string; revoked: boolean; created_by: string | null; created_at: string };
+export type InboundRequest = {
+  id: string; firm_id: string; name: string; contact: string; address: string | null; message: string;
+  status: "new" | "converted" | "dismissed"; task_id: string | null; client_id: string | null; created_at: string;
 };
 export type Consent = {
   id: string;
@@ -196,6 +206,8 @@ export type Task = {
   rework_count: number;
   review_reminded_at: string | null;
   custom_status_id: string | null;
+  client_id: string | null;
+  accepted_via: "boss" | "auto" | "client" | null;
   created_at: string;
   updated_at: string;
 };
@@ -239,6 +251,7 @@ export type TaskPhoto = {
   firm_id: string;
   storage_path: string;
   uploaded_by: string | null;
+  kind: "general" | "before" | "after";
   created_at: string;
 };
 export type TimeEntry = {
@@ -298,6 +311,9 @@ export interface Database {
       shifts: Table<Shift, "firm_id" | "member_id" | "started_at">;
       time_edits: Table<TimeEdit, "firm_id" | "member_id" | "kind" | "record_id" | "before" | "after" | "reason">;
       adjustments: Table<Adjustment, "firm_id" | "member_id" | "amount_cents" | "reason" | "effective_date">;
+      clients: Table<Client, "firm_id" | "name">;
+      task_links: Table<TaskLink, "task_id">;
+      inbound_requests: Table<InboundRequest, "firm_id" | "name" | "contact" | "message">;
       data_requests: Table<DataRequest, "firm_id" | "member_id" | "kind">;
       task_finance: Table<TaskFinance, "task_id">;
       checklist_items: Table<ChecklistItem, "task_id" | "text">;

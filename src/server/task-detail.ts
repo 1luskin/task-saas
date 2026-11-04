@@ -46,7 +46,7 @@ export async function loadTaskDetail(ctx: Ctx, id: string) {
     task,
     checklist: checklist.data ?? [],
     comments: comments.data ?? [],
-    photos: photoRows.map((p, i) => ({ id: p.id, url: urls[i] ?? null, uploaded_by: p.uploaded_by })),
+    photos: photoRows.map((p, i) => ({ id: p.id, url: urls[i] ?? null, uploaded_by: p.uploaded_by, kind: p.kind })),
     entries: allEntries,
     runningMine,
     closedMinutesMine,

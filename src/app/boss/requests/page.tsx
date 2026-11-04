@@ -5,14 +5,16 @@ import { getMembers } from "@/server/queries";
 import { EmptyState, PageTitle } from "@/components/ui";
 import { RequestDecision } from "./decision";
 import Link from "next/link";
+import { InboundActions } from "@/components/clients/inbound";
 import { IconPin } from "@/components/icons";
 
 export default async function RequestsPage() {
   const ctx = await requireBossPage();
   const { t, locale } = await getI18n();
-  const [{ data: requests }, members] = await Promise.all([
+  const [{ data: requests }, members, { data: inbound }] = await Promise.all([
     ctx.supabase.from("task_requests").select("*").eq("firm_id", ctx.firm.id).order("created_at", { ascending: false }).limit(100),
     getMembers(ctx, { includeArchived: true }),
+    ctx.supabase.from("inbound_requests").select("*").eq("firm_id", ctx.firm.id).eq("status", "new").order("created_at", { ascending: false }).limit(50),
   ]);
   const name = (id: string | null) => members.find((m) => m.id === id)?.full_name ?? "?";
   const pending = (requests ?? []).filter((r) => r.status === "pending");
@@ -22,6 +24,19 @@ export default async function RequestsPage() {
   return (
     <div className="mx-auto max-w-3xl space-y-4">
       <PageTitle>{t("requests.title")}</PageTitle>
+      {(inbound ?? []).length > 0 && (
+        <section className="space-y-2">
+          <h2 className="font-semibold">{t("clients.inbound")}</h2>
+          {inbound!.map((r) => (
+            <div key={r.id} className="card-white space-y-2 p-4">
+              <div className="text-sm text-muted">{r.name} · {r.contact} · {formatDate(r.created_at.slice(0, 10), locale)}</div>
+              <p className="whitespace-pre-wrap break-words">{r.message}</p>
+              {r.address && <p className="flex items-center gap-1 text-sm"><IconPin className="size-4 text-muted" />{r.address}</p>}
+              <InboundActions id={r.id} />
+            </div>
+          ))}
+        </section>
+      )}
       {pending.length === 0 && <EmptyState>{t("requests.none")}</EmptyState>}
       {pending.map((r) => (
         <div key={r.id} className="card-white space-y-3 p-4">

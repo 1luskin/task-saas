@@ -8,6 +8,7 @@ import { ActionError, check, must, runAction } from "@/lib/action";
 import { isoDate, moneyInput, optText, optUuid, priority, taskStatus, timeHHMM, uuid } from "@/lib/validation";
 import { notifyAccepted, notifyNewTask, notifyRework } from "@/server/notify";
 import { hit } from "@/lib/rate-limit";
+import { requestReview } from "@/server/review-request";
 
 const taskInput = z.object({
   title: z.string().trim().min(1).max(200),
@@ -21,6 +22,7 @@ const taskInput = z.object({
   client_price: moneyInput,
   fixed_pay: moneyInput,
   checklist: z.array(z.string().trim().min(1).max(300)).max(100).default([]),
+  client_id: optUuid,
 });
 export type TaskInput = z.input<typeof taskInput>;
 
@@ -55,6 +57,7 @@ export async function createTask(raw: TaskInput) {
           status: input.status,
           fixed_pay_cents: fixedPay,
           created_by: ctx.member.id,
+          client_id: input.client_id,
         })
         .select()
         .single(),
@@ -102,6 +105,7 @@ export async function updateTask(id: string, raw: TaskInput) {
           priority: input.priority,
           status: input.status,
           fixed_pay_cents: fixedPay,
+          client_id: input.client_id,
           // Neuer Termin → Überfällig-Meldung wieder erlauben
           overdue_notified_at: before.due_date !== input.due_date ? null : before.overdue_notified_at,
         })
@@ -183,7 +187,7 @@ export async function deleteComment(id: string) {
 }
 
 /** Nach direktem Upload in Storage: Datensatz anlegen. */
-export async function registerPhoto(taskId: string, storagePath: string) {
+export async function registerPhoto(taskId: string, storagePath: string, kind: "general" | "before" | "after" = "general") {
   return runAction(async () => {
     const ctx = await assertMember();
     assertWritable(ctx);
@@ -191,7 +195,7 @@ export async function registerPhoto(taskId: string, storagePath: string) {
     if (!(await hit("upload", ctx.userId))) throw new ActionError("forbidden", "rate_limited");
     const path = z.string().regex(/^[0-9a-f-]{36}\/[0-9a-f-]{36}\/[0-9a-f-]{36}\.(jpg|jpeg|png|webp)$/i).parse(storagePath);
     if (!path.startsWith(`${ctx.firm.id}/${taskId}/`)) throw new ActionError("forbidden");
-    check(await ctx.supabase.from("task_photos").insert({ task_id: taskId, storage_path: path, uploaded_by: ctx.member.id }));
+    check(await ctx.supabase.from("task_photos").insert({ task_id: taskId, storage_path: path, uploaded_by: ctx.member.id, kind: z.enum(["general", "before", "after"]).parse(kind) }));
     revalidateTasks();
   });
 }
@@ -228,7 +232,7 @@ async function acceptInternal(ctx: Awaited<ReturnType<typeof assertBoss>>, task:
   check(
     await ctx.supabase
       .from("tasks")
-      .update({ status: "done", accepted_at: now, accepted_by: ctx.member.id, completed_at: now, rating })
+      .update({ status: "done", accepted_at: now, accepted_by: ctx.member.id, completed_at: now, rating, accepted_via: "boss" })
       .eq("id", task.id),
   );
   // offene Zeiteinträge schließen (falls noch Timer lief)
@@ -237,6 +241,7 @@ async function acceptInternal(ctx: Awaited<ReturnType<typeof assertBoss>>, task:
     const a = task.assignee_id;
     after(() => notifyAccepted(a, task));
   }
+  after(() => requestReview(task.id));
   revalidateTasks();
 }
 

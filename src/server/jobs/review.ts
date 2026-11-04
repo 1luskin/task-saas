@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/server";
 import { sendPushToMembers } from "@/lib/push";
 import { autoAcceptDue, reviewReminderDue } from "@/lib/workflow";
 import { notifyAccepted } from "@/server/notify";
+import { requestReview } from "@/server/review-request";
 
 /** Auto-Abnahme + Erinnerung an den Chef (läuft in /api/cron/frequent). */
 export async function runReviewJobs(now = Date.now()) {
@@ -23,13 +24,14 @@ export async function runReviewJobs(now = Date.now()) {
       // accepted_by bleibt null = automatisch abgenommen
       const { data: done } = await admin
         .from("tasks")
-        .update({ status: "done", accepted_at: nowIso, completed_at: nowIso })
+        .update({ status: "done", accepted_at: nowIso, completed_at: nowIso, accepted_via: "auto" })
         .eq("id", t.id)
         .eq("status", "review")
         .select("id");
       if (done?.length) {
         await admin.from("time_entries").update({ ended_at: nowIso }).eq("task_id", t.id).is("ended_at", null);
         if (t.assignee_id) await notifyAccepted(t.assignee_id, t);
+        await requestReview(t.id);
         accepted++;
       }
     } else if (reviewReminderDue(t.submitted_at, d, t.review_reminded_at, now)) {

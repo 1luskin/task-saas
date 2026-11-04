@@ -4,12 +4,14 @@ import { getMembers } from "@/server/queries";
 import { TaskForm } from "@/components/tasks/task-form";
 import { emptyTaskForm } from "@/components/tasks/task-form-values";
 import { PageTitle } from "@/components/ui";
+import { isEnabled } from "@/lib/features";
 
 export default async function NewTaskPage({ searchParams }: { searchParams: Promise<{ date?: string }> }) {
   const ctx = await requireBossPage();
   const { t } = await getI18n();
   const { date } = await searchParams;
   const members = await getMembers(ctx);
+  const { data: clients } = (await isEnabled(ctx, "clients")) ? await ctx.supabase.from("clients").select("id, name").eq("firm_id", ctx.firm.id).order("name") : { data: [] };
   return (
     <div className="mx-auto max-w-2xl">
       <PageTitle>{t("task.newTitle")}</PageTitle>
@@ -18,6 +20,7 @@ export default async function NewTaskPage({ searchParams }: { searchParams: Prom
           initial={{ ...emptyTaskForm, due_date: date && /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : "" }}
           members={members.map((m) => ({ id: m.id, full_name: m.full_name, status: m.status, pay_mode: m.pay_mode }))}
           fields={ctx.firm.task_fields}
+          clients={clients ?? []}
         />
       </div>
     </div>

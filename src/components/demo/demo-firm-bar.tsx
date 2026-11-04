@@ -16,6 +16,10 @@ export async function DemoFirmBar({ ctx }: { ctx: Ctx }) {
     ? await ctx.supabase.from("members").select("id, full_name, role").eq("firm_id", ctx.firm.id).eq("role", "employee").is("archived_at", null).order("full_name")
     : { data: [] as { id: string; full_name: string; role: string }[] };
   const isWorkerView = ctx.member.role !== "boss";
+  const { data: links } = isWorkerView
+    ? { data: [] as { token: string }[] }
+    : await ctx.supabase.from("task_links").select("token").eq("firm_id", ctx.firm.id).eq("revoked", false).limit(1);
+  const customerToken = links?.[0]?.token ?? null;
 
   return (
     <div className="flex flex-wrap items-center gap-2 bg-review-soft px-4 py-2 text-sm text-review">
@@ -32,7 +36,11 @@ export async function DemoFirmBar({ ctx }: { ctx: Ctx }) {
             <button className="chip min-h-8 text-ink-2 hover:bg-white/5" title={staff![0]!.full_name}>{t("demoFirm.worker")}</button>
           </form>
         ))}
-      <span className="chip min-h-8 text-muted" title={t("demoFirm.customerSoon")} aria-disabled="true">{t("demoFirm.customer")}</span>
+      {customerToken ? (
+        <a href={`/c/${customerToken}`} target="_blank" rel="noreferrer" className="chip min-h-8 text-ink-2 hover:bg-white/5">{t("demoFirm.customer")}</a>
+      ) : (
+        <span className="chip min-h-8 text-muted" aria-disabled="true">{t("demoFirm.customer")}</span>
+      )}
       <form action={resetDemoFirm}>
         <button className="chip min-h-8 text-ink-2 hover:bg-white/5">{t("demoFirm.reset")}</button>
       </form>

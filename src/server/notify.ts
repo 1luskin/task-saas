@@ -49,3 +49,10 @@ export async function notifyAccepted(assigneeId: string, task: { id: string; tit
     tag: `accepted-${task.id}`,
   }));
 }
+
+/** Allgemein: alle Chefs der Firma benachrichtigen (Demo-Firmen werden in sendPushToMembers übersprungen) */
+export async function notifyBosses(firmId: string, build: Parameters<typeof sendPushToMembers>[1]) {
+  const admin = createAdminClient();
+  const { data: bosses } = await admin.from("members").select("id").eq("firm_id", firmId).eq("role", "boss").is("archived_at", null);
+  await sendPushToMembers((bosses ?? []).map((b) => b.id), build);
+}

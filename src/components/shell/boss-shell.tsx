@@ -10,6 +10,8 @@ import { DemoFirmBar } from "../demo/demo-firm-bar";
 import { ExpiredBanner, TrialCard } from "../trial/trial";
 import type { Ctx } from "@/lib/auth";
 import { loadFeatures, type FeatureKey } from "@/lib/features";
+import { Contact as IconContactRaw } from "lucide-react";
+const IconContact = ({ className }: { className?: string }) => <IconContactRaw strokeWidth={1.8} className={`shrink-0 ${className ?? ""}`} aria-hidden />;
 import { LogoutButton } from "../logout-button";
 import { Avatar } from "../ui";
 import {
@@ -28,6 +30,7 @@ export async function BossShell({
     { href: "/boss", exact: true, label: t("nav.tasks"), icon: IconTasks },
     { href: "/boss/calendar", label: t("nav.calendar"), icon: IconCalendar },
     { href: "/boss/employees", label: t("nav.employees"), icon: IconUsers },
+    ...(on("clients") ? [{ href: "/boss/clients", label: t("nav.clientsNav"), icon: IconContact }] : []),
     { href: "/boss/money", label: t("nav.money"), icon: IconEuro },
     ...(on("templates") ? [{ href: "/boss/templates", label: t("nav.templates"), icon: IconRepeat }] : []),
     ...(on("reports") ? [{ href: "/boss/reports", label: t("nav.reports"), icon: IconChart }] : []),

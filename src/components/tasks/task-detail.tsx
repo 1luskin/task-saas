@@ -16,8 +16,8 @@ import { Expenses } from "../money/expenses";
 type Detail = NonNullable<Awaited<ReturnType<typeof loadTaskDetail>>>;
 
 export function TaskDetail({
-  d, ctx, t, locale, backHref, bossTools, expensesOn = true,
-}: { d: Detail; ctx: Ctx; t: TFunction; locale: string; backHref: string; bossTools?: React.ReactNode; expensesOn?: boolean }) {
+  d, ctx, t, locale, backHref, bossTools, expensesOn = true, clientPanel,
+}: { d: Detail; ctx: Ctx; t: TFunction; locale: string; backHref: string; bossTools?: React.ReactNode; expensesOn?: boolean; clientPanel?: React.ReactNode }) {
   const { task } = d;
   const isBoss = ctx.member.role === "boss";
   const overdue = isOverdue(task);
@@ -125,6 +125,8 @@ export function TaskDetail({
       <div className="card-white p-4 sm:p-6">
         <Checklist taskId={task.id} status={task.status} items={d.checklist} editable={isBoss} />
       </div>
+
+      {clientPanel}
 
       {expensesOn && (
         <div className="card-white p-4 sm:p-6">

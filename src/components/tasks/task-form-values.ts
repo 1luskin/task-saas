@@ -13,8 +13,9 @@ export interface TaskFormValues {
   client_price: string;
   fixed_pay: string;
   checklist: string;
+  client_id?: string;
 }
 export const emptyTaskForm: TaskFormValues = {
   title: "", description: "", assignee_id: "", due_date: "", due_time: "", priority: "normal",
-  status: "new", address: "", client_price: "", fixed_pay: "", checklist: "",
+  status: "new", address: "", client_price: "", fixed_pay: "", checklist: "", client_id: "",
 };
