@@ -8,11 +8,17 @@ import { InstallHint } from "@/components/settings/install-hint";
 import { TrialCard } from "@/components/trial/trial";
 import { FirmForm } from "./firm-form";
 import { StatusesEditor } from "@/components/settings/statuses-editor";
+import { DataPanel } from "@/components/settings/data-panel";
+import { LegalFooter } from "@/components/legal/legal-footer";
 
 export default async function SettingsPage() {
   const ctx = await requireBossPage();
   const { t } = await getI18n();
-  const { data: statuses } = await ctx.supabase.from("task_statuses").select("*").eq("firm_id", ctx.firm.id).order("position");
+  const [{ data: statuses }, { data: reqs }, { data: members }] = await Promise.all([
+    ctx.supabase.from("task_statuses").select("*").eq("firm_id", ctx.firm.id).order("position"),
+    ctx.supabase.from("data_requests").select("*").eq("firm_id", ctx.firm.id).eq("status", "open"),
+    ctx.supabase.from("members").select("id, full_name").eq("firm_id", ctx.firm.id),
+  ]);
   return (
     <div className="mx-auto max-w-2xl space-y-4">
       <PageTitle>{t("settings.title")}</PageTitle>
@@ -40,6 +46,15 @@ export default async function SettingsPage() {
         <LanguageSwitch persist large />
         <InstallHint />
       </section>
+      <section className="card-white p-4">
+        <DataPanel
+          firmName={ctx.firm.name}
+          email={ctx.email ?? ""}
+          scheduledFor={ctx.firm.deletion_scheduled_for}
+          requests={(reqs ?? []).map((r) => ({ id: r.id, kind: r.kind, created_at: r.created_at, memberName: members?.find((m) => m.id === r.member_id)?.full_name ?? "?" }))}
+        />
+      </section>
+      <LegalFooter />
     </div>
   );
 }

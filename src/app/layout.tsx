@@ -8,6 +8,7 @@ const geologica = Geologica({ subsets: ["latin", "cyrillic"], weight: ["500", "6
 import { getLocale } from "@/i18n/server";
 import { I18nProvider } from "@/i18n/client";
 import { ServiceWorkerRegister } from "@/components/pwa/sw-register";
+import { CookieBanner } from "@/components/legal/cookie-banner";
 
 export const metadata: Metadata = {
   title: { default: APP_NAME, template: `%s · ${APP_NAME}` },
@@ -53,6 +54,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <I18nProvider locale={locale}>
           {children}
           <ServiceWorkerRegister />
+          <CookieBanner />
         </I18nProvider>
       </body>
     </html>

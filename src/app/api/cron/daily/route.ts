@@ -117,5 +117,15 @@ export async function GET(req: Request) {
     await admin.from("tasks").update({ overdue_notified_at: new Date().toISOString() }).in("id", ids);
   }
 
-  return NextResponse.json({ ok: true, created, overdue: overdue.length });
+  // 3. DSGVO: beantragte Firmenlöschungen nach 30 Tagen endgültig ausführen
+  const { data: doomed } = await admin.from("firms").select("id").lt("deletion_scheduled_for", new Date().toISOString());
+  for (const f of doomed ?? []) {
+    const { data: photos } = await admin.from("task_photos").select("storage_path").eq("firm_id", f.id);
+    if (photos?.length) await admin.storage.from("task-photos").remove(photos.map((p) => p.storage_path));
+    await admin.from("firms").delete().eq("id", f.id);
+  }
+  // 4. Aufbewahrung: Login-Protokoll 90 Tage
+  await admin.from("login_events").delete().lt("created_at", new Date(Date.now() - 90 * 864e5).toISOString());
+
+  return NextResponse.json({ ok: true, created, overdue: overdue.length, deletedFirms: doomed?.length ?? 0 });
 }

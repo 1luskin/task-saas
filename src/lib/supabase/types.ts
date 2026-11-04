@@ -30,7 +30,28 @@ export type Firm = {
   plan: FirmPlan;
   is_demo: boolean;
   contact_email: string | null;
+  deletion_requested_at: string | null;
+  deletion_scheduled_for: string | null;
   created_at: string;
+};
+export type Consent = {
+  id: string;
+  user_id: string | null;
+  member_id: string | null;
+  kind: "cookies" | "geolocation" | "review_publish" | "terms";
+  version: string;
+  granted: boolean;
+  created_at: string;
+};
+export type DataRequest = {
+  id: string;
+  firm_id: string;
+  member_id: string;
+  kind: "delete" | "export";
+  status: "open" | "done" | "rejected";
+  note: string | null;
+  created_at: string;
+  resolved_at: string | null;
 };
 export type Group = {
   id: string;
@@ -220,6 +241,8 @@ export interface Database {
       task_statuses: Table<TaskStatusRow, "firm_id" | "name" | "kind">;
       user_settings: Table<UserSettings, "user_id">;
       login_events: Table<LoginEvent, "user_id" | "kind">;
+      consents: Table<Consent, "kind" | "version" | "granted">;
+      data_requests: Table<DataRequest, "firm_id" | "member_id" | "kind">;
       task_finance: Table<TaskFinance, "task_id">;
       checklist_items: Table<ChecklistItem, "task_id" | "text">;
       task_comments: Table<TaskComment, "task_id" | "author_name" | "body">;

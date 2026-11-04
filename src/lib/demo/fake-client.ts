@@ -46,6 +46,8 @@ const DEFAULTS: Partial<Record<TableName, () => Row>> = {
   time_entries: () => ({ ended_at: null, rate_cents: 0 }),
   task_comments: () => ({ author_id: null }),
   task_photos: () => ({ uploaded_by: null }),
+  consents: () => ({ member_id: null }),
+  data_requests: () => ({ status: "open", note: null, resolved_at: null }),
 };
 const CHILD_OF_TASK: TableName[] = ["checklist_items", "task_comments", "task_photos", "task_finance", "time_entries"];
 const KEY: Partial<Record<TableName, string>> = { task_finance: "task_id" };
@@ -84,6 +86,8 @@ class Session {
       case "time_entries": return r.firm_id === firm && (boss || r.member_id === me);
       case "task_requests": return r.firm_id === firm && (boss || r.created_by === me);
       case "push_subscriptions": case "user_settings": case "login_events": return r.user_id === this.uid;
+      case "consents": return r.user_id === this.uid || (boss && this.db.members.some((m) => m.id === r.member_id && m.firm_id === firm));
+      case "data_requests": return r.firm_id === firm && (boss || r.member_id === me);
     }
   }
   /** INSERT-Policies */
@@ -95,6 +99,8 @@ class Session {
       case "task_photos": return this.taskVisible(r.task_id) && r.uploaded_by === me;
       case "time_entries": return this.taskVisible(r.task_id) && (r.member_id === me || this.boss);
       case "task_requests": return r.firm_id === this.firm && r.created_by === me && r.status === "pending";
+      case "consents": return r.user_id === this.uid && (r.member_id == null || r.member_id === me);
+      case "data_requests": return r.firm_id === this.firm && r.member_id === me && r.status === "open";
       case "push_subscriptions": return r.user_id === this.uid && r.member_id === me;
       case "checklist_items": return this.boss && this.taskVisible(r.task_id);
       default: return this.boss && r.firm_id === this.firm && this.visible(table, r);

@@ -1,5 +1,6 @@
 import { APP_NAME } from "@/config/app";
 import { LanguageSwitch } from "./language-switch";
+import { LegalFooter } from "./legal/legal-footer";
 
 export function AuthShell({ children }: { children: React.ReactNode }) {
   return (
@@ -13,6 +14,7 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
           <LanguageSwitch />
         </div>
         <div className="card-white p-6">{children}</div>
+        <LegalFooter />
       </div>
     </main>
   );
