@@ -1,167 +1,127 @@
-# Werkplan — задачи и заработок для маленьких фирм
+# Werkplan — задачи, время и заработок для маленьких фирм
 
-MVP SaaS для небольших фирм в Германии (клининг, стройка, ремонт, склады …):
-задачи, учёт времени, заработок сотрудников, прибыль, календарь, заявки, шаблоны,
-отчёты (PDF / Excel), PWA с офлайн-режимом и push-уведомлениями. Языки: немецкий и русский.
+SaaS для небольших фирм в Германии (клининг, ремонт, стройка, склады): начальник раздаёт задачи на ПК,
+команда работает с телефона (PWA, офлайн). Учёт времени и смен, приёмка работы, заработок и прибыль,
+клиенты и ссылка заказчика, Excel/PDF, пробный период 14 дней, суперадминка. Языки DE + RU.
 
-**Стек:** Next.js 16 (App Router) · TypeScript (strict) · Tailwind CSS v4 · Supabase (Postgres, Auth, Storage) · Vercel (+ Cron)
+> Рабочее имя продукта — константа `APP_NAME` в `src/config/app.ts` (меняется в одном месте).
+> Прогресс по ТЗ — `PROGRESS.md`, принятые решения — `DECISIONS.md`, что сделать руками перед запуском — `LAUNCH_CHECKLIST.md`.
+
+**Стек:** Next.js 16 (App Router, TypeScript strict) · Tailwind CSS v4 · Supabase (Postgres, Auth, Storage, регион Frankfurt) · Vercel (fra1) · Vitest · Playwright
 
 ---
 
-## 1. Быстрый старт
-
-### Демо-режим (без ключей Supabase)
+## 1. Быстрый старт без ключей (демо-режим)
 
 ```bash
 npm install
-npm run dev        # http://localhost:3000
+npm run dev            # http://localhost:3000
 ```
 
-Если `NEXT_PUBLIC_SUPABASE_URL` не задан (или `NEXT_PUBLIC_DEMO_MODE=1`), приложение
-запускается **в демо-режиме**: тестовая фирма «Glanz & Bau Service GmbH», начальница и 3 сотрудника
-(один в отпуске), 10 задач, заявки, шаблоны, записи времени.
+Без `NEXT_PUBLIC_SUPABASE_URL` (или с `NEXT_PUBLIC_DEMO_MODE=1`) приложение работает на тестовых данных в памяти:
+фирма, начальница, 3 сотрудника, 10 задач во всех статусах, смены, расходы, клиенты, ссылка заказчика.
+На `/login` выбирается, кем войти; суперадминка `/admin` доступна демо-начальнице. Права те же, что в БД
+(`src/lib/demo/fake-client.ts` повторяет RLS и триггеры).
 
-- На `/login` вместо ввода e-mail выбирается, кем войти (начальник или любой сотрудник).
-- Работают все экраны и действия: создание задач, «Начал»/«Закончил», чек-лист, комментарии,
-  заявки, Excel/PDF. Данные хранятся в памяти сервера, кнопка «Сбросить тестовые данные» на `/login`.
-- Права те же, что в базе: сотрудник видит только свои задачи и не видит финансы фирмы.
-- Отключено только: загрузка фото и отправка push.
-- Код: `src/lib/demo/` (тестовые данные + клиент на данных в памяти, повторяющий правила RLS).
-
-### С настоящим Supabase
+## 2. Проверки
 
 ```bash
-cp .env.example .env.local   # вставить ключи (см. ниже)
-npm run dev
+npm run typecheck      # TypeScript
+npm run lint           # ESLint
+npm test               # Vitest (unit)
+npm run build && npm run check:bundle   # сборка + проверка, что секретов нет в клиентском бандле
+npm run test:e2e       # Playwright в демо-режиме (сам собирает и запускает сервер на :3123)
+PGHOST=/tmp PGPORT=5432 tests/sql/run.sh   # миграции + RLS-тесты на локальном Postgres 16
 ```
 
-Секреты задаются **только через переменные окружения**; `.env` и `.env*.local` в `.gitignore`.
+`tests/sql/run.sh` создаёт базу, ставит заглушку схем `auth`/`storage` (`tests/sql/supabase-stub.sql`),
+применяет все миграции и прогоняет SQL-тесты прав (`tests/sql/0*.sql`; строки «muss scheitern» должны дать ошибку).
 
-### Supabase
+---
 
-1. Создайте проект **в регионе `Central EU (Frankfurt)`** (DSGVO).
-2. Примените миграции из `supabase/migrations` (по порядку):
-   - через CLI: `supabase link --project-ref <ref>` → `supabase db push`
-   - или вставьте оба файла в SQL Editor.
-3. **Authentication → Providers → Email:** включено, «Confirm email» можно оставить.
-4. **Authentication → Email Templates → Magic Link** — шаблон должен содержать код,
-   иначе придёт только ссылка:
+## 3. Подключение Supabase
+
+1. **Проект** — создать в регионе **Central EU (Frankfurt)**.
+2. **Миграции** — по порядку из `supabase/migrations`:
+   ```bash
+   npx supabase link --project-ref <ref>
+   npx supabase db push
+   ```
+   (или вставить файлы по очереди в SQL Editor).
+3. **Auth → Providers → Email**: включено. **Auth → Email Templates**: в шаблонах *Magic Link* и *Confirm signup*
+   должен быть код, иначе придёт только ссылка:
    ```html
    <h2>Ihr Anmeldecode / Ваш код</h2>
    <p style="font-size:28px;letter-spacing:6px"><b>{{ .Token }}</b></p>
    ```
-   То же для шаблона **Confirm signup** (первый вход нового пользователя).
-5. **Authentication → URL Configuration:** Site URL = ваш домен.
-6. Для продакшна подключите свой SMTP (встроенный в Supabase сильно ограничен по количеству писем).
+4. **Свой SMTP обязателен** (Auth → SMTP Settings). Встроенная почта Supabase шлёт всего несколько писем в час —
+   регистрации встанут. Подойдёт Brevo, Postmark, Mailjet (сервер в ЕС предпочтителен).
+5. **Auth → URL Configuration**: Site URL = ваш домен; **Sessions**: при желании «Inactivity timeout» (например, 7 дней).
+6. **Storage** — бакеты создаются миграциями: `task-photos`, `receipts` (приватные), `firm-logos` (публичный, только картинки ≤ 512 КБ).
+7. **Database → Extensions**: включить `pg_cron` и `pg_net` (для частых задач, см. п. 5).
 
-### Переменные окружения (`.env.local` / Vercel → Settings → Environment Variables)
+## 4. Переменные окружения
 
-| Переменная | Где взять |
+Все переменные перечислены в `.env.example` (локально — `.env.local`, на Vercel — Settings → Environment Variables).
+
+| Переменная | Назначение |
 |---|---|
 | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase → Project Settings → API |
-| `SUPABASE_SERVICE_ROLE_KEY` | там же. **Только на сервере**, никогда с префиксом `NEXT_PUBLIC_` |
-| `NEXT_PUBLIC_APP_URL` | публичный URL приложения (для ссылок-приглашений) |
-| `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` | `npm run vapid` |
-| `CRON_SECRET` | любая длинная случайная строка. Vercel сам передаёт её в Cron-запрос |
+| `SUPABASE_SERVICE_ROLE_KEY` | **только сервер** (cron, push, ссылка заказчика, суперадминка). Никогда с `NEXT_PUBLIC_` |
+| `NEXT_PUBLIC_APP_URL` | публичный URL (ссылки-приглашения, ссылки заказчика, письма, sitemap) |
+| `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` | Web Push; ключи: `npm run vapid` |
+| `CRON_SECRET` | защита `/api/cron/daily` и `/api/cron/frequent` (Bearer) |
+| `SUPERADMIN_EMAILS` | e-mail владельца сервиса через запятую → доступ к `/admin` |
+| `BREVO_API_KEY`, `EMAIL_FROM`, `EMAIL_FROM_NAME` | письма приложения (без ключа пишутся в лог) |
+| `SENTRY_DSN`, `NEXT_PUBLIC_SENTRY_DSN` | ошибки в Sentry (EU-регион), без ключа выключено |
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY` | Cloudflare Turnstile на входе и публичной форме, без ключей выключено |
+| `NEXT_PUBLIC_MAP_TILE_URL` | сервер тайлов карты (по умолчанию OpenStreetMap) |
+| `NEXT_PUBLIC_DEMO_MODE` | `1` = принудительно демо-режим |
 
-Без VAPID-ключей приложение работает, просто push не отправляется.
+## 5. Фоновые задачи
 
-### Деплой на Vercel
+- **Ежедневно** — Vercel Cron (`vercel.json`, 04:00 UTC) → `/api/cron/daily`: задачи из шаблонов, уведомления о просрочке,
+  окончательное удаление фирм через 30 дней после запроса, очистка журнала входов (90 дней).
+- **Каждые 15 минут** — `/api/cron/frequent`: авто-приёмка работы через N дней и напоминание начальнику, авто-закрытие
+  забытых смен. Vercel Hobby так часто не умеет, поэтому вызывает Supabase:
+  ```sql
+  -- SQL Editor в Supabase (после включения pg_cron и pg_net)
+  select private.enable_frequent_cron('https://ВАШ-ДОМЕН/api/cron/frequent', 'ЗНАЧЕНИЕ_CRON_SECRET');
+  -- выключить:
+  select private.disable_frequent_cron();
+  ```
 
-`vercel.json` задаёт регион функций `fra1` (Франкфурт) и ежедневный Cron
-`/api/cron/daily` (04:00 UTC): создаёт задачи из шаблонов и шлёт начальникам
-уведомления о просрочках.
+## 6. Деплой на Vercel
+
+1. Импортировать репозиторий, Framework: Next.js. Регион функций уже задан (`fra1` в `vercel.json`).
+2. Добавить все переменные из п. 4 (Production + Preview).
+3. Задать `CRON_SECRET` — Vercel сам передаёт его в ежедневный cron.
+4. Подключить свой домен, указать его в `NEXT_PUBLIC_APP_URL` и в Supabase → Auth → URL Configuration.
+5. Включить частый cron (п. 5).
+6. Проверить: регистрация по коду, создание фирмы → онбординг → демо-фирма, приглашение сотрудника, push (на iPhone
+   только после «На экран Домой»), Excel/PDF.
 
 ---
 
-## 2. Что где лежит
+## 7. Архитектура
 
 ```
-supabase/migrations/      SQL-схема, триггеры, RLS-политики, Storage-бакет
-src/proxy.ts              обновление сессии, редирект на /login
-src/app/
-  login, onboarding, join/[token]   вход по коду из e-mail, создание фирмы, приглашение
-  boss/…                  ПК-дашборд начальника (задачи + календарь), сотрудники, деньги,
-                          шаблоны, отчёты, настройки, заявки, архив
-  staff/…                 телефон сотрудника: Сегодня / Задачи / Заработок / Профиль
-  api/sync                офлайн-синхронизация действий сотрудника
-  api/cron/daily          Vercel Cron
-  api/export/month        Excel (.xlsx) за месяц для Steuerberater
-  api/reports/weekly-pdf  недельный отчёт PDF (шрифт Inter, кириллица + умлауты)
-src/server/actions/       Server Actions (zod-валидация + проверка роли на сервере)
-src/i18n/                 словари de / ru
-src/lib/offline/queue.ts  очередь офлайн-действий
-public/sw.js              Service Worker: кэш страниц, push
+supabase/migrations/        схема, RLS на каждой таблице и бакете, триггеры-охранники, RPC (нумерация по датам)
+src/proxy.ts                CSP с nonce, обновление сессии, редирект на /login
+src/app/                    страницы: / (лендинг), /login, /boss/*, /staff/*, /admin/*, /c/[token], /f/[slug], правовые
+src/app/api/                sync (офлайн-очередь), cron/daily, cron/frequent, export (xlsx/zip/json), reports (pdf)
+src/server/actions/         server actions: zod-валидация + роль + фирма + фича-флаг + пробный период
+src/lib/                    auth, finance/earnings, workflow (статусы), trial, features, rate-limit, shifts, email, demo
+src/i18n/                   словари DE/RU (новый язык — файл + запись в config.ts)
+src/legal/                  тексты Impressum/Datenschutz/AGB/AVV (плейсхолдеры)
+tests/unit|e2e|sql          Vitest, Playwright (демо), SQL-тесты RLS
+design/                     макеты экранов (HTML-эскизы) и DESIGN.md
 ```
 
----
+**Безопасность (кратко):** RLS везде, изоляция фирм через `private.my_firm_id()`; сотрудник видит только своё,
+финансы фирмы — только начальник; переходы статусов и неизменяемые поля охраняют триггеры; вход по коду через сервер
+с лимитами в Postgres; CSP с nonce, HSTS; повторный код для опасных действий; Sentry без персональных данных.
+Подробности и причины — `DECISIONS.md`.
 
-## 3. Безопасность
-
-- **RLS включён на всех таблицах** и на Storage-бакете `task-photos`.
-- Вспомогательные функции (`private.my_firm_id()`, `private.is_boss()` …) лежат в схеме
-  `private`, недоступной через API.
-- **Полная изоляция фирм:** любая строка видна только членам своей фирмы; `firm_id`
-  дочерних таблиц проставляется триггером из задачи — подделать нельзя.
-- **Сотрудник** видит только свои задачи, свой профиль, свои записи времени и заявки.
-  Цена клиента хранится в отдельной таблице `task_finance`, доступной **только начальникам**.
-- Триггеры-«охранники» не дают сотруднику менять что-либо, кроме статуса задачи,
-  галочек чек-листа и своих полей профиля (имя, телефон, язык, отпуск, уведомления).
-  Ставку/роль/группу меняет только начальник.
-- Назначить задачу сотруднику в отпуске / на больничном нельзя (проверка в БД).
-- Каждая Server Action и Route Handler проверяет роль на сервере (`assertBoss` / `assertMember`)
-  и валидирует вход через zod.
-- `service_role` используется только на сервере: Cron, рассылка push, очистка push-подписки.
-
-Проверено локально на Postgres 16 со «заглушкой» Supabase: чужая фирма не видна,
-сотрудник не видит финансы и чужие задачи, не может переименовать задачу или поднять себе ставку,
-вставка в чужую фирму блокируется RLS.
-
----
-
-## 4. Деньги — как считается
-
-- Режим оплаты задаётся начальником для каждого сотрудника: почасовая / фикс за задачу / оба.
-- **Почасовая:** кнопки «Начал» / «Закончил» создают записи времени. Ставка фиксируется
-  в записи в момент старта (изменение ставки не переписывает историю).
-- **Фикс:** начисляется, когда задача выполнена.
-- **Прибыль** = цена клиента − (фикс + часы × ставка).
-- В периоде: часы — по дате начала записи, фикс и цена клиента — по дате выполнения.
-  Суммы в Excel/PDF совпадают с суммами на экране.
-
----
-
-## 5. Офлайн и PWA
-
-- Статус задачи, галочки чек-листа, «Начал»/«Закончил» всегда идут через локальную очередь
-  (`localStorage`) с временем действия на устройстве. Есть сеть — очередь сразу отправляется
-  на `/api/sync`, нет сети — интерфейс обновляется сразу, синхронизация произойдёт при появлении
-  сети (событие `online`, возврат в приложение, каждые 30 с).
-- Service Worker кэширует открытые страницы (network-first) и статику, поэтому открытые ранее
-  экраны доступны без интернета. При выходе кэш страниц и очередь очищаются.
-- Установка: Android/Chrome — кнопка «Установить приложение» в настройках/профиле;
-  iPhone — «Поделиться → На экран „Домой“» (только так iOS разрешает web-push).
-
-### Capacitor (на будущее)
-
-Приложение — обычный веб-клиент с относительными URL и без браузерно-специфичных хаков.
-Обёртка: `npx cap init`, в `capacitor.config.ts` указать `server.url` на продакшн-домен;
-web-push заменить на `@capacitor/push-notifications` (точка замены — `src/lib/offline/push-client.ts`
-и `src/lib/push.ts`).
-
----
-
-## 6. Добавить язык
-
-1. `src/i18n/messages/xx.ts` — скопировать `ru.ts`, перевести (TypeScript проверит, что все ключи на месте).
-2. Добавить код в `LOCALES`, `LOCALE_LABELS` и `dictionaries` в `src/i18n/config.ts`.
-3. Расширить `check (locale in (...))` в таблице `members` новой миграцией.
-
----
-
-## 7. Ограничения MVP
-
-- Один пользователь = одна фирма.
-- Cron раз в сутки: просрочка по времени внутри текущего дня попадёт в уведомление на следующее утро
-  (в интерфейсе подсвечивается сразу).
-- Оплаты/подписки нет (по ТЗ).
+**Capacitor (App Store / Google Play):** относительные URL, без браузерных хаков; push заменяется в
+`src/lib/offline/push-client.ts` и `src/lib/push.ts`.

@@ -6,10 +6,10 @@
 ## Правила работы
 - [x] Ветка `main` из `claude/affectionate-hopper-47gol4`, коммиты и push в `main`
 - [x] PROGRESS.md (этот файл), DECISIONS.md
-- [ ] После каждого этапа: typecheck, lint, build, тесты → коммит → push → отчёт
-- [ ] Старые миграции не трогать, RLS на каждой новой таблице/бакете, прогон на локальном Postgres _(инструмент: `tests/sql/run.sh`)_
-- [ ] Тесты по ходу (деньги, права, статусы, лимиты)
-- [ ] Демо-режим показывает ВСЕ новые экраны (seed.ts + fake-client.ts)
+- [x] После каждого этапа: typecheck, lint, build, тесты → коммит → push → отчёт
+- [x] Старые миграции не трогать, RLS на каждой новой таблице/бакете, прогон на локальном Postgres _(инструмент: `tests/sql/run.sh`)_
+- [x] Тесты по ходу (деньги, права, статусы, лимиты)
+- [x] Демо-режим показывает ВСЕ новые экраны (seed.ts + fake-client.ts)
 - [ ] Тексты DE + RU, часовой пояс фирмы, деньги de-DE, суммы в центах _(часовой пояс сейчас везде Europe/Berlin — firms.timezone пока не используется в расчётах)_
 - [ ] Крупные фичи — за feature flag _(инфраструктура готова: `assertFeature`/`isEnabled`, флаги для будущих фич уже заведены — kanban, clients, expenses, shifts, geolocation, invoices, public_form)_
 - [x] APP_NAME в одном месте (`src/config/app.ts`)
@@ -171,6 +171,6 @@
 - [ ] Lighthouse ≥ 90, доступность
 
 ## Этап 18. Финал
-- [ ] README (Supabase, все env, pg_cron, Vercel)
-- [ ] LAUNCH_CHECKLIST.md
+- [x] README (Supabase, все env, pg_cron, Vercel) _(обновлять при новых переменных)_
+- [x] LAUNCH_CHECKLIST.md
 - [ ] Итоговый отчёт
