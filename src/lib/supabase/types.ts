@@ -32,7 +32,19 @@ export type Firm = {
   contact_email: string | null;
   deletion_requested_at: string | null;
   deletion_scheduled_for: string | null;
+  logo_path: string | null;
+  task_fields: TaskFields;
+  shift_autoclose_hours: number;
   created_at: string;
+};
+export type TaskFields = {
+  description: boolean;
+  address: boolean;
+  due_time: boolean;
+  checklist: boolean;
+  client_price: boolean;
+  fixed_pay: boolean;
+  photos: boolean;
 };
 export type SiteContent = { key: "landing"; locale: Locale; data: Record<string, unknown>; updated_at: string };
 export type PlanRow = { id: "start" | "pro"; price_cents: number | null; position: number; updated_at: string };

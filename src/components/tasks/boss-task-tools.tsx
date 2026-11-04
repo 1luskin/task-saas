@@ -4,9 +4,10 @@ import { useState } from "react";
 import { useI18n } from "@/i18n/client";
 import { deleteTask } from "@/server/actions/tasks";
 import { TaskForm, type MemberOption, type TaskFormValues } from "./task-form";
+import type { TaskFields } from "@/lib/supabase/types";
 import { useAction, ErrorText } from "../use-action";
 
-export function BossTaskTools({ taskId, initial, members }: { taskId: string; initial: TaskFormValues; members: MemberOption[] }) {
+export function BossTaskTools({ taskId, initial, members, fields }: { taskId: string; initial: TaskFormValues; members: MemberOption[]; fields?: TaskFields }) {
   const { t } = useI18n();
   const router = useRouter();
   const [editing, setEditing] = useState(false);
@@ -16,7 +17,7 @@ export function BossTaskTools({ taskId, initial, members }: { taskId: string; in
     return (
       <div className="card-white p-4 sm:p-6">
         <h2 className="mb-4 text-lg font-semibold">{t("task.editTitle")}</h2>
-        <TaskForm taskId={taskId} initial={initial} members={members} onDone={() => { setEditing(false); router.refresh(); }} />
+        <TaskForm taskId={taskId} initial={initial} members={members} fields={fields} onDone={() => { setEditing(false); router.refresh(); }} />
       </div>
     );
   }

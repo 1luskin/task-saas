@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { APP_NAME } from "@/config/app";
+import { logoUrl } from "@/lib/logo";
 import { getI18n } from "@/i18n/server";
 import { NavLink } from "./nav-link";
 import { OfflineBanner } from "./offline-banner";
@@ -42,7 +43,7 @@ export async function BossShell({
       {/* Seitenleiste (PC) */}
       <aside className="sticky top-4 hidden h-[calc(100dvh-2rem)] w-56 shrink-0 flex-col rounded-[18px] bg-surface px-2.5 py-4 lg:flex">
         <Link href="/boss" className="mb-6 flex items-center gap-2.5 px-2">
-          <img src="/icons/icon.svg" alt="" className="size-8 rounded-[9px]" />
+          <img src={logoUrl(ctx.firm.logo_path) ?? "/icons/icon.svg"} alt="" className="size-8 rounded-[9px] object-contain" />
           <div className="min-w-0">
             <div className="truncate font-semibold leading-tight">{firmName}</div>
             <div className="text-xs text-muted">{APP_NAME}</div>

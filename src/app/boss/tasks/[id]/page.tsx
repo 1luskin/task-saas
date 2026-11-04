@@ -24,6 +24,7 @@ export default async function BossTaskPage({ params }: { params: Promise<{ id: s
       bossTools={
         <BossTaskTools
           taskId={task.id}
+          fields={ctx.firm.task_fields}
           members={members.map((m) => ({ id: m.id, full_name: m.full_name, status: m.status, pay_mode: m.pay_mode }))}
           initial={{
             title: task.title,

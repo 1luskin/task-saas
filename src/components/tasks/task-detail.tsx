@@ -135,7 +135,7 @@ export function TaskDetail({
               </a>
             </div>
           )}
-          <Photos taskId={task.id} firmId={ctx.firm.id} photos={d.photos} myMemberId={ctx.member.id} isBoss={isBoss} />
+          {ctx.firm.task_fields.photos !== false && <Photos taskId={task.id} firmId={ctx.firm.id} photos={d.photos} myMemberId={ctx.member.id} isBoss={isBoss} />}
         </div>
       </details>
 

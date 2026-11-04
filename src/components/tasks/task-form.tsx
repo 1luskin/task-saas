@@ -5,7 +5,7 @@ import { useI18n } from "@/i18n/client";
 import { Field, Input, Select, Textarea, cx } from "../ui";
 import { ErrorText, useAction } from "../use-action";
 import { createTask, updateTask, type TaskInput } from "@/server/actions/tasks";
-import type { MemberStatus, PayMode, TaskStatus } from "@/lib/supabase/types";
+import type { MemberStatus, PayMode, TaskFields, TaskStatus } from "@/lib/supabase/types";
 import type { TaskFormValues } from "./task-form-values";
 export type { TaskFormValues } from "./task-form-values";
 
@@ -17,9 +17,11 @@ export interface MemberOption {
 }
 
 
+const ALL_FIELDS: TaskFields = { description: true, address: true, due_time: true, checklist: true, client_price: true, fixed_pay: true, photos: true };
+
 export function TaskForm({
-  taskId, initial, members, onDone,
-}: { taskId?: string; initial: TaskFormValues; members: MemberOption[]; onDone?: () => void }) {
+  taskId, initial, members, onDone, fields = ALL_FIELDS,
+}: { taskId?: string; initial: TaskFormValues; members: MemberOption[]; onDone?: () => void; fields?: TaskFields }) {
   const { t } = useI18n();
   const router = useRouter();
   const { run, pending, error } = useAction();
@@ -27,7 +29,7 @@ export function TaskForm({
   const [moreOpen, setMoreOpen] = useState(Boolean(initial.address));
   const set = <K extends keyof TaskFormValues>(k: K, val: TaskFormValues[K]) => setV((p) => ({ ...p, [k]: val }));
   const assignee = members.find((m) => m.id === v.assignee_id);
-  const showFixed = !assignee || assignee.pay_mode !== "hourly";
+  const showFixed = fields.fixed_pay && (!assignee || assignee.pay_mode !== "hourly");
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -57,9 +59,11 @@ export function TaskForm({
       <Field label={t("task.title")}>
         <Input required maxLength={200} value={v.title} onChange={(e) => set("title", e.target.value)} autoFocus={!taskId} />
       </Field>
-      <Field label={t("task.description")}>
-        <Textarea maxLength={5000} value={v.description} onChange={(e) => set("description", e.target.value)} />
-      </Field>
+      {fields.description && (
+        <Field label={t("task.description")}>
+          <Textarea maxLength={5000} value={v.description} onChange={(e) => set("description", e.target.value)} />
+        </Field>
+      )}
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label={t("task.assignee")}>
           <Select value={v.assignee_id} onChange={(e) => set("assignee_id", e.target.value)}>
@@ -90,9 +94,11 @@ export function TaskForm({
         <Field label={t("task.dueDate")}>
           <Input type="date" value={v.due_date} onChange={(e) => set("due_date", e.target.value)} />
         </Field>
-        <Field label={`${t("task.dueTime")} (${t("common.optional")})`}>
-          <Input type="time" value={v.due_time} onChange={(e) => set("due_time", e.target.value)} />
-        </Field>
+        {fields.due_time && (
+          <Field label={`${t("task.dueTime")} (${t("common.optional")})`}>
+            <Input type="time" value={v.due_time} onChange={(e) => set("due_time", e.target.value)} />
+          </Field>
+        )}
         {taskId && (
           <Field label={t("task.status")}>
             <Select value={v.status} onChange={(e) => set("status", e.target.value as TaskStatus)}>
@@ -104,34 +110,36 @@ export function TaskForm({
         )}
       </div>
 
-      {!taskId && (
+      {!taskId && fields.checklist && (
         <Field label={t("task.checklist")} hint={t("task.checklistHint")}>
           <Textarea value={v.checklist} onChange={(e) => set("checklist", e.target.value)} rows={3} />
         </Field>
       )}
 
-      <div className="rounded-[16px] border border-line/70 bg-card p-4">
+      {(fields.client_price || showFixed) && <div className="rounded-[16px] border border-line/70 bg-card p-4">
         <div className="mb-3 text-sm font-semibold text-muted">{t("task.finance")}</div>
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label={`${t("task.clientPrice")} (€)`}>
-            <Input inputMode="decimal" placeholder="0,00" value={v.client_price} onChange={(e) => set("client_price", e.target.value)} />
-          </Field>
+          {fields.client_price && (
+            <Field label={`${t("task.clientPrice")} (€)`}>
+              <Input inputMode="decimal" placeholder="0,00" value={v.client_price} onChange={(e) => set("client_price", e.target.value)} />
+            </Field>
+          )}
           {showFixed && (
             <Field label={`${t("task.fixedPay")} (€)`}>
               <Input inputMode="decimal" placeholder="0,00" value={v.fixed_pay} onChange={(e) => set("fixed_pay", e.target.value)} />
             </Field>
           )}
         </div>
-      </div>
+      </div>}
 
-      <details open={moreOpen} onToggle={(e) => setMoreOpen((e.target as HTMLDetailsElement).open)} className="rounded-[16px] border border-line/70 bg-surface">
+      {fields.address && <details open={moreOpen} onToggle={(e) => setMoreOpen((e.target as HTMLDetailsElement).open)} className="rounded-[16px] border border-line/70 bg-surface">
         <summary className="flex min-h-12 cursor-pointer items-center px-4 font-medium">{t("task.more")}</summary>
         <div className="space-y-4 px-4 pb-4">
           <Field label={t("task.address")}>
             <Input maxLength={300} autoComplete="street-address" value={v.address} onChange={(e) => set("address", e.target.value)} />
           </Field>
         </div>
-      </details>
+      </details>}
 
       <ErrorText error={error} />
       <div className="flex gap-2">

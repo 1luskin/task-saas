@@ -6,6 +6,7 @@ import { isDemo } from "@/lib/demo/mode";
 import { DemoFirmBar } from "../demo/demo-firm-bar";
 import { ExpiredBanner } from "../trial/trial";
 import type { Ctx } from "@/lib/auth";
+import { logoUrl } from "@/lib/logo";
 import { IconSun, IconTasks, IconUser, IconWallet } from "../icons";
 
 export async function StaffShell({ ctx, children }: { ctx: Ctx; children: React.ReactNode }) {
@@ -24,7 +25,7 @@ export async function StaffShell({ ctx, children }: { ctx: Ctx; children: React.
       {!isDemo() && <IdleLogout />}
       <header className="pt-safe sticky top-0 z-30 bg-bg/90 backdrop-blur">
         <div className="mx-auto flex max-w-3xl items-center gap-3 px-4 py-2">
-          <img src="/icons/icon.svg" alt="" className="size-8 rounded-[9px]" />
+          <img src={logoUrl(ctx.firm.logo_path) ?? "/icons/icon.svg"} alt="" className="size-8 rounded-[9px] object-contain" />
           <span className="flex-1 truncate font-semibold">{firmName}</span>
           <nav className="hidden gap-1 lg:flex">
             {tabs.map((tab) => (
