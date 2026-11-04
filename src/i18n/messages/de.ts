@@ -1,6 +1,7 @@
+import { APP_NAME } from "@/config/app";
 const de = {
   app: {
-    name: "Werkplan",
+    name: APP_NAME,
     tagline: "Aufgaben & Verdienst für kleine Teams",
   },
   common: {

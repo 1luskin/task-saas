@@ -1,3 +1,4 @@
+import { APP_NAME } from "@/config/app";
 import { LanguageSwitch } from "./language-switch";
 
 export function AuthShell({ children }: { children: React.ReactNode }) {
@@ -7,7 +8,7 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
         <div className="mb-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <img src="/icons/icon.svg" alt="" className="size-11 rounded-[12px]" />
-            <span className="text-xl font-semibold tracking-tight">Werkplan</span>
+            <span className="text-xl font-semibold tracking-tight">{APP_NAME}</span>
           </div>
           <LanguageSwitch />
         </div>

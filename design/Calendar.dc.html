@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Календарь</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Geologica:wght@500;600;700&amp;family=Golos+Text:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+h1,h2,h3{font-family:Geologica,sans-serif;letter-spacing:-0.01em}
+a{color:#9DB6CB}a:hover{color:#C3D4E2}
+</style>
+</helmet>
+<div style="min-height: 900px; background: #1E2125; font-family: Golos Text, system-ui, sans-serif; color: #ECEEF0; display: flex; flex-wrap: wrap; gap: 16px; padding: 16px; box-sizing: border-box">
+  <nav aria-label="Главное меню" style="flex: 1 1 200px; max-width: 224px; background: #272B30; border-radius: 18px; padding: 18px 10px; display: flex; flex-direction: column; gap: 2px; box-sizing: border-box">
+    <div style="font-weight: 700; font-size: 14px; padding: 8px 10px 18px">Glanz &amp; Bau</div>
+    <sc-for list="{{menu}}" as="m" hint-placeholder-count="11"><a href="#" style="{{m.style}}">{{m.label}}</a></sc-for>
+  </nav>
+
+  <main style="flex: 999 1 700px; min-width: 0; background: #272B30; border-radius: 18px; padding: 18px; display: flex; flex-direction: column; gap: 14px">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px">
+      <div style="display: flex; align-items: center; gap: 12px">
+        <h1 style="margin: 0; font-size: 24px; font-weight: 700">Ноябрь 2026</h1>
+        <button type="button" aria-label="Предыдущий месяц" style="width: 36px; height: 36px; border-radius: 10px; border: none; background: #30353B; color: #ECEEF0">‹</button>
+        <button type="button" aria-label="Следующий месяц" style="width: 36px; height: 36px; border-radius: 10px; border: none; background: #30353B; color: #ECEEF0">›</button>
+        <button type="button" style="height: 36px; padding: 0 12px; border-radius: 10px; border: 1px solid #3B4148; background: transparent; color: #ECEEF0; font: 500 13px Golos Text, sans-serif">Сегодня</button>
+      </div>
+      <div style="display: flex; gap: 8px; flex-wrap: wrap">
+        <div style="display: flex; background: #30353B; border-radius: 12px; padding: 3px">
+          <span style="padding: 8px 14px; border-radius: 9px; background: #3B4148; font-size: 13px; font-weight: 600">Месяц</span>
+          <span style="padding: 8px 14px; font-size: 13px; color: #A0A8B1">Неделя</span>
+          <span style="padding: 8px 14px; font-size: 13px; color: #A0A8B1">День</span>
+        </div>
+        <span style="display: flex; align-items: center; padding: 0 12px; border-radius: 12px; background: #30353B; font-size: 13px; color: #C8CDD3">Все сотрудники ▾</span>
+        <button type="button" style="height: 40px; padding: 0 16px; border-radius: 12px; border: none; background: {{accent}}; color: #FFFFFF; font: 600 14px Golos Text, sans-serif">+ Задача</button>
+      </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; font-size: 12px; color: #A0A8B1; padding: 0 4px">
+      <span>Понедельник</span><span>Вторник</span><span>Среда</span><span>Четверг</span><span>Пятница</span><span>Суббота</span><span>Воскресенье</span>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; flex: 1">
+      <sc-for list="{{cells}}" as="c" hint-placeholder-count="35">
+        <div style="{{c.style}}">
+          <div style="display: flex; justify-content: space-between; align-items: center">
+            <span style="{{c.numStyle}}">{{c.n}}</span>
+            <sc-if value="{{c.away}}" hint-placeholder-val="{{false}}"><span style="font-size: 10px; color: #A0A8B1">ИП отпуск</span></sc-if>
+          </div>
+          <sc-for list="{{c.items}}" as="i" hint-placeholder-count="2">
+            <div style="{{i.style}}"><span style="font-weight: 700">{{i.ini}}</span> {{i.title}}</div>
+          </sc-for>
+          <sc-if value="{{c.more}}" hint-placeholder-val="{{false}}"><span style="font-size: 11px; color: #A0A8B1">{{c.more}}</span></sc-if>
+        </div>
+      </sc-for>
+    </div>
+    <div style="display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px; color: #A0A8B1">
+      <span>Перетащите задачу на другой день, чтобы сменить срок</span>
+      <span style="color: #9DB6CB">■ в работе</span><span style="color: #E2C98F">■ на проверке</span><span style="color: #F0B2AC">■ просрочено</span><span style="color: #A9C9B4">■ готово</span><span>▨ отпуск</span>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#56728A","options":["#56728A","#5E6B5E","#5A5F66"]},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const accent = this.props.accent ?? '#56728A';
+    const mi = (on) => 'display:flex;align-items:center;min-height:42px;padding:0 12px;border-radius:11px;font-size:14px;text-decoration:none;' + (on ? 'background:#3B4148;color:#ECEEF0;font-weight:600' : 'color:#B9C0C8');
+    const menu = ['Задачи','Календарь','Канбан','Клиенты','Сотрудники','Смены и отпуска','Заявки','Деньги','Счета','Отчёты','Настройки'].map((l, i) => ({ label: l, style: mi(i === 1) }));
+    const ch = (bg, c) => 'font-size:11px;padding:4px 6px;border-radius:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:' + bg + ';color:' + c;
+    const W = ch('#2F3D4A', '#C3D4E2'), R = ch('#4A2E2D', '#F0B2AC'), Y = ch('#463D2A', '#EBD7A8'), G = ch('#2E3A33', '#B9D6C3');
+    const data = {
+      2: [['АК','Уборка склада',R],['МС','Смеситель кв.12',W]], 3: [['ОТ','Покраска стены',W]], 4: [['МС','Смеситель',W],['ОТ','Уборка офиса',Y],['АК','Склад',R]],
+      5: [['АК','Приём материала',W]], 6: [['МС','Уборка офиса',W],['ОТ','Вывоз мусора',W]], 9: [['АК','Уборка склада',W]], 10: [['ИП','Окна 3 этаж',Y]],
+      12: [['МС','Kanzlei Weber',W],['ОТ','Café Rosa',W]], 16: [['АК','Уборка склада',W]], 18: [['ИП','Praxis Dr. Lang',G]], 20: [['ОТ','Плитка ванная',W]],
+      23: [['АК','Уборка склада',W]], 26: [['МС','Генуборка',W]], 30: [['АК','Уборка склада',W]]
+    };
+    const cells = [];
+    for (let i = 0; i < 35; i++) {
+      const n = i - 6 + 1;
+      const inM = n >= 1 && n <= 30;
+      const today = n === 4;
+      const away = n >= 16 && n <= 20;
+      const its = inM ? (data[n] || []) : [];
+      cells.push({
+        n: inM ? String(n) : '',
+        away,
+        items: its.slice(0, 2).map((x) => ({ ini: x[0], title: x[1], style: x[2] })),
+        more: its.length > 2 ? '+' + (its.length - 2) + ' ещё' : '',
+        style: 'min-height:108px;border-radius:12px;padding:8px;display:flex;flex-direction:column;gap:4px;box-sizing:border-box;' +
+          (today ? 'background:#353A41;box-shadow:inset 0 0 0 1px #7E9BB3' : away ? 'background:repeating-linear-gradient(135deg,#30353B 0 8px,#2C3036 8px 16px)' : inM ? 'background:#30353B' : 'background:#24272B'),
+        numStyle: 'font-size:13px;font-weight:' + (today ? '700' : '500') + ';color:' + (today ? '#ECEEF0' : '#C8CDD3')
+      });
+    }
+    return { accent, menu, cells };
+  }
+}
+</script>
+</body>
+</html>

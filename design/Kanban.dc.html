@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Канбан</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Geologica:wght@500;600;700&amp;family=Golos+Text:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+h1,h2,h3{font-family:Geologica,sans-serif;letter-spacing:-0.01em}
+a{color:#9DB6CB}a:hover{color:#C3D4E2}
+</style>
+</helmet>
+<div style="min-height: 900px; background: #1E2125; font-family: Golos Text, system-ui, sans-serif; color: #ECEEF0; display: flex; flex-wrap: wrap; gap: 16px; padding: 16px; box-sizing: border-box">
+  <nav aria-label="Главное меню" style="flex: 1 1 200px; max-width: 224px; background: #272B30; border-radius: 18px; padding: 18px 10px; display: flex; flex-direction: column; gap: 2px; box-sizing: border-box">
+    <div style="font-weight: 700; font-size: 14px; padding: 8px 10px 18px">Glanz &amp; Bau</div>
+    <sc-for list="{{menu}}" as="m" hint-placeholder-count="11"><a href="#" style="{{m.style}}">{{m.label}}</a></sc-for>
+  </nav>
+
+  <main style="flex: 999 1 700px; min-width: 0; display: flex; flex-direction: column; gap: 14px">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px">
+      <h1 style="margin: 0; font-size: 24px; font-weight: 700">Канбан</h1>
+      <div style="display: flex; gap: 8px; flex-wrap: wrap">
+        <div style="display: flex; background: #272B30; border-radius: 12px; padding: 3px">
+          <span style="padding: 8px 14px; font-size: 13px; color: #A0A8B1">Список</span>
+          <span style="padding: 8px 14px; border-radius: 9px; background: #3B4148; font-size: 13px; font-weight: 600">Канбан</span>
+          <span style="padding: 8px 14px; font-size: 13px; color: #A0A8B1">Календарь</span>
+        </div>
+        <button type="button" style="height: 40px; padding: 0 16px; border-radius: 12px; border: none; background: {{accent}}; color: #FFFFFF; font: 600 14px Golos Text, sans-serif">+ Задача</button>
+      </div>
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; background: #2F3D4A; border-radius: 14px; padding: 10px 14px">
+      <span style="font-weight: 600; font-size: 14px">Выбрано: 2</span>
+      <span style="flex: 1"></span>
+      <button type="button" style="height: 36px; padding: 0 12px; border-radius: 10px; border: none; background: #3B4A57; color: #ECEEF0; font: 500 13px Golos Text, sans-serif">Сменить исполнителя</button>
+      <button type="button" style="height: 36px; padding: 0 12px; border-radius: 10px; border: none; background: #3B4A57; color: #ECEEF0; font: 500 13px Golos Text, sans-serif">Перенести срок</button>
+      <button type="button" style="height: 36px; padding: 0 12px; border-radius: 10px; border: none; background: #3B4A57; color: #ECEEF0; font: 500 13px Golos Text, sans-serif">Статус</button>
+      <button type="button" style="height: 36px; padding: 0 12px; border-radius: 10px; border: none; background: #3B4A57; color: #ECEEF0; font: 500 13px Golos Text, sans-serif">Дублировать</button>
+      <button type="button" style="height: 36px; padding: 0 12px; border-radius: 10px; border: none; background: #4A2E2D; color: #F0B2AC; font: 500 13px Golos Text, sans-serif">Удалить</button>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; flex: 1; overflow-x: auto">
+      <sc-for list="{{cols}}" as="col" hint-placeholder-count="4">
+        <div style="background: #272B30; border-radius: 16px; padding: 12px; display: flex; flex-direction: column; gap: 8px; min-width: 230px">
+          <div style="display: flex; align-items: center; gap: 8px; padding: 2px 4px 6px">
+            <span style="{{col.dot}}"></span>
+            <span style="font-weight: 600; font-size: 14px; flex: 1">{{col.name}}</span>
+            <span style="font-size: 12px; color: #A0A8B1">{{col.count}}</span>
+          </div>
+          <sc-for list="{{col.cards}}" as="c" hint-placeholder-count="3">
+            <div style="{{c.style}}">
+              <div style="display: flex; gap: 8px; align-items: flex-start">
+                <span style="{{c.box}}"></span>
+                <div style="flex: 1; font-weight: 600; font-size: 14px">{{c.title}}</div>
+                <sc-if value="{{c.urgent}}" hint-placeholder-val="{{false}}"><span style="font-size: 11px; font-weight: 600; color: #F0B2AC; background: #4A2E2D; padding: 3px 6px; border-radius: 6px">Срочно</span></sc-if>
+              </div>
+              <div style="font-size: 12px; color: #A0A8B1">{{c.client}}</div>
+              <div style="display: flex; justify-content: space-between; align-items: center">
+                <div style="width: 26px; height: 26px; border-radius: 50%; background: #4A5A68; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center">{{c.ini}}</div>
+                <span style="font-size: 12px; color: #A0A8B1">{{c.meta}}</span>
+              </div>
+            </div>
+          </sc-for>
+          <button type="button" style="height: 38px; border-radius: 10px; border: 1px dashed #3B4148; background: transparent; color: #A0A8B1; font: 500 13px Golos Text, sans-serif">+ Добавить</button>
+        </div>
+      </sc-for>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#56728A","options":["#56728A","#5E6B5E","#5A5F66"]},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const accent = this.props.accent ?? '#56728A';
+    const mi = (on) => 'display:flex;align-items:center;min-height:42px;padding:0 12px;border-radius:11px;font-size:14px;text-decoration:none;' + (on ? 'background:#3B4148;color:#ECEEF0;font-weight:600' : 'color:#B9C0C8');
+    const menu = ['Задачи','Календарь','Канбан','Клиенты','Сотрудники','Смены и отпуска','Заявки','Деньги','Счета','Отчёты','Настройки'].map((l, i) => ({ label: l, style: mi(i === 2) }));
+    const dot = (c) => 'width:10px;height:10px;border-radius:50%;background:' + c;
+    const card = (sel) => 'background:#30353B;border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px;' + (sel ? 'box-shadow:inset 0 0 0 2px #7E9BB3' : '');
+    const box = (sel) => 'width:16px;height:16px;border-radius:5px;flex-shrink:0;margin-top:1px;' + (sel ? 'background:#7E9BB3' : 'border:1.5px solid #59616A');
+    const C = (title, client, ini, meta, urgent, sel) => ({ title, client, ini, meta, urgent, style: card(sel), box: box(sel) });
+    const cols = [
+      { name: 'Новая', dot: dot('#8A929B'), cards: [C('Покраска стены', 'Café Rosa', 'ОТ', 'завтра', false, true), C('Приём материала', 'Склад', 'АК', '16:00', false, true), C('Плитка в ванной', 'Fam. Schulz', 'ОТ', '20 нояб.', false, false)] },
+      { name: 'В работе', dot: dot('#7E9BB3'), cards: [C('Замена смесителя, кв. 12', 'Hausverwaltung Fürth', 'МС', '1 ч 10 мин', true, false), C('Уборка склада', 'Lagerhaus Nord', 'АК', 'просрочено', true, false)] },
+      { name: 'На проверке', dot: dot('#D8BC7E'), cards: [C('Генуборка офиса', 'Kanzlei Weber', 'ОТ', 'фото до/после', false, false), C('Мойка окон', 'Praxis Dr. Lang', 'ИП', '2 ч 05 мин', false, false)] },
+      { name: 'Готово', dot: dot('#8FB39C'), cards: [C('Вывоз мусора', 'Café Rosa', 'ОТ', '★ 5', false, false), C('Ремонт двери', 'Fam. Schulz', 'МС', 'принято', false, false)] }
+    ].map((c) => ({ ...c, count: String(c.cards.length) }));
+    return { accent, menu, cols };
+  }
+}
+</script>
+</body>
+</html>

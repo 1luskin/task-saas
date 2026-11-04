@@ -1,10 +1,11 @@
 import type { MetadataRoute } from "next";
+import { APP_NAME } from "@/config/app";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
     id: "/",
-    name: "Werkplan – Aufgaben & Verdienst",
-    short_name: "Werkplan",
+    name: `${APP_NAME} – Aufgaben & Verdienst`,
+    short_name: APP_NAME,
     start_url: "/",
     scope: "/",
     display: "standalone",

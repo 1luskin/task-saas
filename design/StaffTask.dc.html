@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Сотрудник — Задача</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Geologica:wght@500;600;700&amp;family=Golos+Text:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+h1,h2,h3{font-family:Geologica,sans-serif;letter-spacing:-0.01em}
+a{color:#9DB6CB}a:hover{color:#C3D4E2}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #1E2125; font-family: Golos Text, system-ui, sans-serif; color: #ECEEF0; display: flex; flex-direction: column">
+  <div style="flex: 1; padding: 22px 16px 12px; display: flex; flex-direction: column; gap: 12px; overflow: hidden">
+    <a href="#" style="font-size: 15px; text-decoration: none; min-height: 32px; display: flex; align-items: center">← Сегодня</a>
+    <div>
+      <div style="display: flex; gap: 6px">
+        <span style="font-size: 12px; font-weight: 600; padding: 4px 9px; border-radius: 999px; background: #2F3D4A; color: #9DB6CB">В работе · 1:10</span>
+        <span style="font-size: 12px; font-weight: 600; padding: 4px 9px; border-radius: 999px; background: #4A2E2D; color: #F0B2AC">Срочно</span>
+      </div>
+      <h1 style="margin: 10px 0 0; font-size: 26px; font-weight: 700">Замена смесителя</h1>
+      <div style="font-size: 15px; color: #A0A8B1; margin-top: 4px">Hausverwaltung Fürth · кв. 12 · до 14:00</div>
+    </div>
+
+    <div style="background: #272B30; border-radius: 18px; padding: 6px 14px">
+      <sc-for list="{{check}}" as="c" hint-placeholder-count="3">
+        <div style="display: flex; align-items: center; gap: 12px; min-height: 52px; border-top: 1px solid #30353B; font-size: 16px">
+          <span style="{{c.box}}">
+            <sc-if value="{{c.done}}" hint-placeholder-val="{{false}}"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"></path></svg></sc-if>
+          </span>
+          <span style="{{c.text}}">{{c.t}}</span>
+        </div>
+      </sc-for>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+      <button type="button" style="height: 84px; border-radius: 16px; border: 1px dashed #4A5058; background: #272B30; color: #C8CDD3; font: 500 14px Golos Text, sans-serif">+ Фото «до»</button>
+      <button type="button" style="height: 84px; border-radius: 16px; border: 1px dashed #4A5058; background: #272B30; color: #C8CDD3; font: 500 14px Golos Text, sans-serif">+ Фото «после»</button>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+      <button type="button" style="height: 50px; border-radius: 14px; border: 1px solid #3B4148; background: transparent; color: #ECEEF0; font: 500 15px Golos Text, sans-serif">+ Расход / чек</button>
+      <button type="button" style="height: 50px; border-radius: 14px; border: 1px solid #3B4148; background: transparent; color: #ECEEF0; font: 500 15px Golos Text, sans-serif">Комментарий</button>
+    </div>
+    <details style="background: #272B30; border-radius: 16px; padding: 14px">
+      <summary style="font-size: 15px; font-weight: 600; cursor: pointer">Дополнительно</summary>
+      <div style="font-size: 14px; color: #C8CDD3; margin-top: 8px">Адрес: Schwabacher Str. 40, Fürth · <a href="#">открыть в навигаторе</a></div>
+    </details>
+  </div>
+  <div style="padding: 12px 16px 28px; background: #272B30; border-top: 1px solid #30353B">
+    <button type="button" style="width: 100%; height: 60px; border-radius: 16px; border: none; background: {{accent}}; color: #FFFFFF; font: 700 18px Golos Text, sans-serif">Закончил · на проверку</button>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#56728A","options":["#56728A","#5E6B5E","#5A5F66"]},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const accent = this.props.accent ?? '#56728A';
+    const box = (d) => 'width:26px;height:26px;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;' + (d ? 'background:' + accent : 'border:2px solid #59616A');
+    const check = [['Перекрыть воду', true], ['Снять старый смеситель', false], ['Установить и проверить', false]]
+      .map((c) => ({ t: c[0], done: c[1], box: box(c[1]), text: c[1] ? 'color:#A0A8B1;text-decoration:line-through' : '' }));
+    return { accent, check };
+  }
+}
+</script>
+</body>
+</html>

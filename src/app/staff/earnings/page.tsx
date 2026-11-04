@@ -20,7 +20,7 @@ export default async function EarningsPage() {
   const m = month.perMember.get(ctx.member.id);
   const rows = report.rows.filter((r) => r.payoutCents > 0 || r.minutes > 0).reverse();
 
-  const Card = ({ title, e }: { title: string; e: typeof w }) => (
+  const card = ({ title, e }: { title: string; e: typeof w }) => (
     <div className="card-white p-4">
       <div className="text-sm text-muted">{title}</div>
       <div className="mt-1 text-3xl font-semibold text-accent">{formatMoney(e?.totalCents ?? 0, locale)}</div>
@@ -35,8 +35,8 @@ export default async function EarningsPage() {
     <div className="space-y-4">
       <h1 className="text-2xl font-semibold tracking-tight">{t("nav.earnings")}</h1>
       <div className="grid gap-3 sm:grid-cols-2">
-        <Card title={t("staff.earningsWeek")} e={w} />
-        <Card title={t("staff.earningsMonth")} e={m} />
+        {card({ title: t("staff.earningsWeek"), e: w })}
+        {card({ title: t("staff.earningsMonth"), e: m })}
       </div>
       <h2 className="font-semibold">{t("staff.perTask")}</h2>
       <div className="card-white divide-y divide-line/70">

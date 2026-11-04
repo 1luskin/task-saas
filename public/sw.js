@@ -1,4 +1,8 @@
-/* Werkplan Service Worker – Offline-Cache + Web Push */
+/* Service Worker – Offline-Cache + Web Push. Produktname kommt aus /sw-config.js (src/config/app.ts) */
+try {
+  importScripts("/sw-config.js");
+} catch (_) {}
+const APP_NAME = self.__APP_NAME || "App";
 const VERSION = "v1";
 const PAGE_CACHE = `pages-${VERSION}`;
 const STATIC_CACHE = `static-${VERSION}`;
@@ -72,7 +76,7 @@ self.addEventListener("message", (event) => {
 });
 
 self.addEventListener("push", (event) => {
-  let data = { title: "Werkplan", body: "", url: "/" };
+  let data = { title: APP_NAME, body: "", url: "/" };
   try {
     data = { ...data, ...event.data.json() };
   } catch (_) {}

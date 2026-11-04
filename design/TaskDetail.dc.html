@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Задача — детали</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Geologica:wght@500;600;700&amp;family=Golos+Text:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+h1,h2,h3{font-family:Geologica,sans-serif;letter-spacing:-0.01em}
+a{color:#9DB6CB}a:hover{color:#C3D4E2}
+</style>
+</helmet>
+<div style="min-height: 980px; background: #1E2125; font-family: Golos Text, system-ui, sans-serif; color: #ECEEF0; padding: 16px; box-sizing: border-box">
+  <div style="max-width: 1360px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px">
+    <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap">
+      <a href="#" style="font-size: 14px; text-decoration: none">← Задачи</a>
+      <span style="flex: 1"></span>
+      <button type="button" style="height: 42px; padding: 0 14px; border-radius: 12px; border: 1px solid #3B4148; background: #272B30; color: #ECEEF0; font: 500 14px Golos Text, sans-serif">QR-наклейка</button>
+      <button type="button" style="height: 42px; padding: 0 14px; border-radius: 12px; border: 1px solid #3B4148; background: #272B30; color: #ECEEF0; font: 500 14px Golos Text, sans-serif">Дублировать</button>
+      <button type="button" style="height: 42px; padding: 0 14px; border-radius: 12px; border: 1px solid #3B4148; background: #272B30; color: #ECEEF0; font: 500 14px Golos Text, sans-serif">Ссылка заказчику</button>
+    </div>
+
+    <div style="background: #463D2A; border-radius: 16px; padding: 14px 16px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap">
+      <div style="flex: 1; min-width: 240px">
+        <div style="font-weight: 700; font-size: 15px; color: #EBD7A8">Ждёт вашей проверки</div>
+        <div style="font-size: 13px; color: #D9C7A0; margin-top: 2px">Олег Т. закончил сегодня в 13:42 · авто-приёмка через 3 дня</div>
+      </div>
+      <button type="button" style="height: 44px; padding: 0 16px; border-radius: 12px; border: 1px solid #7A6A48; background: transparent; color: #EBD7A8; font: 600 14px Golos Text, sans-serif">Вернуть на доработку</button>
+      <button type="button" style="height: 44px; padding: 0 18px; border-radius: 12px; border: none; background: {{accent}}; color: #FFFFFF; font: 600 14px Golos Text, sans-serif">Принять работу</button>
+    </div>
+
+    <div style="display: flex; gap: 14px; flex-wrap: wrap; align-items: flex-start">
+      <div style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; gap: 14px">
+        <section style="background: #272B30; border-radius: 18px; padding: 20px">
+          <div style="display: flex; gap: 8px; margin-bottom: 10px">
+            <span style="font-size: 12px; font-weight: 600; padding: 4px 9px; border-radius: 999px; background: #463D2A; color: #E2C98F">На проверке</span>
+            <span style="font-size: 12px; padding: 4px 9px; border-radius: 999px; background: #3B4148; color: #C8CDD3">Обычный приоритет</span>
+          </div>
+          <h1 style="margin: 0; font-size: 26px; font-weight: 700">Генеральная уборка офиса</h1>
+          <p style="margin: 10px 0 0; color: #C8CDD3; font-size: 15px; line-height: 1.55">Офис 2 этаж, 6 кабинетов и кухня. Ключ у администратора на ресепшене. Не трогать бумаги на столах.</p>
+        </section>
+
+        <section style="background: #272B30; border-radius: 18px; padding: 20px">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 12px">
+            <h2 style="margin: 0; font-size: 17px">Чек-лист</h2><span style="font-size: 13px; color: #A0A8B1">4 из 4</span>
+          </div>
+          <sc-for list="{{check}}" as="c" hint-placeholder-count="4">
+            <div style="display: flex; align-items: center; gap: 10px; padding: 9px 0; border-top: 1px solid #30353B; font-size: 15px">
+              <span style="width: 20px; height: 20px; border-radius: 6px; background: #56728A; display: flex; align-items: center; justify-content: center">
+                <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"></path></svg>
+              </span>
+              <span>{{c}}</span>
+            </div>
+          </sc-for>
+        </section>
+
+        <section style="background: #272B30; border-radius: 18px; padding: 20px">
+          <h2 style="margin: 0 0 12px; font-size: 17px">Фото до / после</h2>
+          <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+            <div style="height: 180px; border-radius: 14px; background: #30353B; display: flex; align-items: flex-end; padding: 10px; box-sizing: border-box; font-size: 13px; color: #A0A8B1">[ФОТО «ДО»]</div>
+            <div style="height: 180px; border-radius: 14px; background: #353A41; display: flex; align-items: flex-end; padding: 10px; box-sizing: border-box; font-size: 13px; color: #A0A8B1">[ФОТО «ПОСЛЕ»]</div>
+          </div>
+          <div style="display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap">
+            <span style="font-size: 13px; padding: 8px 12px; border-radius: 10px; background: #30353B">смета_kanzlei.pdf</span>
+            <span style="font-size: 13px; padding: 8px 12px; border-radius: 10px; background: #30353B">План этажа.pdf</span>
+          </div>
+        </section>
+
+        <section style="background: #272B30; border-radius: 18px; padding: 20px">
+          <h2 style="margin: 0 0 12px; font-size: 17px">Комментарии</h2>
+          <sc-for list="{{comments}}" as="m" hint-placeholder-count="2">
+            <div style="display: flex; gap: 10px; padding: 10px 0; border-top: 1px solid #30353B">
+              <div style="width: 32px; height: 32px; border-radius: 50%; background: #4A5A68; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700">{{m.ini}}</div>
+              <div>
+                <div style="font-size: 13px"><b>{{m.who}}</b> <span style="color: #A0A8B1">{{m.time}}</span></div>
+                <div style="font-size: 15px; margin-top: 3px; color: #D5D9DE">{{m.text}}</div>
+              </div>
+            </div>
+          </sc-for>
+          <label style="display: flex; gap: 8px; margin-top: 10px">
+            <span style="position: absolute; left: -9999px">Комментарий</span>
+            <input type="text" placeholder="Напишите комментарий, @ — отметить человека" style="flex: 1; height: 46px; border-radius: 12px; border: 1px solid #3B4148; background: #1E2125; color: #ECEEF0; padding: 0 14px; font: 14px Golos Text, sans-serif">
+          </label>
+        </section>
+      </div>
+
+      <aside style="flex: 1 1 340px; max-width: 420px; display: flex; flex-direction: column; gap: 14px">
+        <section style="background: #272B30; border-radius: 18px; padding: 20px; display: flex; flex-direction: column; gap: 12px">
+          <sc-for list="{{meta}}" as="r" hint-placeholder-count="6">
+            <div style="display: flex; justify-content: space-between; gap: 10px; font-size: 14px">
+              <span style="color: #A0A8B1">{{r.k}}</span><span style="font-weight: 500; text-align: right">{{r.v}}</span>
+            </div>
+          </sc-for>
+        </section>
+        <section style="background: #272B30; border-radius: 18px; padding: 20px">
+          <h2 style="margin: 0 0 12px; font-size: 17px">Деньги по задаче</h2>
+          <sc-for list="{{money}}" as="r" hint-placeholder-count="4">
+            <div style="{{r.style}}"><span>{{r.k}}</span><span>{{r.v}}</span></div>
+          </sc-for>
+          <div style="margin-top: 10px; font-size: 12px; color: #A0A8B1">Видит только начальник</div>
+        </section>
+        <section style="background: #272B30; border-radius: 18px; padding: 20px">
+          <h2 style="margin: 0 0 12px; font-size: 17px">Геометка</h2>
+          <div style="height: 150px; border-radius: 14px; background: linear-gradient(0deg, #30353B, #30353B); position: relative; overflow: hidden">
+            <div style="position: absolute; left: 0; right: 0; top: 70px; height: 10px; background: #3B4148"></div>
+            <div style="position: absolute; top: 0; bottom: 0; left: 120px; width: 10px; background: #3B4148"></div>
+            <div style="position: absolute; left: 150px; top: 46px; width: 16px; height: 16px; border-radius: 50%; background: #7E9BB3; box-shadow: 0 0 0 6px rgba(126,155,179,.25)"></div>
+          </div>
+          <div style="font-size: 13px; color: #A0A8B1; margin-top: 8px">Начал 11:20 и закончил 13:42 · у объекта (40 м)</div>
+        </section>
+      </aside>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#56728A","options":["#56728A","#5E6B5E","#5A5F66"]},"$preview":{"width":1440,"height":980}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const accent = this.props.accent ?? '#56728A';
+    const check = ['Пропылесосить все кабинеты', 'Влажная уборка полов', 'Кухня: столы и раковина', 'Вынести мусор'];
+    const comments = [
+      { ini: 'ЕК', who: 'Елена К.', time: 'вчера 18:10', text: '@Олег на кухне особенно внимательно, клиент жаловался' },
+      { ini: 'ОТ', who: 'Олег Т.', time: 'сегодня 13:40', text: 'Готово, кухню сделал отдельно, фото приложил' }
+    ];
+    const meta = [
+      { k: 'Исполнитель', v: 'Олег Т.' }, { k: 'Клиент', v: 'Kanzlei Weber' }, { k: 'Адрес', v: 'Königstraße 12, Fürth' },
+      { k: 'Срок', v: 'сегодня, 15:00' }, { k: 'Время работы', v: '2 ч 22 мин' }, { k: 'Группа', v: 'Клининг' }
+    ];
+    const row = 'display:flex;justify-content:space-between;font-size:14px;padding:7px 0;color:#C8CDD3';
+    const money = [
+      { k: 'Цена для клиента', v: '220,00 €', style: row },
+      { k: 'Выплата сотруднику', v: '− 64,00 €', style: row },
+      { k: 'Расходы (2 чека)', v: '− 18,40 €', style: row },
+      { k: 'Прибыль', v: '137,60 €', style: 'display:flex;justify-content:space-between;font-size:16px;font-weight:700;padding:10px 0 0;border-top:1px solid #3B4148;margin-top:4px' }
+    ];
+    return { accent, check, comments, meta, money };
+  }
+}
+</script>
+</body>
+</html>

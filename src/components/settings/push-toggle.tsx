@@ -8,9 +8,20 @@ export function PushToggle() {
   const [state, setState] = useState<"loading" | "on" | "off" | "unsupported" | "denied">("loading");
 
   useEffect(() => {
-    if (!pushSupported()) return setState("unsupported");
-    if (Notification.permission === "denied") return setState("denied");
-    currentSubscription().then((s) => setState(s ? "on" : "off"));
+    let cancelled = false;
+    (async () => {
+      const next = !pushSupported()
+        ? "unsupported"
+        : Notification.permission === "denied"
+          ? "denied"
+          : (await currentSubscription())
+            ? "on"
+            : "off";
+      if (!cancelled) setState(next);
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   if (state === "unsupported") return <p className="text-sm text-muted">{t("settings.pushUnsupported")}</p>;

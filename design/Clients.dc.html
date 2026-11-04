@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Клиенты</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Geologica:wght@500;600;700&amp;family=Golos+Text:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+h1,h2,h3{font-family:Geologica,sans-serif;letter-spacing:-0.01em}
+a{color:#9DB6CB}a:hover{color:#C3D4E2}
+</style>
+</helmet>
+<div style="min-height: 980px; background: #1E2125; font-family: Golos Text, system-ui, sans-serif; color: #ECEEF0; display: flex; flex-wrap: wrap; gap: 16px; padding: 16px; box-sizing: border-box">
+  <nav aria-label="Главное меню" style="flex: 1 1 200px; max-width: 224px; background: #272B30; border-radius: 18px; padding: 18px 10px; display: flex; flex-direction: column; gap: 2px; box-sizing: border-box">
+    <div style="font-weight: 700; font-size: 14px; padding: 8px 10px 18px">Glanz &amp; Bau</div>
+    <sc-for list="{{menu}}" as="m" hint-placeholder-count="11"><a href="#" style="{{m.style}}">{{m.label}}</a></sc-for>
+  </nav>
+
+  <section style="flex: 1 1 340px; max-width: 420px; background: #272B30; border-radius: 18px; padding: 16px; display: flex; flex-direction: column; gap: 8px">
+    <div style="display: flex; justify-content: space-between; align-items: center; padding: 4px 4px 8px">
+      <h1 style="margin: 0; font-size: 22px; font-weight: 700">Клиенты</h1>
+      <button type="button" style="height: 38px; padding: 0 12px; border-radius: 11px; border: none; background: {{accent}}; color: #FFFFFF; font: 600 13px Golos Text, sans-serif">+ Клиент</button>
+    </div>
+    <div style="display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-radius: 12px; background: #2E3640; font-size: 13px; color: #C3D4E2">
+      <span style="flex: 1">2 новые заявки с вашей страницы</span><a href="#" style="font-weight: 600; text-decoration: none">Открыть</a>
+    </div>
+    <sc-for list="{{clients}}" as="c" hint-placeholder-count="6">
+      <div style="{{c.style}}">
+        <div style="width: 40px; height: 40px; border-radius: 12px; background: #3B4148; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px">{{c.ini}}</div>
+        <div style="flex: 1; min-width: 0">
+          <div style="font-weight: 600; font-size: 14px">{{c.name}}</div>
+          <div style="font-size: 12px; color: #A0A8B1">{{c.meta}}</div>
+        </div>
+        <span style="font-size: 13px; font-weight: 600">{{c.sum}}</span>
+      </div>
+    </sc-for>
+  </section>
+
+  <main style="flex: 999 1 520px; min-width: 0; display: flex; flex-direction: column; gap: 14px">
+    <section style="background: #272B30; border-radius: 18px; padding: 22px; display: flex; gap: 18px; flex-wrap: wrap; align-items: center">
+      <div style="width: 64px; height: 64px; border-radius: 18px; background: #3B4148; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 20px">KW</div>
+      <div style="flex: 1; min-width: 220px">
+        <h2 style="margin: 0; font-size: 24px">Kanzlei Weber</h2>
+        <div style="font-size: 14px; color: #A0A8B1; margin-top: 4px">Königstraße 12, Fürth · +49 911 [ТЕЛЕФОН] · info@[EMAIL]</div>
+      </div>
+      <div style="display: flex; gap: 8px; flex-wrap: wrap">
+        <button type="button" style="height: 42px; padding: 0 14px; border-radius: 12px; border: 1px solid #3B4148; background: transparent; color: #ECEEF0; font: 500 14px Golos Text, sans-serif">QR объекта</button>
+        <button type="button" style="height: 42px; padding: 0 14px; border-radius: 12px; border: 1px solid #3B4148; background: transparent; color: #ECEEF0; font: 500 14px Golos Text, sans-serif">Предложение</button>
+        <button type="button" style="height: 42px; padding: 0 16px; border-radius: 12px; border: none; background: {{accent}}; color: #FFFFFF; font: 600 14px Golos Text, sans-serif">+ Задача</button>
+      </div>
+    </section>
+
+    <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px">
+      <sc-for list="{{kpis}}" as="k" hint-placeholder-count="4">
+        <div style="background: #272B30; border-radius: 16px; padding: 16px">
+          <div style="font-size: 13px; color: #A0A8B1">{{k.label}}</div>
+          <div style="font-size: 24px; font-weight: 700; margin-top: 6px">{{k.value}}</div>
+        </div>
+      </sc-for>
+    </div>
+
+    <div style="display: flex; gap: 14px; flex-wrap: wrap">
+      <section style="flex: 2 1 380px; background: #272B30; border-radius: 18px; padding: 20px">
+        <h3 style="margin: 0 0 10px; font-size: 17px">История задач</h3>
+        <sc-for list="{{hist}}" as="h" hint-placeholder-count="5">
+          <div style="display: flex; gap: 10px; align-items: center; padding: 10px 0; border-top: 1px solid #30353B; font-size: 14px">
+            <span style="color: #A0A8B1; width: 70px">{{h.date}}</span>
+            <span style="flex: 1">{{h.title}}</span>
+            <span style="color: #A0A8B1">{{h.who}}</span>
+            <span style="width: 74px; text-align: right; font-weight: 600">{{h.sum}}</span>
+          </div>
+        </sc-for>
+      </section>
+      <section style="flex: 1 1 280px; background: #272B30; border-radius: 18px; padding: 20px; display: flex; flex-direction: column; gap: 12px">
+        <h3 style="margin: 0; font-size: 17px">Отзывы клиента</h3>
+        <sc-for list="{{reviews}}" as="r" hint-placeholder-count="2">
+          <div style="background: #30353B; border-radius: 12px; padding: 12px">
+            <div style="color: #E2C98F; font-size: 14px; letter-spacing: 2px">{{r.stars}}</div>
+            <div style="font-size: 14px; margin-top: 6px; color: #D5D9DE">{{r.text}}</div>
+            <div style="font-size: 12px; color: #A0A8B1; margin-top: 6px">{{r.meta}}</div>
+          </div>
+        </sc-for>
+        <div style="font-size: 13px; color: #A0A8B1">Ссылка заказчику: цена <b style="color: #ECEEF0">показывается</b> · изменить</div>
+      </section>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#56728A","options":["#56728A","#5E6B5E","#5A5F66"]},"$preview":{"width":1440,"height":980}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const accent = this.props.accent ?? '#56728A';
+    const mi = (on) => 'display:flex;align-items:center;min-height:42px;padding:0 12px;border-radius:11px;font-size:14px;text-decoration:none;' + (on ? 'background:#3B4148;color:#ECEEF0;font-weight:600' : 'color:#B9C0C8');
+    const menu = ['Задачи','Календарь','Канбан','Клиенты','Сотрудники','Смены и отпуска','Заявки','Деньги','Счета','Отчёты','Настройки'].map((l, i) => ({ label: l, style: mi(i === 3) }));
+    const row = (on) => 'display:flex;align-items:center;gap:12px;padding:10px;border-radius:12px;' + (on ? 'background:#353A41;box-shadow:inset 0 0 0 1px #56728A' : 'background:#30353B');
+    const clients = [
+      ['KW', 'Kanzlei Weber', '12 задач · ★ 5.0', '2 640 €', true], ['HF', 'Hausverwaltung Fürth', '31 задача · ★ 4.8', '7 920 €', false],
+      ['CR', 'Café Rosa', '8 задач · ★ 4.6', '1 180 €', false], ['LN', 'Lagerhaus Nord', '20 задач · ★ 4.4', '4 300 €', false],
+      ['PL', 'Praxis Dr. Lang', '6 задач · ★ 5.0', '930 €', false], ['FS', 'Fam. Schulz', '3 задачи · новый', '960 €', false]
+    ].map((c) => ({ ini: c[0], name: c[1], meta: c[2], sum: c[3], style: row(c[4]) }));
+    const kpis = [{ label: 'Выручка всего', value: '2 640 €' }, { label: 'Прибыль', value: '1 610 €' }, { label: 'Задач', value: '12' }, { label: 'Средняя оценка', value: '★ 5.0' }];
+    const hist = [
+      { date: '04.11', title: 'Генеральная уборка офиса', who: 'Олег Т.', sum: '220 €' },
+      { date: '28.10', title: 'Мойка окон', who: 'Ирина П.', sum: '160 €' },
+      { date: '21.10', title: 'Уборка после ремонта', who: 'Мария С.', sum: '480 €' },
+      { date: '14.10', title: 'Еженедельная уборка', who: 'Мария С.', sum: '180 €' },
+      { date: '07.10', title: 'Еженедельная уборка', who: 'Мария С.', sum: '180 €' }
+    ];
+    const reviews = [
+      { stars: '★★★★★', text: 'Очень аккуратно, кухня сияет. Спасибо!', meta: '28.10 · можно публиковать' },
+      { stars: '★★★★★', text: 'Пунктуально и без лишних вопросов.', meta: '21.10 · не публиковать' }
+    ];
+    return { accent, menu, clients, kpis, hist, reviews };
+  }
+}
+</script>
+</body>
+</html>

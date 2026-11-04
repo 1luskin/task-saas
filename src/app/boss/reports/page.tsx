@@ -17,7 +17,7 @@ export default async function ReportsPage() {
   ]);
   const name = (id: string) => members.find((m) => m.id === id)?.full_name ?? "?";
 
-  const Bars = ({ title, f }: { title: string; f: typeof week }) => {
+  const bars = ({ title, f }: { title: string; f: typeof week }) => {
     const rows = [...f.perMember.values()].sort((a, b) => b.tasksDone - a.tasksDone);
     const max = Math.max(1, ...rows.map((r) => r.tasksDone));
     return (
@@ -58,8 +58,8 @@ export default async function ReportsPage() {
       </PageTitle>
       <h2 className="font-semibold text-muted">{t("reports.doneByEmployee")}</h2>
       <div className="grid gap-4 lg:grid-cols-2">
-        <Bars title={t("reports.thisWeek")} f={week} />
-        <Bars title={t("reports.thisMonth")} f={month} />
+        {bars({ title: t("reports.thisWeek"), f: week })}
+        {bars({ title: t("reports.thisMonth"), f: month })}
       </div>
     </div>
   );

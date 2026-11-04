@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Суперадмин</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Geologica:wght@500;600;700&amp;family=Golos+Text:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+h1,h2,h3{font-family:Geologica,sans-serif;letter-spacing:-0.01em}
+a{color:#9DB6CB}a:hover{color:#C3D4E2}
+</style>
+</helmet>
+<div style="min-height: 980px; background: #17191C; font-family: Golos Text, system-ui, sans-serif; color: #ECEEF0; display: flex; flex-wrap: wrap; gap: 16px; padding: 16px; box-sizing: border-box">
+  <nav aria-label="Админ-меню" style="flex: 1 1 200px; max-width: 224px; background: #222529; border-radius: 18px; padding: 18px 10px; display: flex; flex-direction: column; gap: 2px; box-sizing: border-box">
+    <div style="display: flex; align-items: center; gap: 8px; padding: 8px 10px 18px">
+      <span style="font-weight: 700; font-size: 14px">Суперадмин</span>
+      <span style="font-size: 11px; font-weight: 600; padding: 2px 7px; border-radius: 6px; background: #4A2E2D; color: #F0B2AC">только ты</span>
+    </div>
+    <sc-for list="{{menu}}" as="m" hint-placeholder-count="7"><a href="#" style="{{m.style}}">{{m.label}}</a></sc-for>
+  </nav>
+
+  <main style="flex: 999 1 700px; min-width: 0; display: flex; flex-direction: column; gap: 14px">
+    <h1 style="margin: 0; font-size: 24px; font-weight: 700">Обзор</h1>
+    <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px">
+      <sc-for list="{{kpis}}" as="k" hint-placeholder-count="4">
+        <div style="background: #222529; border-radius: 16px; padding: 16px">
+          <div style="font-size: 13px; color: #A0A8B1">{{k.label}}</div>
+          <div style="font-size: 28px; font-weight: 700; margin-top: 6px">{{k.value}}</div>
+          <div style="font-size: 12px; color: #A0A8B1; margin-top: 4px">{{k.sub}}</div>
+        </div>
+      </sc-for>
+    </div>
+
+    <section style="background: #222529; border-radius: 18px; padding: 18px; overflow-x: auto">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; gap: 10px; flex-wrap: wrap">
+        <h2 style="margin: 0; font-size: 17px">Фирмы</h2>
+        <input type="search" aria-label="Поиск фирм" placeholder="Поиск фирмы…" style="height: 38px; border-radius: 10px; border: 1px solid #33383E; background: #17191C; color: #ECEEF0; padding: 0 12px; font: 13px Golos Text, sans-serif">
+      </div>
+      <div style="min-width: 760px">
+        <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1.3fr 1.6fr; gap: 10px; padding: 8px 10px; font-size: 12px; color: #A0A8B1">
+          <span>Фирма</span><span>Сотрудники</span><span>Создана</span><span>Активность</span><span>Статус</span><span>Действия</span>
+        </div>
+        <sc-for list="{{firms}}" as="f" hint-placeholder-count="6">
+          <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1.3fr 1.6fr; gap: 10px; align-items: center; padding: 10px; border-radius: 12px; background: #2A2E33; margin-top: 6px; font-size: 14px">
+            <span style="font-weight: 600">{{f.name}}</span><span>{{f.staff}}</span><span style="color: #A0A8B1">{{f.created}}</span><span style="color: #A0A8B1">{{f.active}}</span>
+            <span style="{{f.style}}">{{f.status}}</span>
+            <span style="display: flex; gap: 6px">
+              <button type="button" style="height: 32px; padding: 0 10px; border-radius: 8px; border: none; background: #33383E; color: #ECEEF0; font: 500 12px Golos Text, sans-serif">+14 дней</button>
+              <button type="button" style="height: 32px; padding: 0 10px; border-radius: 8px; border: none; background: #33383E; color: #ECEEF0; font: 500 12px Golos Text, sans-serif">Флаги</button>
+              <button type="button" style="height: 32px; padding: 0 10px; border-radius: 8px; border: none; background: #3A2726; color: #F0B2AC; font: 500 12px Golos Text, sans-serif">Блок</button>
+            </span>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+
+    <div style="display: flex; gap: 14px; flex-wrap: wrap">
+      <section style="flex: 1 1 380px; background: #222529; border-radius: 18px; padding: 18px">
+        <h2 style="margin: 0 0 8px; font-size: 17px">Флаги функций · для всех</h2>
+        <sc-for list="{{flags}}" as="g" hint-placeholder-count="5">
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 9px 0; border-top: 1px solid #2A2E33; font-size: 14px">
+            <span>{{g.name}}</span><span style="{{g.style}}">{{g.v}}</span>
+          </div>
+        </sc-for>
+      </section>
+      <section style="flex: 1 1 380px; background: #222529; border-radius: 18px; padding: 18px">
+        <h2 style="margin: 0 0 8px; font-size: 17px">Тарифы</h2>
+        <sc-for list="{{plans}}" as="p" hint-placeholder-count="3">
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-top: 1px solid #2A2E33; font-size: 14px">
+            <span style="font-weight: 600">{{p.name}}</span><span style="color: #A0A8B1">{{p.v}}</span>
+          </div>
+        </sc-for>
+        <div style="font-size: 12px; color: #A0A8B1; margin-top: 8px">Оплата: заглушка, Stripe пока не подключён</div>
+      </section>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":980}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const mi = (on) => 'display:flex;align-items:center;min-height:42px;padding:0 12px;border-radius:11px;font-size:14px;text-decoration:none;' + (on ? 'background:#33383E;color:#ECEEF0;font-weight:600' : 'color:#B9C0C8');
+    const menu = ['Обзор', 'Фирмы', 'Флаги функций', 'Тарифы и цены', 'Тексты лендинга', 'Отзывы', 'Журнал'].map((l, i) => ({ label: l, style: mi(i === 0) }));
+    const kpis = [
+      { label: 'Фирм всего', value: '[N]', sub: '+[N] за неделю' }, { label: 'Активны за 7 дней', value: '[N]', sub: 'заходили хоть раз' },
+      { label: 'В пробном периоде', value: '[N]', sub: '[N] заканчиваются за 3 дня' }, { label: 'Сотрудников всего', value: '[N]', sub: 'во всех фирмах' }
+    ];
+    const pill = (bg, c) => 'justify-self:start;font-size:12px;font-weight:600;padding:4px 9px;border-radius:999px;background:' + bg + ';color:' + c;
+    const T = pill('#2F3D4A', '#9DB6CB'), E = pill('#463D2A', '#E2C98F'), P = pill('#2E3A33', '#A9C9B4'), B = pill('#4A2E2D', '#F0B2AC');
+    const firms = [
+      ['Glanz & Bau Service', '6', '01.11', 'сегодня', 'Пробный · 9 дн', T], ['Malerbetrieb Kraus', '4', '28.10', 'вчера', 'Пробный · 2 дн', E],
+      ['Umzug Express Nbg', '11', '15.10', 'сегодня', 'Платный', P], ['Haus & Garten Huber', '2', '12.10', '9 дней назад', 'Пробный закончился', E],
+      ['Fliesen Yilmaz', '3', '03.10', 'сегодня', 'Платный', P], ['Test GmbH', '1', '01.10', '30 дней назад', 'Заблокирована', B]
+    ].map((f) => ({ name: f[0], staff: f[1], created: f[2], active: f[3], status: f[4], style: f[5] }));
+    const on = 'font-size:12px;font-weight:600;color:#A9C9B4', off = 'font-size:12px;font-weight:600;color:#A0A8B1', some = 'font-size:12px;font-weight:600;color:#E2C98F';
+    const flags = [
+      { name: 'Счета (ZUGFeRD)', v: 'бета · 3 фирмы', style: some }, { name: 'Экспорт DATEV', v: 'включено', style: on },
+      { name: 'Геозона', v: 'включено', style: on }, { name: 'Учёт материалов', v: 'выключено', style: off }, { name: 'Форма заявки клиента', v: 'включено', style: on }
+    ];
+    const plans = [{ name: 'Start', v: '[ЦЕНА] € / сотрудник / мес' }, { name: 'Pro', v: '[ЦЕНА] € / сотрудник / мес' }, { name: 'Пробный период', v: '14 дней' }];
+    return { menu, kpis, firms, flags, plans };
+  }
+}
+</script>
+</body>
+</html>

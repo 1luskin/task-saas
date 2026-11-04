@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Дашборд начальника</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Geologica:wght@500;600;700&amp;family=Golos+Text:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+h1,h2,h3{font-family:Geologica,sans-serif;letter-spacing:-0.01em}
+a{color:#9DB6CB}a:hover{color:#C3D4E2}
+</style>
+</helmet>
+<div style="min-height: 900px; background: #1E2125; font-family: Golos Text, system-ui, sans-serif; color: #ECEEF0; display: flex; flex-wrap: wrap; gap: 16px; padding: 16px; box-sizing: border-box">
+
+  <nav aria-label="Главное меню" style="flex: 1 1 200px; max-width: 224px; background: #272B30; border-radius: 18px; padding: 18px 10px; display: flex; flex-direction: column; gap: 2px; box-sizing: border-box">
+    <div style="display: flex; align-items: center; gap: 10px; padding: 4px 10px 18px">
+      <div style="width: 34px; height: 34px; border-radius: 10px; background: #56728A; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px">GB</div>
+      <div>
+        <div style="font-weight: 700; font-size: 14px">Glanz &amp; Bau</div>
+        <div style="font-size: 12px; color: #A0A8B1">[НАЗВАНИЕ]</div>
+      </div>
+    </div>
+    <sc-for list="{{menu}}" as="m" hint-placeholder-count="11">
+      <a href="#" style="{{m.style}}">
+        <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="{{m.icon}}"></path></svg>
+        <span style="flex: 1">{{m.label}}</span>
+        <sc-if value="{{m.badge}}" hint-placeholder-val="{{false}}"><span style="font-size: 11px; font-weight: 600; background: #3B4148; color: #ECEEF0; padding: 2px 7px; border-radius: 999px">{{m.badge}}</span></sc-if>
+      </a>
+    </sc-for>
+    <div style="margin-top: auto; padding: 12px; border-radius: 14px; background: #30353B; font-size: 13px">
+      <div style="font-weight: 600">Пробный период</div>
+      <div style="color: #A0A8B1; margin-top: 4px">Осталось 9 из 14 дней</div>
+      <div style="height: 6px; border-radius: 999px; background: #3B4148; margin-top: 10px"><div style="width: 36%; height: 6px; border-radius: 999px; background: #7E9BB3"></div></div>
+      <a href="#" style="display: inline-block; margin-top: 10px; font-weight: 600; text-decoration: none">Тарифы</a>
+    </div>
+  </nav>
+
+  <main style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; gap: 14px">
+    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap">
+      <label style="flex: 1 1 280px; display: flex; align-items: center; gap: 10px; height: 46px; padding: 0 14px; background: #272B30; border-radius: 14px; color: #A0A8B1; font-size: 14px">
+        <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M11 18a7 7 0 100-14 7 7 0 000 14zM20 20l-4-4"></path></svg>
+        <span style="position: absolute; left: -9999px">Поиск</span>
+        <input type="search" placeholder="Поиск задач, людей, клиентов…" style="flex: 1; background: transparent; border: none; outline: none; color: #ECEEF0; font: 14px Golos Text, sans-serif">
+        <span style="font-size: 12px; border: 1px solid #3B4148; padding: 2px 6px; border-radius: 6px">Ctrl K</span>
+      </label>
+      <button type="button" style="height: 46px; padding: 0 16px; border-radius: 14px; border: 1px solid #3B4148; background: #272B30; color: #ECEEF0; font: 500 14px Golos Text, sans-serif">Как работник</button>
+      <button type="button" style="height: 46px; padding: 0 18px; border-radius: 14px; border: none; background: {{accent}}; color: #FFFFFF; font: 600 14px Golos Text, sans-serif">+ Новая задача</button>
+      <div aria-label="Профиль" style="width: 46px; height: 46px; border-radius: 50%; background: #3B4148; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 14px">ЕК</div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px">
+      <sc-for list="{{kpis}}" as="k" hint-placeholder-count="4">
+        <div style="background: #272B30; border-radius: 16px; padding: 16px">
+          <div style="font-size: 13px; color: #A0A8B1">{{k.label}}</div>
+          <div style="{{k.style}}">{{k.value}}</div>
+          <div style="font-size: 12px; color: #A0A8B1; margin-top: 4px">{{k.sub}}</div>
+        </div>
+      </sc-for>
+    </div>
+
+    <div style="background: #272B30; border-radius: 18px; padding: 10px">
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 8px 10px; flex-wrap: wrap; gap: 8px">
+        <h1 style="margin: 0; font-size: 20px; font-weight: 700">Задачи на сегодня</h1>
+        <div style="display: flex; gap: 6px; flex-wrap: wrap">
+          <span style="padding: 7px 12px; border-radius: 999px; background: #3B4148; font-size: 13px; font-weight: 500">Все</span>
+          <span style="padding: 7px 12px; border-radius: 999px; font-size: 13px; color: #A0A8B1">Срочные</span>
+          <span style="padding: 7px 12px; border-radius: 999px; font-size: 13px; color: #A0A8B1">На проверке</span>
+          <span style="padding: 7px 12px; border-radius: 999px; font-size: 13px; color: #A0A8B1">Просроченные</span>
+        </div>
+      </div>
+      <sc-for list="{{tasks}}" as="t" hint-placeholder-count="6">
+        <div style="display: flex; align-items: center; gap: 12px; padding: 11px 12px; border-radius: 12px; background: #30353B; margin-top: 6px">
+          <sc-if value="{{t.pinned}}" hint-placeholder-val="{{false}}">
+            <svg role="img" aria-label="Закреплено" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9DB6CB" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17v5M9 3h6l-1 6 3 3H7l3-3-1-6z"></path></svg>
+          </sc-if>
+          <div style="{{t.avatar}}">{{t.ini}}</div>
+          <div style="flex: 1; min-width: 0">
+            <div style="font-weight: 600; font-size: 15px">{{t.title}}</div>
+            <div style="font-size: 13px; color: #A0A8B1; margin-top: 2px">{{t.meta}}</div>
+          </div>
+          <sc-if value="{{t.urgent}}" hint-placeholder-val="{{false}}">
+            <span style="font-size: 12px; font-weight: 600; color: #F0B2AC; background: #4A2E2D; padding: 4px 8px; border-radius: 8px">Срочно</span>
+          </sc-if>
+          <span style="{{t.statusStyle}}">{{t.status}}</span>
+        </div>
+      </sc-for>
+    </div>
+  </main>
+
+  <aside aria-label="Календарь и события" style="flex: 1 1 340px; max-width: 420px; display: flex; flex-direction: column; gap: 14px">
+    <div style="background: #272B30; border-radius: 18px; padding: 18px">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px">
+        <h2 style="margin: 0; font-size: 17px; font-weight: 700">Ноябрь 2026</h2>
+        <div style="display: flex; gap: 4px">
+          <button type="button" aria-label="Назад" style="width: 32px; height: 32px; border-radius: 9px; border: none; background: #30353B; color: #ECEEF0">‹</button>
+          <button type="button" aria-label="Вперёд" style="width: 32px; height: 32px; border-radius: 9px; border: none; background: #30353B; color: #ECEEF0">›</button>
+        </div>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; font-size: 11px; color: #A0A8B1; text-align: center; margin-bottom: 4px">
+        <span>Пн</span><span>Вт</span><span>Ср</span><span>Чт</span><span>Пт</span><span>Сб</span><span>Вс</span>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px">
+        <sc-for list="{{cells}}" as="c" hint-placeholder-count="35">
+          <div style="{{c.style}}">
+            <div style="{{c.numStyle}}">{{c.n}}</div>
+            <div style="display: flex; gap: 2px; flex-wrap: wrap; justify-content: center">
+              <sc-for list="{{c.dots}}" as="d" hint-placeholder-count="2"><span style="{{d}}"></span></sc-for>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+      <div style="margin-top: 14px; display: flex; flex-direction: column; gap: 6px">
+        <div style="font-size: 13px; color: #A0A8B1">4 ноября, среда</div>
+        <sc-for list="{{dayItems}}" as="i" hint-placeholder-count="3">
+          <div style="{{i.style}}"><span style="font-weight: 700">{{i.ini}}</span><span>{{i.title}}</span></div>
+        </sc-for>
+      </div>
+    </div>
+
+    <div style="background: #272B30; border-radius: 18px; padding: 18px; flex: 1">
+      <h2 style="margin: 0 0 12px; font-size: 17px; font-weight: 700">Лента событий</h2>
+      <sc-for list="{{feed}}" as="f" hint-placeholder-count="5">
+        <div style="display: flex; gap: 10px; padding: 8px 0; border-top: 1px solid #30353B; font-size: 13px">
+          <span style="color: #A0A8B1; width: 40px; flex-shrink: 0">{{f.time}}</span>
+          <span>{{f.text}}</span>
+        </div>
+      </sc-for>
+    </div>
+  </aside>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#56728A","options":["#56728A","#5E6B5E","#5A5F66"]},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const accent = this.props.accent ?? '#56728A';
+    const I = {
+      tasks: 'M9 11l3 3 8-8M4 12v7a1 1 0 001 1h14', cal: 'M4 6h16v14H4zM4 10h16M9 3v4M15 3v4', kanban: 'M4 4h4v16H4zM10 4h4v10h-4zM16 4h4v7h-4z',
+      clients: 'M16 20v-1a4 4 0 00-4-4H7a4 4 0 00-4 4v1M9.5 11a3.5 3.5 0 100-7 3.5 3.5 0 000 7zM21 20v-1a4 4 0 00-3-3.9M16 4.1a3.5 3.5 0 010 6.8',
+      staff: 'M12 12a4 4 0 100-8 4 4 0 000 8zM4 21a8 8 0 0116 0', shift: 'M12 7v5l3 2M12 21a9 9 0 100-18 9 9 0 000 18z',
+      req: 'M4 5h16v11H8l-4 4z', money: 'M12 3v18M17 7H9.5a3 3 0 000 6h5a3 3 0 010 6H6', inv: 'M6 3h9l3 3v15H6zM9 9h6M9 13h6M9 17h4',
+      rep: 'M4 20V10M10 20V4M16 20v-7M22 20H2', set: 'M12 15a3 3 0 100-6 3 3 0 000 6zM19 12a7 7 0 00-.1-1.2l2-1.6-2-3.4-2.4 1a7 7 0 00-2-1.2L14 3h-4l-.5 2.6a7 7 0 00-2 1.2l-2.4-1-2 3.4 2 1.6a7 7 0 000 2.4l-2 1.6 2 3.4 2.4-1a7 7 0 002 1.2L10 21h4l.5-2.6a7 7 0 002-1.2l2.4 1 2-3.4-2-1.6c.1-.4.1-.8.1-1.2z'
+    };
+    const mi = (on) => 'display:flex;align-items:center;gap:10px;min-height:42px;padding:0 10px;border-radius:11px;font-size:14px;text-decoration:none;' + (on ? 'background:#3B4148;color:#ECEEF0;font-weight:600' : 'color:#B9C0C8');
+    const menu = [
+      ['Задачи', I.tasks, false], ['Календарь', I.cal, false], ['Канбан', I.kanban, false], ['Клиенты', I.clients, false], ['Сотрудники', I.staff, false],
+      ['Смены и отпуска', I.shift, false], ['Заявки', I.req, '3'], ['Деньги', I.money, false], ['Счета', I.inv, false], ['Отчёты', I.rep, false], ['Настройки', I.set, false]
+    ].map((m, i) => ({ label: m[0], icon: m[1], badge: m[2], style: mi(i === 0) }));
+    const big = (c) => 'font-size:28px;font-weight:700;margin-top:6px;color:' + c;
+    const kpis = [
+      { label: 'Просрочено', value: '3', sub: '+1 со вчера', style: big('#F0B2AC') },
+      { label: 'На проверке', value: '2', sub: 'ждут вашего ответа', style: big('#E2C98F') },
+      { label: 'Сейчас на смене', value: '4 из 6', sub: '1 в отпуске', style: big('#ECEEF0') },
+      { label: 'Прибыль за неделю', value: '1 240 €', sub: 'после расходов', style: big('#ECEEF0') }
+    ];
+    const av = (bg) => 'width:34px;height:34px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#ECEEF0;background:' + bg;
+    const st = (bg, c) => 'font-size:12px;font-weight:600;padding:5px 10px;border-radius:999px;white-space:nowrap;background:' + bg + ';color:' + c;
+    const S = { late: st('#4A2E2D', '#F0B2AC'), work: st('#2F3D4A', '#9DB6CB'), rev: st('#463D2A', '#E2C98F'), neu: st('#3B4148', '#C8CDD3'), done: st('#2E3A33', '#A9C9B4') };
+    const tasks = [
+      { title: 'Уборка склада', meta: 'Андрей К. · клиент Lagerhaus Nord · срок вчера', ini: 'АК', avatar: av('#4A5A68'), status: 'Просрочено', statusStyle: S.late, urgent: true, pinned: true },
+      { title: 'Замена смесителя, кв. 12', meta: 'Мария С. · Hausverwaltung Fürth · до 14:00 · чек-лист 1/3', ini: 'МС', avatar: av('#5A5368'), status: 'В работе', statusStyle: S.work, urgent: true, pinned: false },
+      { title: 'Генеральная уборка офиса', meta: 'Олег Т. · Kanzlei Weber · фото до/после', ini: 'ОТ', avatar: av('#4F6157'), status: 'На проверке', statusStyle: S.rev, urgent: false, pinned: false },
+      { title: 'Покраска стены', meta: 'Олег Т. · Café Rosa · завтра', ini: 'ОТ', avatar: av('#4F6157'), status: 'Новая', statusStyle: S.neu, urgent: false, pinned: false },
+      { title: 'Приём материала', meta: 'Андрей К. · склад · 16:00', ini: 'АК', avatar: av('#4A5A68'), status: 'Новая', statusStyle: S.neu, urgent: false, pinned: false },
+      { title: 'Мойка окон, 3 этаж', meta: 'Ирина П. · Praxis Dr. Lang · принято', ini: 'ИП', avatar: av('#63584B'), status: 'Готово', statusStyle: S.done, urgent: false, pinned: false }
+    ];
+    const dot = (c) => 'width:5px;height:5px;border-radius:50%;background:' + c;
+    const D = { a: dot('#7E9BB3'), r: dot('#E39A94'), y: dot('#D8BC7E'), g: dot('#8FB39C') };
+    const busy = { 2: [D.r, D.a], 3: [D.a], 4: [D.a, D.y, D.r], 5: [D.a], 6: [D.a, D.a], 9: [D.a], 10: [D.y], 12: [D.a, D.a], 16: [D.a], 18: [D.g], 20: [D.a], 24: [D.a] };
+    const cells = [];
+    for (let i = 0; i < 35; i++) {
+      const n = i - 6 + 1; // Nov 1 2026 is Sunday
+      const inM = n >= 1 && n <= 30;
+      const today = n === 4;
+      cells.push({
+        n: inM ? String(n) : '',
+        dots: inM ? (busy[n] || []) : [],
+        style: 'min-height:42px;border-radius:9px;padding:4px 2px;display:flex;flex-direction:column;align-items:center;gap:3px;' + (today ? 'background:#3B4148;box-shadow:inset 0 0 0 1px #7E9BB3' : inM ? 'background:#30353B' : 'background:transparent'),
+        numStyle: 'font-size:12px;font-weight:' + (today ? '700' : '500') + ';color:' + (today ? '#ECEEF0' : '#C8CDD3')
+      });
+    }
+    const chip = (bg, c) => 'display:flex;gap:8px;font-size:13px;padding:8px 10px;border-radius:10px;background:' + bg + ';color:' + c;
+    const dayItems = [
+      { ini: 'МС', title: 'Смеситель, кв. 12 · 10:00', style: chip('#2F3D4A', '#C3D4E2') },
+      { ini: 'ОТ', title: 'Уборка офиса · на проверке', style: chip('#463D2A', '#EBD7A8') },
+      { ini: 'АК', title: 'Уборка склада · просрочено', style: chip('#4A2E2D', '#F0B2AC') }
+    ];
+    const feed = [
+      { time: '13:42', text: 'Олег Т. отправил «Уборка офиса» на проверку' },
+      { time: '12:10', text: 'Новая заявка от Ирины П.: сломан пылесос' },
+      { time: '11:05', text: 'Мария С. добавила расход 18,40 € (чек)' },
+      { time: '08:02', text: 'Андрей К. начал смену' },
+      { time: '07:55', text: 'Клиент Kanzlei Weber оценил работу ★ 5' }
+    ];
+    return { accent, menu, kpis, tasks, cells, dayItems, feed };
+  }
+}
+</script>
+</body>
+</html>

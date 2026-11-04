@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { APP_NAME } from "@/config/app";
 import { getI18n } from "@/i18n/server";
 import { NavLink } from "./nav-link";
 import { OfflineBanner } from "./offline-banner";
@@ -35,7 +36,7 @@ export async function BossShell({
           <img src="/icons/icon.svg" alt="" className="size-8 rounded-[9px]" />
           <div className="min-w-0">
             <div className="truncate font-semibold leading-tight">{firmName}</div>
-            <div className="text-xs text-muted">Werkplan</div>
+            <div className="text-xs text-muted">{APP_NAME}</div>
           </div>
         </Link>
         <nav className="flex flex-col gap-1">

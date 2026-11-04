@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Kundenlink — Auftragsstatus</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Geologica:wght@500;600;700&amp;family=Golos+Text:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+h1,h2,h3{font-family:Geologica,sans-serif;letter-spacing:-0.01em}
+a{color:#9DB6CB}a:hover{color:#C3D4E2}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #1E2125; font-family: Golos Text, system-ui, sans-serif; color: #ECEEF0; padding: 22px 16px 24px; display: flex; flex-direction: column; gap: 12px">
+  <div style="display: flex; align-items: center; gap: 10px">
+    <div style="width: 40px; height: 40px; border-radius: 12px; background: #56728A; display: flex; align-items: center; justify-content: center; font-weight: 700">GB</div>
+    <div style="flex: 1">
+      <div style="font-weight: 700; font-size: 15px">Glanz &amp; Bau Service</div>
+      <div style="font-size: 12px; color: #A0A8B1">Ihr Auftrag</div>
+    </div>
+    <span style="font-size: 12px; color: #A0A8B1">DE · RU</span>
+  </div>
+
+  <div style="background: #272B30; border-radius: 20px; padding: 16px">
+    <h1 style="margin: 0; font-size: 22px; font-weight: 700">Generalreinigung Büro</h1>
+    <div style="font-size: 14px; color: #A0A8B1; margin-top: 4px">Königstraße 12 · heute</div>
+    <div style="display: flex; flex-direction: column; gap: 0; margin-top: 14px">
+      <sc-for list="{{steps}}" as="s" hint-placeholder-count="4">
+        <div style="display: flex; gap: 12px; align-items: center; min-height: 34px">
+          <span style="{{s.dot}}"></span>
+          <span style="{{s.text}}">{{s.t}}</span>
+          <span style="margin-left: auto; font-size: 12px; color: #A0A8B1">{{s.time}}</span>
+        </div>
+      </sc-for>
+    </div>
+    <div style="display: flex; justify-content: space-between; margin-top: 12px; padding-top: 12px; border-top: 1px solid #30353B; font-size: 14px">
+      <span style="color: #A0A8B1">Ausgeführt von</span><span>Oleg T.</span>
+    </div>
+    <div style="display: flex; justify-content: space-between; margin-top: 6px; font-size: 15px">
+      <span style="color: #A0A8B1">Preis</span><span style="font-weight: 700">220,00 €</span>
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+    <div style="height: 120px; border-radius: 16px; background: #30353B; display: flex; align-items: flex-end; padding: 8px; box-sizing: border-box; font-size: 12px; color: #A0A8B1">[FOTO VORHER]</div>
+    <div style="height: 120px; border-radius: 16px; background: #353A41; display: flex; align-items: flex-end; padding: 8px; box-sizing: border-box; font-size: 12px; color: #A0A8B1">[FOTO NACHHER]</div>
+  </div>
+
+  <div style="background: #272B30; border-radius: 20px; padding: 16px; display: flex; flex-direction: column; gap: 10px">
+    <div style="font-weight: 600; font-size: 15px">Wie zufrieden sind Sie?</div>
+    <div style="display: flex; gap: 8px">
+      <sc-for list="{{stars}}" as="s" hint-placeholder-count="5">
+        <button type="button" aria-label="{{s.label}}" style="width: 44px; height: 44px; border-radius: 12px; border: none; background: #30353B; color: #E2C98F; font-size: 22px">★</button>
+      </sc-for>
+    </div>
+    <label style="font-size: 13px; color: #A0A8B1">
+      <span style="position: absolute; left: -9999px">Kommentar</span>
+      <input type="text" placeholder="Kommentar (optional)" style="width: 100%; box-sizing: border-box; height: 44px; border-radius: 12px; border: 1px solid #3B4148; background: #1E2125; color: #ECEEF0; padding: 0 12px; font: 14px Golos Text, sans-serif">
+    </label>
+    <label style="display: flex; gap: 8px; align-items: center; font-size: 13px; color: #C8CDD3">
+      <input type="checkbox" style="width: 20px; height: 20px">Bewertung darf veröffentlicht werden
+    </label>
+  </div>
+
+  <button type="button" style="margin-top: auto; height: 58px; border-radius: 16px; border: none; background: {{accent}}; color: #FFFFFF; font: 700 17px Golos Text, sans-serif">Arbeit abnehmen</button>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#56728A","options":["#56728A","#5E6B5E","#5A5F66"]},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const accent = this.props.accent ?? '#56728A';
+    const dot = (on, cur) => 'width:12px;height:12px;border-radius:50%;flex-shrink:0;' + (cur ? 'background:#D8BC7E;box-shadow:0 0 0 4px rgba(216,188,126,.2)' : on ? 'background:#7E9BB3' : 'border:2px solid #4A5058');
+    const steps = [['Angenommen', '08:30', true, false], ['In Arbeit', '11:20', true, false], ['Fertig, wird geprüft', '13:42', true, true], ['Abgenommen', '', false, false]]
+      .map((s) => ({ t: s[0], time: s[1], dot: dot(s[2], s[3]), text: 'font-size:15px;' + (s[3] ? 'font-weight:600' : s[2] ? 'color:#C8CDD3' : 'color:#7D858E') }));
+    const stars = [1, 2, 3, 4, 5].map((n) => ({ label: n + ' Sterne' }));
+    return { accent, steps, stars };
+  }
+}
+</script>
+</body>
+</html>

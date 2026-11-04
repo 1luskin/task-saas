@@ -1,8 +1,9 @@
+import { APP_NAME } from "@/config/app";
 import type { Messages } from "./de";
 
 const ru: Messages = {
   app: {
-    name: "Werkplan",
+    name: APP_NAME,
     tagline: "Задачи и заработок для небольших команд",
   },
   common: {

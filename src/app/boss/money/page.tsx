@@ -20,7 +20,7 @@ export default async function MoneyPage({ searchParams }: { searchParams: Promis
   const money = (c: number) => formatMoney(c, locale);
   const rows = [...mon.perMember.values()].sort((a, b) => b.totalCents - a.totalCents);
 
-  const Block = ({ title, f }: { title: string; f: typeof week }) => (
+  const block = ({ title, f }: { title: string; f: typeof week }) => (
     <div className="card-white p-4">
       <div className="mb-3 font-semibold">{title}</div>
       <div className="grid grid-cols-3 gap-2">
@@ -35,8 +35,8 @@ export default async function MoneyPage({ searchParams }: { searchParams: Promis
     <div className="space-y-4">
       <PageTitle actions={<ExportForm month={m} />}>{t("money.title")}</PageTitle>
       <div className="grid gap-4 lg:grid-cols-2">
-        <Block title={t("money.week")} f={week} />
-        <Block title={`${t("money.monthLabel")} ${m}`} f={mon} />
+        {block({ title: t("money.week"), f: week })}
+        {block({ title: `${t("money.monthLabel")} ${m}`, f: mon })}
       </div>
       <div className="card-white overflow-x-auto">
         <div className="p-4 font-semibold">{t("money.perEmployee")} · {m}</div>

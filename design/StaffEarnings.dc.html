@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Сотрудник — Заработок</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Geologica:wght@500;600;700&amp;family=Golos+Text:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+h1,h2,h3{font-family:Geologica,sans-serif;letter-spacing:-0.01em}
+a{color:#9DB6CB}a:hover{color:#C3D4E2}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #1E2125; font-family: Golos Text, system-ui, sans-serif; color: #ECEEF0; display: flex; flex-direction: column">
+  <div style="flex: 1; padding: 26px 16px 12px; display: flex; flex-direction: column; gap: 12px; overflow: hidden">
+    <h1 style="margin: 0; font-size: 30px; font-weight: 700">Заработок</h1>
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); background: #272B30; border-radius: 14px; padding: 4px">
+      <span style="text-align: center; padding: 11px; border-radius: 11px; background: #3B4148; font-weight: 600; font-size: 15px">Неделя</span>
+      <span style="text-align: center; padding: 11px; font-size: 15px; color: #A0A8B1">Месяц</span>
+    </div>
+    <div style="background: #272B30; border-radius: 20px; padding: 18px">
+      <div style="font-size: 14px; color: #A0A8B1">2 – 8 ноября</div>
+      <div style="font-size: 40px; font-weight: 700; margin-top: 4px">186,00 €</div>
+      <div style="display: flex; gap: 16px; margin-top: 8px; font-size: 14px; color: #C8CDD3">
+        <span>14 ч 20 мин</span><span>6 задач</span><span>★ 4.9</span>
+      </div>
+      <div style="font-size: 13px; color: #E2C98F; margin-top: 10px">+ 32 € ждут проверки начальником</div>
+    </div>
+    <div style="background: #272B30; border-radius: 20px; padding: 6px 16px">
+      <sc-for list="{{rows}}" as="r" hint-placeholder-count="6">
+        <div style="display: flex; align-items: center; gap: 10px; min-height: 56px; border-top: 1px solid #30353B">
+          <div style="flex: 1">
+            <div style="font-size: 15px; font-weight: 500">{{r.t}}</div>
+            <div style="font-size: 13px; color: #A0A8B1">{{r.m}}</div>
+          </div>
+          <span style="{{r.style}}">{{r.v}}</span>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+  <nav aria-label="Нижнее меню" style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); background: #272B30; border-top: 1px solid #30353B; padding: 8px 6px 22px">
+    <sc-for list="{{tabs}}" as="b" hint-placeholder-count="4">
+      <a href="#" style="{{b.style}}">
+        <svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="{{b.icon}}"></path></svg>
+        <span>{{b.label}}</span>
+      </a>
+    </sc-for>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const n = 'font-size:15px;font-weight:600', g = 'font-size:15px;font-weight:600;color:#A9C9B4', r = 'font-size:15px;font-weight:600;color:#F0B2AC';
+    const rows = [
+      { t: 'Уборка офиса', m: 'Kanzlei Weber · 2 ч 22 мин', v: '+ 42,60 €', style: n },
+      { t: 'Мойка окон', m: 'Praxis Dr. Lang · фикс', v: '+ 35,00 €', style: n },
+      { t: 'Премия', m: 'Отличный отзыв клиента', v: '+ 20,00 €', style: g },
+      { t: 'Возврат за чек', m: 'Чистящие средства', v: '+ 18,40 €', style: n },
+      { t: 'Вычет', m: 'Опоздание 40 мин, 03.11', v: '− 10,00 €', style: r },
+      { t: 'Смены', m: 'Пн–Ср · по часам', v: '+ 80,00 €', style: n }
+    ];
+    const tab = (on) => 'display:flex;flex-direction:column;align-items:center;gap:4px;min-height:52px;justify-content:center;font-size:12px;text-decoration:none;font-weight:' + (on ? '600;color:#C3D4E2' : '500;color:#A0A8B1');
+    const tabs = [
+      { label: 'Сегодня', icon: 'M4 12l5 5L20 6', style: tab(false) },
+      { label: 'Задачи', icon: 'M4 6h16M4 12h16M4 18h10', style: tab(false) },
+      { label: 'Заработок', icon: 'M12 3v18M17 7H9.5a3 3 0 000 6h5a3 3 0 010 6H6', style: tab(true) },
+      { label: 'Профиль', icon: 'M12 12a4 4 0 100-8 4 4 0 000 8zM4 21a8 8 0 0116 0', style: tab(false) }
+    ];
+    return { rows, tabs };
+  }
+}
+</script>
+</body>
+</html>

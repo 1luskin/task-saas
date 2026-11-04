@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Настройки фирмы</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Geologica:wght@500;600;700&amp;family=Golos+Text:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+h1,h2,h3{font-family:Geologica,sans-serif;letter-spacing:-0.01em}
+a{color:#9DB6CB}a:hover{color:#C3D4E2}
+</style>
+</helmet>
+<div style="min-height: 980px; background: #1E2125; font-family: Golos Text, system-ui, sans-serif; color: #ECEEF0; display: flex; flex-wrap: wrap; gap: 16px; padding: 16px; box-sizing: border-box">
+  <nav aria-label="Главное меню" style="flex: 1 1 200px; max-width: 224px; background: #272B30; border-radius: 18px; padding: 18px 10px; display: flex; flex-direction: column; gap: 2px; box-sizing: border-box">
+    <div style="font-weight: 700; font-size: 14px; padding: 8px 10px 18px">Glanz &amp; Bau</div>
+    <sc-for list="{{menu}}" as="m" hint-placeholder-count="11"><a href="#" style="{{m.style}}">{{m.label}}</a></sc-for>
+  </nav>
+
+  <main style="flex: 999 1 700px; min-width: 0; display: flex; flex-direction: column; gap: 14px">
+    <h1 style="margin: 0; font-size: 24px; font-weight: 700">Настройки</h1>
+    <div style="display: flex; gap: 6px; flex-wrap: wrap">
+      <sc-for list="{{tabs}}" as="t" hint-placeholder-count="7"><span style="{{t.style}}">{{t.label}}</span></sc-for>
+    </div>
+
+    <div style="display: flex; gap: 14px; flex-wrap: wrap; align-items: flex-start">
+      <div style="flex: 1 1 420px; display: flex; flex-direction: column; gap: 14px">
+        <section style="background: #272B30; border-radius: 18px; padding: 20px">
+          <h2 style="margin: 0 0 14px; font-size: 17px">Фирма</h2>
+          <div style="display: flex; gap: 14px; align-items: center">
+            <div style="width: 72px; height: 72px; border-radius: 18px; background: #56728A; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 22px">GB</div>
+            <div style="display: flex; flex-direction: column; gap: 6px">
+              <button type="button" style="height: 38px; padding: 0 12px; border-radius: 10px; border: 1px solid #3B4148; background: transparent; color: #ECEEF0; font: 500 13px Golos Text, sans-serif">Загрузить логотип</button>
+              <span style="font-size: 12px; color: #A0A8B1">PNG или SVG, виден в шапке у всех</span>
+            </div>
+          </div>
+          <label style="display: block; margin-top: 16px; font-size: 13px; color: #A0A8B1">Название
+            <input type="text" value="Glanz &amp; Bau Service GmbH" style="display: block; width: 100%; box-sizing: border-box; margin-top: 6px; height: 44px; border-radius: 12px; border: 1px solid #3B4148; background: #1E2125; color: #ECEEF0; padding: 0 12px; font: 14px Golos Text, sans-serif">
+          </label>
+        </section>
+
+        <section style="background: #272B30; border-radius: 18px; padding: 20px">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px">
+            <h2 style="margin: 0; font-size: 17px">Статусы задач</h2>
+            <button type="button" style="height: 34px; padding: 0 12px; border-radius: 10px; border: none; background: #30353B; color: #ECEEF0; font: 500 13px Golos Text, sans-serif">+ Статус</button>
+          </div>
+          <sc-for list="{{statuses}}" as="s" hint-placeholder-count="6">
+            <div style="display: flex; align-items: center; gap: 10px; padding: 9px 0; border-top: 1px solid #30353B; font-size: 14px">
+              <span style="color: #59616A">⋮⋮</span>
+              <span style="{{s.dot}}"></span>
+              <span style="flex: 1">{{s.name}}</span>
+              <span style="font-size: 12px; color: #A0A8B1">{{s.note}}</span>
+            </div>
+          </sc-for>
+        </section>
+      </div>
+
+      <div style="flex: 1 1 420px; display: flex; flex-direction: column; gap: 14px">
+        <section style="background: #272B30; border-radius: 18px; padding: 20px">
+          <h2 style="margin: 0 0 6px; font-size: 17px">Функции</h2>
+          <sc-for list="{{features}}" as="f" hint-placeholder-count="8">
+            <div style="display: flex; align-items: center; gap: 12px; padding: 10px 0; border-top: 1px solid #30353B">
+              <div style="flex: 1">
+                <div style="font-size: 14px; font-weight: 500">{{f.name}}</div>
+                <div style="font-size: 12px; color: #A0A8B1; margin-top: 2px">{{f.desc}}</div>
+              </div>
+              <button type="button" role="switch" aria-checked="{{f.on}}" aria-label="{{f.name}}" style="{{f.track}}"><span style="{{f.knob}}"></span></button>
+            </div>
+          </sc-for>
+        </section>
+        <section style="background: #272B30; border-radius: 18px; padding: 20px">
+          <h2 style="margin: 0 0 10px; font-size: 17px">Проверка работы</h2>
+          <div style="font-size: 14px; color: #C8CDD3">Автоматически принимать через <b style="color: #ECEEF0">3 дня</b>, если не проверено</div>
+          <div style="font-size: 14px; color: #C8CDD3; margin-top: 8px">Автозакрытие забытой смены через <b style="color: #ECEEF0">12 часов</b></div>
+        </section>
+      </div>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#56728A","options":["#56728A","#5E6B5E","#5A5F66"]},"$preview":{"width":1440,"height":980}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const accent = this.props.accent ?? '#56728A';
+    const mi = (on) => 'display:flex;align-items:center;min-height:42px;padding:0 12px;border-radius:11px;font-size:14px;text-decoration:none;' + (on ? 'background:#3B4148;color:#ECEEF0;font-weight:600' : 'color:#B9C0C8');
+    const menu = ['Задачи','Календарь','Канбан','Клиенты','Сотрудники','Смены и отпуска','Заявки','Деньги','Счета','Отчёты','Настройки'].map((l, i) => ({ label: l, style: mi(i === 10) }));
+    const tb = (on) => 'padding:9px 14px;border-radius:11px;font-size:13px;' + (on ? 'background:#3B4148;font-weight:600' : 'color:#A0A8B1;background:#272B30');
+    const tabs = ['Фирма и функции', 'Поля задач', 'Ставки', 'Группы', 'Уведомления', 'Язык', 'Тариф и данные'].map((l, i) => ({ label: l, style: tb(i === 0) }));
+    const dot = (c) => 'width:12px;height:12px;border-radius:50%;background:' + c;
+    const statuses = [
+      { name: 'Новая', note: 'обязательный', dot: dot('#8A929B') }, { name: 'В работе', note: '', dot: dot('#7E9BB3') },
+      { name: 'Ждёт материал', note: 'свой', dot: dot('#A78BB5') }, { name: 'На проверке', note: 'обязательный', dot: dot('#D8BC7E') },
+      { name: 'На доработке', note: '', dot: dot('#E39A94') }, { name: 'Готово', note: 'обязательный', dot: dot('#8FB39C') }
+    ];
+    const sw = (on) => ({
+      track: 'border:none;padding:0;width:44px;height:26px;border-radius:999px;flex-shrink:0;position:relative;background:' + (on ? accent : '#3B4148'),
+      knob: 'position:absolute;top:3px;width:20px;height:20px;border-radius:50%;background:#ECEEF0;left:' + (on ? '21px' : '3px')
+    });
+    const features = [
+      ['Учёт смен', 'Начать / пауза / закончить смену', true], ['Геометка', 'Место только при «Начал» и «Закончил»', true],
+      ['Геозона', 'Смену можно начать только у объекта', false], ['Расходы и чеки', 'Сотрудник вносит покупки', true],
+      ['Ссылка для заказчика', 'Статус, фото и приёмка работы', true], ['Автоназначение', 'Задача тому, у кого меньше работы', false],
+      ['Дневной отчёт', 'Bautagebuch в конце дня', true], ['Учёт материалов', 'Склад и списание на задачи', false]
+    ].map((f) => ({ name: f[0], desc: f[1], on: f[2] ? 'true' : 'false', ...sw(f[2]) }));
+    return { accent, menu, tabs, statuses, features };
+  }
+}
+</script>
+</body>
+</html>

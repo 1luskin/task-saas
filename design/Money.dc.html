@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Деньги и счета</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Geologica:wght@500;600;700&amp;family=Golos+Text:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+h1,h2,h3{font-family:Geologica,sans-serif;letter-spacing:-0.01em}
+a{color:#9DB6CB}a:hover{color:#C3D4E2}
+</style>
+</helmet>
+<div style="min-height: 980px; background: #1E2125; font-family: Golos Text, system-ui, sans-serif; color: #ECEEF0; display: flex; flex-wrap: wrap; gap: 16px; padding: 16px; box-sizing: border-box">
+  <nav aria-label="Главное меню" style="flex: 1 1 200px; max-width: 224px; background: #272B30; border-radius: 18px; padding: 18px 10px; display: flex; flex-direction: column; gap: 2px; box-sizing: border-box">
+    <div style="font-weight: 700; font-size: 14px; padding: 8px 10px 18px">Glanz &amp; Bau</div>
+    <sc-for list="{{menu}}" as="m" hint-placeholder-count="11"><a href="#" style="{{m.style}}">{{m.label}}</a></sc-for>
+  </nav>
+
+  <main style="flex: 999 1 700px; min-width: 0; display: flex; flex-direction: column; gap: 14px">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px">
+      <h1 style="margin: 0; font-size: 24px; font-weight: 700">Деньги · ноябрь</h1>
+      <div style="display: flex; gap: 8px; flex-wrap: wrap">
+        <button type="button" style="height: 42px; padding: 0 14px; border-radius: 12px; border: 1px solid #3B4148; background: #272B30; color: #ECEEF0; font: 500 14px Golos Text, sans-serif">Excel для Steuerberater</button>
+        <button type="button" style="height: 42px; padding: 0 14px; border-radius: 12px; border: 1px solid #3B4148; background: #272B30; color: #ECEEF0; font: 500 14px Golos Text, sans-serif">Экспорт DATEV</button>
+        <button type="button" style="height: 42px; padding: 0 16px; border-radius: 12px; border: none; background: {{accent}}; color: #FFFFFF; font: 600 14px Golos Text, sans-serif">+ Счёт</button>
+      </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px">
+      <sc-for list="{{kpis}}" as="k" hint-placeholder-count="4">
+        <div style="background: #272B30; border-radius: 16px; padding: 16px">
+          <div style="font-size: 13px; color: #A0A8B1">{{k.label}}</div>
+          <div style="font-size: 26px; font-weight: 700; margin-top: 6px">{{k.value}}</div>
+        </div>
+      </sc-for>
+    </div>
+
+    <div style="display: flex; gap: 14px; flex-wrap: wrap">
+      <section style="flex: 2 1 460px; background: #272B30; border-radius: 18px; padding: 20px">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px">
+          <h2 style="margin: 0; font-size: 17px">Прибыль по неделям</h2>
+          <div style="display: flex; gap: 14px; font-size: 12px; color: #A0A8B1"><span style="color: #9DB6CB">■ выручка</span><span style="color: #D7B48A">■ выплаты и расходы</span></div>
+        </div>
+        <div style="display: flex; align-items: flex-end; gap: 22px; height: 210px; padding: 0 6px; border-bottom: 1px solid #3B4148">
+          <sc-for list="{{bars}}" as="b" hint-placeholder-count="8">
+            <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px">
+              <div style="display: flex; align-items: flex-end; gap: 4px; height: 190px">
+                <div style="{{b.rev}}"></div><div style="{{b.cost}}"></div>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="display: flex; gap: 22px; padding: 6px 6px 0; font-size: 12px; color: #A0A8B1">
+          <sc-for list="{{bars}}" as="b" hint-placeholder-count="8"><span style="flex: 1; text-align: center">{{b.w}}</span></sc-for>
+        </div>
+      </section>
+
+      <section style="flex: 1 1 300px; background: #272B30; border-radius: 18px; padding: 20px">
+        <h2 style="margin: 0 0 14px; font-size: 17px">Топ сотрудников</h2>
+        <sc-for list="{{top}}" as="t" hint-placeholder-count="4">
+          <div style="padding: 8px 0">
+            <div style="display: flex; justify-content: space-between; font-size: 14px"><span>{{t.name}}</span><span style="color: #A0A8B1">{{t.v}}</span></div>
+            <div style="height: 8px; border-radius: 999px; background: #30353B; margin-top: 6px"><div style="{{t.bar}}"></div></div>
+          </div>
+        </sc-for>
+      </section>
+    </div>
+
+    <div style="display: flex; gap: 14px; flex-wrap: wrap">
+      <section style="flex: 1 1 420px; background: #272B30; border-radius: 18px; padding: 20px">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 10px"><h2 style="margin: 0; font-size: 17px">Расходы на проверку</h2><span style="font-size: 13px; color: #A0A8B1">3</span></div>
+        <sc-for list="{{exp}}" as="e" hint-placeholder-count="3">
+          <div style="display: flex; align-items: center; gap: 10px; padding: 10px 0; border-top: 1px solid #30353B; font-size: 14px">
+            <div style="width: 40px; height: 40px; border-radius: 10px; background: #30353B; font-size: 10px; color: #A0A8B1; display: flex; align-items: center; justify-content: center">чек</div>
+            <div style="flex: 1"><div style="font-weight: 600">{{e.what}}</div><div style="font-size: 12px; color: #A0A8B1">{{e.who}}</div></div>
+            <span style="font-weight: 600">{{e.sum}}</span>
+            <button type="button" aria-label="Отклонить" style="width: 36px; height: 36px; border-radius: 10px; border: none; background: #4A2E2D; color: #F0B2AC">×</button>
+            <button type="button" aria-label="Одобрить" style="width: 36px; height: 36px; border-radius: 10px; border: none; background: #2E3A33; color: #A9C9B4">✓</button>
+          </div>
+        </sc-for>
+      </section>
+      <section style="flex: 1 1 420px; background: #272B30; border-radius: 18px; padding: 20px">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 10px"><h2 style="margin: 0; font-size: 17px">Счета</h2><span style="font-size: 12px; color: #A0A8B1">ZUGFeRD · §14 UStG</span></div>
+        <sc-for list="{{inv}}" as="i" hint-placeholder-count="4">
+          <div style="display: flex; align-items: center; gap: 10px; padding: 10px 0; border-top: 1px solid #30353B; font-size: 14px">
+            <span style="color: #A0A8B1; width: 86px">{{i.no}}</span>
+            <span style="flex: 1">{{i.client}}</span>
+            <span style="font-weight: 600">{{i.sum}}</span>
+            <span style="{{i.style}}">{{i.st}}</span>
+          </div>
+        </sc-for>
+      </section>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#56728A","options":["#56728A","#5E6B5E","#5A5F66"]},"$preview":{"width":1440,"height":980}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const accent = this.props.accent ?? '#56728A';
+    const mi = (on) => 'display:flex;align-items:center;min-height:42px;padding:0 12px;border-radius:11px;font-size:14px;text-decoration:none;' + (on ? 'background:#3B4148;color:#ECEEF0;font-weight:600' : 'color:#B9C0C8');
+    const menu = ['Задачи','Календарь','Канбан','Клиенты','Сотрудники','Смены и отпуска','Заявки','Деньги','Счета','Отчёты','Настройки'].map((l, i) => ({ label: l, style: mi(i === 7) }));
+    const kpis = [{ label: 'Выручка', value: '6 480 €' }, { label: 'Выплаты', value: '2 310 €' }, { label: 'Расходы', value: '412 €' }, { label: 'Прибыль', value: '3 758 €' }];
+    const data = [[3.1, 1.6], [3.8, 1.9], [3.3, 1.7], [4.4, 2.1], [4.0, 2.0], [4.9, 2.3], [5.2, 2.4], [6.1, 2.7]];
+    const bars = data.map((d, i) => ({
+      w: 'Н' + (38 + i),
+      rev: 'width:18px;border-radius:6px 6px 0 0;background:#7E9BB3;height:' + Math.round(d[0] * 28) + 'px',
+      cost: 'width:18px;border-radius:6px 6px 0 0;background:#B8956A;height:' + Math.round(d[1] * 28) + 'px'
+    }));
+    const top = [['Мария С.', 34, '34 задачи · ★ 4.9'], ['Олег Т.', 28, '28 · ★ 4.7'], ['Андрей К.', 22, '22 · ★ 4.5'], ['Ирина П.', 15, '15 · ★ 4.8']]
+      .map((t) => ({ name: t[0], v: t[2], bar: 'height:8px;border-radius:999px;background:#7E9BB3;width:' + Math.round(t[1] / 34 * 100) + '%' }));
+    const exp = [
+      { what: 'Чистящие средства', who: 'Мария С. · Генуборка · вернуть сотруднику', sum: '18,40 €' },
+      { what: 'Силикон, 2 шт.', who: 'Олег Т. · Плитка ванная', sum: '11,90 €' },
+      { what: 'Бензин', who: 'Андрей К. · выезд Erlangen', sum: '24,00 €' }
+    ];
+    const pill = (bg, c) => 'font-size:12px;font-weight:600;padding:4px 9px;border-radius:999px;background:' + bg + ';color:' + c;
+    const inv = [
+      { no: 'RE-2026-041', client: 'Kanzlei Weber', sum: '220,00 €', st: 'Оплачен', style: pill('#2E3A33', '#A9C9B4') },
+      { no: 'RE-2026-042', client: 'Hausverwaltung Fürth', sum: '540,00 €', st: 'Отправлен', style: pill('#2F3D4A', '#9DB6CB') },
+      { no: 'RE-2026-043', client: 'Café Rosa', sum: '180,00 €', st: 'Просрочен', style: pill('#4A2E2D', '#F0B2AC') },
+      { no: 'RE-2026-044', client: 'Fam. Schulz', sum: '960,00 €', st: 'Черновик', style: pill('#3B4148', '#C8CDD3') }
+    ];
+    return { accent, menu, kpis, bars, top, exp, inv };
+  }
+}
+</script>
+</body>
+</html>
