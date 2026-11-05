@@ -96,7 +96,7 @@ export function createSeed(): DemoDb {
     ],
     firms: [{ id: DEMO.firm, name: "Glanz & Bau Service GmbH", timezone: "Europe/Berlin", auto_accept_days: 3,
       trial_ends_at: new Date(Date.now() + 9 * 864e5).toISOString(), plan: "trial", is_demo: false, contact_email: "chefin@demo.de",
-      deletion_requested_at: null, deletion_scheduled_for: null, logo_path: null, shift_autoclose_hours: 12, public_slug: "glanz-bau", trial_mail_sent_at: null, weekly_mail_last: null, geofence_radius_m: null, geo_retention_days: 90,
+      deletion_requested_at: null, deletion_scheduled_for: null, logo_path: null, shift_autoclose_hours: 12, public_slug: "glanz-bau", trial_mail_sent_at: null, weekly_mail_last: null, geofence_radius_m: null, geo_retention_days: 90, datev_consultant_no: 1001, datev_client_no: 1, datev_skr: "03", datev_accounts: {}, vat_rate: 19, small_business: false,
       task_fields: { description: true, address: true, due_time: true, checklist: true, client_price: true, fixed_pay: true, photos: true }, created_at: ago(5 * 24) }],
     user_settings: [],
     login_events: [],
@@ -108,7 +108,7 @@ export function createSeed(): DemoDb {
     reviews: [],
     feature_flags: ([
       ["templates", true], ["requests", true], ["reports", true], ["excel_export", true], ["custom_statuses", true], ["demo_firm", true],
-      ["kanban", true], ["clients", true], ["expenses", true], ["shifts", true], ["geolocation", false], ["invoices", false], ["public_form", false], ["team", true], ["knowledge", true],
+      ["kanban", true], ["clients", true], ["expenses", true], ["shifts", true], ["geolocation", false], ["invoices", false], ["public_form", false], ["team", true], ["knowledge", true], ["materials", true], ["datev", true],
     ] as const).map(([key, on]) => ({ key, default_enabled: on, description: null, updated_at: now })),
     firm_features: [],
     admin_audit: [],
@@ -118,8 +118,16 @@ export function createSeed(): DemoDb {
       { id: id(1303), firm_id: DEMO.firm, member_id: e2.member, started_at: ago(10), ended_at: null, break_minutes: 0, break_started_at: null, rate_cents: 0, auto_closed: false, needs_review: false, created_at: ago(10) },
     ],
     expenses: [
-      { id: id(1401), firm_id: DEMO.firm, task_id: id(405), member_id: e2.member, amount_cents: 2380, description: "2 Säcke Fugenmörtel", receipt_path: null, reimburse: true, status: "pending", decided_by: null, decided_at: null, created_at: ago(22) },
-      { id: id(1402), firm_id: DEMO.firm, task_id: id(408), member_id: e2.member, amount_cents: 6450, description: "Farbe & Abdeckfolie", receipt_path: null, reimburse: false, status: "approved", decided_by: DEMO.boss, decided_at: ago(2), created_at: ago(30) },
+      { id: id(1401), firm_id: DEMO.firm, task_id: id(405), member_id: e2.member, amount_cents: 2380, description: "2 Säcke Fugenmörtel", receipt_path: null, reimburse: true, status: "pending", decided_by: null, decided_at: null, created_at: ago(22), source: "manual" },
+      { id: id(1402), firm_id: DEMO.firm, task_id: id(408), member_id: e2.member, amount_cents: 6450, description: "Farbe & Abdeckfolie", receipt_path: null, reimburse: false, status: "approved", decided_by: DEMO.boss, decided_at: ago(2), created_at: ago(30), source: "manual" },
+    ],
+    materials: [
+      { id: id(3101), firm_id: DEMO.firm, name: "Fugenmörtel grau 5 kg", unit: "Sack", stock: 3, min_stock: 4, unit_cost_cents: 1190, low_notified_at: ago(20), archived_at: null, created_at: now },
+      { id: id(3102), firm_id: DEMO.firm, name: "Allzweckreiniger 10 l", unit: "Kanister", stock: 6, min_stock: 2, unit_cost_cents: 2450, low_notified_at: null, archived_at: null, created_at: now },
+      { id: id(3103), firm_id: DEMO.firm, name: "Müllsäcke 120 l", unit: "Rolle", stock: 25, min_stock: 10, unit_cost_cents: 390, low_notified_at: null, archived_at: null, created_at: now },
+    ],
+    material_moves: [
+      { id: id(3201), firm_id: DEMO.firm, material_id: id(3101), kind: "in", qty: 5, unit_cost_cents: 1190, task_id: null, member_id: DEMO.boss, expense_id: null, note: "Lieferung Baumarkt", created_at: ago(200) },
     ],
     time_edits: [],
     clients: [

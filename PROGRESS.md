@@ -11,7 +11,7 @@
 - [x] Тесты по ходу (деньги, права, статусы, лимиты)
 - [x] Демо-режим показывает ВСЕ новые экраны (seed.ts + fake-client.ts)
 - [ ] Тексты DE + RU, часовой пояс фирмы, деньги de-DE, суммы в центах _(часовой пояс сейчас везде Europe/Berlin — firms.timezone пока не используется в расчётах)_
-- [ ] Крупные фичи — за feature flag _(флаги: kanban, clients, expenses, shifts, geolocation, invoices, public_form, team, knowledge; дальше — на каждую фичу этапов 15–16)_
+- [ ] Крупные фичи — за feature flag _(флаги: kanban, clients, expenses, shifts, geolocation, invoices, public_form, team, knowledge, materials, datev; дальше — этап 16)_
 - [x] APP_NAME в одном месте (`src/config/app.ts`)
 
 ## Исправить обязательно
@@ -153,10 +153,10 @@
 - [x] Импорт сотрудников из Excel _(предпросмотр, личные приглашения)_
 
 ## Этап 15. Аналитика и бухгалтерия
-- [ ] Графики
-- [ ] PDF-отчёт по сотруднику за месяц
-- [ ] DATEV EXTF CSV
-- [ ] Склад материалов
+- [x] Графики _(дашборд: 2, «Деньги»: 4; SVG, hover, таблица)_
+- [x] PDF-отчёт по сотруднику за месяц
+- [x] DATEV EXTF CSV _(Buchungsstapel v700, CP1252; счета проверить со Steuerberater)_
+- [x] Склад материалов _(списание → расход задачи, предупреждение о минимуме)_
 
 ## Этап 16. Предложения и счета
 - [ ] Angebote с принятием по ссылке

@@ -23,6 +23,9 @@
   --color-ok: #a9c9b4;
   --color-ok-soft: #2e3a33;
   --color-review: #e2c98f;
+  /* Diagramme (validiert: CVD/Helligkeit/Kontrast auf #272b30) */
+  --color-chart-1: #5591d4;
+  --color-chart-2: #cc7a42;
   --color-review-soft: #463d2a;
   --color-st-new: #a0a8b1;
   --color-st-progress: #9db6cb;

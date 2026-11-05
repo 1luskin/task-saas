@@ -16,6 +16,7 @@ import { ApplyChecklistTemplate } from "./checklist-templates";
 import { TaskFiles } from "./files";
 import { TaskMap } from "../geo/task-map";
 import { ArticlePicker, TaskForms } from "./task-forms";
+import { UseMaterial } from "../materials/materials";
 import { IconBook } from "../icons";
 
 type Detail = NonNullable<Awaited<ReturnType<typeof loadTaskDetail>>>;
@@ -151,6 +152,20 @@ export function TaskDetail({
       )}
 
       {clientPanel}
+
+      {d.matOn && (isBoss || canWork) && (d.materials.length > 0 || d.materialUsed.length > 0) && (
+        <div className="card-white space-y-3 p-4 sm:p-6">
+          <h2 className="font-semibold">{t("mat.used")}</h2>
+          {d.materialUsed.map((u) => (
+            <div key={u.id} className="flex items-center gap-2 rounded-[12px] bg-card px-3 py-2 text-sm">
+              <span className="min-w-0 flex-1 truncate">{u.name}</span>
+              <span className="tabular-nums">{new Intl.NumberFormat(locale === "ru" ? "ru-RU" : "de-DE", { maximumFractionDigits: 3 }).format(u.qty)} {u.unit}</span>
+              {isBoss && <span className="tabular-nums text-muted">{formatMoney(u.cost, locale)}</span>}
+            </div>
+          ))}
+          {task.status !== "done" && d.materials.length > 0 && <UseMaterial taskId={task.id} materials={d.materials} />}
+        </div>
+      )}
 
       {expensesOn && (
         <div className="card-white p-4 sm:p-6">

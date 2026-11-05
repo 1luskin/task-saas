@@ -1,4 +1,5 @@
 import { requireBossPage } from "@/lib/auth";
+import { AccountingForm } from "@/components/settings/accounting-form";
 import { getI18n } from "@/i18n/server";
 import { PageTitle } from "@/components/ui";
 import { LanguageSwitch } from "@/components/language-switch";
@@ -56,6 +57,9 @@ export default async function SettingsPage() {
         <FeaturesForm features={features} />
         <ShiftAutocloseForm hours={ctx.firm.shift_autoclose_hours} />
         {features.find((f) => f.key === "geolocation")?.enabled && <GeoSettings radius={ctx.firm.geofence_radius_m} retention={ctx.firm.geo_retention_days} />}
+      </section>
+      <section className="card-white p-4">
+        <AccountingForm initial={{ consultantNo: ctx.firm.datev_consultant_no, clientNo: ctx.firm.datev_client_no, skr: ctx.firm.datev_skr, vatRate: ctx.firm.vat_rate, smallBusiness: ctx.firm.small_business, accounts: ctx.firm.datev_accounts }} />
       </section>
       <section className="card-white p-4">
         <StatusesEditor statuses={statuses ?? []} autoAcceptDays={ctx.firm.auto_accept_days} />

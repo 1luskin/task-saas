@@ -60,6 +60,15 @@ export async function loadTaskDetail(ctx: Ctx, id: string) {
       ])
     : [{ data: null }, { data: [] }, { data: [] }, { data: [] }];
 
+  // Material (Feature "materials")
+  const matOn = await isEnabled(ctx, "materials");
+  const [{ data: materials }, { data: matMoves }] = matOn
+    ? await Promise.all([
+        ctx.supabase.from("materials").select("*").eq("firm_id", task.firm_id).is("archived_at", null).order("name"),
+        ctx.supabase.from("material_moves").select("*").eq("task_id", id).order("created_at"),
+      ])
+    : [{ data: [] }, { data: [] }];
+
   const allEntries = entries.data ?? [];
   const myEntries = allEntries.filter((e) => e.member_id === ctx.member.id);
   const runningMine = myEntries.find((e) => !e.ended_at)?.started_at ?? null;
@@ -85,6 +94,9 @@ export async function loadTaskDetail(ctx: Ctx, id: string) {
     geo: (geoRows ?? []).map((g) => ({ lat: g.lat, lng: g.lng, kind: g.kind, created_at: g.created_at, who: geoWho.get(g.member_id) ?? "" })),
     files: (fileRows ?? []).map((f) => ({ id: f.id, name: f.file_name, size: f.size_bytes, url: fileUrls.get(f.id) ?? null, uploaded_by: f.uploaded_by })),
     kbOn,
+    matOn,
+    materials: (materials ?? []).map((m) => ({ id: m.id, name: m.name, unit: m.unit, stock: Number(m.stock), min_stock: Number(m.min_stock), unit_cost_cents: m.unit_cost_cents })),
+    materialUsed: (matMoves ?? []).map((mv) => ({ id: mv.id, qty: -Number(mv.qty), cost: Math.round(-Number(mv.qty) * mv.unit_cost_cents), name: (materials ?? []).find((m) => m.id === mv.material_id)?.name ?? "—", unit: (materials ?? []).find((m) => m.id === mv.material_id)?.unit ?? "" })),
     article: article ?? null,
     articles: (articles ?? []) as { id: string; title: string }[],
     formTemplates: formTemplates ?? [],

@@ -2,6 +2,7 @@ import { requireBossPage } from "@/lib/auth";
 import { getI18n } from "@/i18n/server";
 import { formatDuration, monthPeriod, todayISO, weekPeriod } from "@/lib/dates";
 import { loadFinance } from "@/lib/finance";
+import { isEnabled } from "@/lib/features";
 import { formatMoney } from "@/lib/money";
 import { getMembers } from "@/server/queries";
 import { PageTitle } from "@/components/ui";
@@ -10,6 +11,9 @@ import { ExportForm } from "./export-form";
 import { AdjustForm, ExpenseDecision } from "@/components/money/adjust-form";
 import { monthPeriod as mp } from "@/lib/dates";
 import Link from "next/link";
+import { Suspense } from "react";
+import { AnalyticsCharts } from "@/components/charts/analytics";
+import { ChartsSkeleton } from "@/components/skeletons";
 
 export default async function MoneyPage({ searchParams }: { searchParams: Promise<{ month?: string }> }) {
   const ctx = await requireBossPage();
@@ -22,6 +26,7 @@ export default async function MoneyPage({ searchParams }: { searchParams: Promis
     getMembers(ctx, { includeArchived: true }),
   ]);
   const money = (c: number) => formatMoney(c, locale);
+  const datevOn = await isEnabled(ctx, "datev");
   const range = mp(`${m}-01`);
   const [{ data: pendingExp }, { data: adjustments }] = await Promise.all([
     ctx.supabase.from("expenses").select("*").eq("firm_id", ctx.firm.id).eq("status", "pending").order("created_at"),
@@ -44,12 +49,15 @@ export default async function MoneyPage({ searchParams }: { searchParams: Promis
 
   return (
     <div className="space-y-4">
-      <PageTitle actions={<ExportForm month={m} />}>{t("money.title")}</PageTitle>
+      <PageTitle actions={<ExportForm month={m} datev={datevOn ? (ctx.firm.datev_consultant_no && ctx.firm.datev_client_no ? "ready" : "setup") : null} />}>{t("money.title")}</PageTitle>
       <Hint id="money" dismissed={ctx.settings.hints_dismissed}>{t("hints.money")}</Hint>
       <div className="grid gap-4 lg:grid-cols-2">
         {block({ title: t("money.week"), f: week })}
         {block({ title: `${t("money.monthLabel")} ${m}`, f: mon })}
       </div>
+      <Suspense fallback={<ChartsSkeleton n={4} />}>
+        <AnalyticsCharts ctx={ctx} variant="money" month={m} />
+      </Suspense>
       <div className="card-white overflow-x-auto">
         <div className="p-4 font-semibold">{t("money.perEmployee")} · {m}</div>
         <table className="w-full min-w-[820px] text-sm">
@@ -69,7 +77,10 @@ export default async function MoneyPage({ searchParams }: { searchParams: Promis
           <tbody className="divide-y divide-line/60">
             {rows.map((r) => (
               <tr key={r.memberId}>
-                <td className="px-4 py-3">{members.find((x) => x.id === r.memberId)?.full_name ?? "?"}</td>
+                <td className="px-4 py-3">
+                  {members.find((x) => x.id === r.memberId)?.full_name ?? "?"}
+                  <a className="ml-2 text-xs text-link" href={`/api/reports/member-pdf?member=${r.memberId}&month=${m}`}>PDF</a>
+                </td>
                 <td className="px-4 py-3 text-right tabular-nums">{r.tasksDone}</td>
                 <td className="px-4 py-3 text-right tabular-nums">{formatDuration(r.minutes)}</td>
                 <td className="px-4 py-3 text-right tabular-nums">{money(r.hourlyCents)}</td>

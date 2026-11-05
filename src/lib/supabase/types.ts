@@ -40,8 +40,15 @@ export type Firm = {
   weekly_mail_last: string | null;
   task_fields: TaskFields;
   shift_autoclose_hours: number;
+  datev_consultant_no: number | null;
+  datev_client_no: number | null;
+  datev_skr: "03" | "04";
+  datev_accounts: DatevAccounts;
+  vat_rate: 0 | 7 | 19;
+  small_business: boolean;
   created_at: string;
 };
+export type DatevAccounts = Partial<Record<"debitor" | "cash" | "expense" | "material", number>>;
 export type TaskFields = {
   description: boolean;
   address: boolean;
@@ -70,7 +77,15 @@ export type AdminAudit = { id: string; admin_email: string; action: string; targ
 export type Expense = {
   id: string; firm_id: string; task_id: string; member_id: string; amount_cents: number; description: string;
   receipt_path: string | null; reimburse: boolean; status: "pending" | "approved" | "rejected";
-  decided_by: string | null; decided_at: string | null; created_at: string;
+  decided_by: string | null; decided_at: string | null; created_at: string; source: "manual" | "material";
+};
+export type Material = {
+  id: string; firm_id: string; name: string; unit: string; stock: number; min_stock: number; unit_cost_cents: number;
+  low_notified_at: string | null; archived_at: string | null; created_at: string;
+};
+export type MaterialMove = {
+  id: string; firm_id: string; material_id: string; kind: "in" | "use" | "correction"; qty: number; unit_cost_cents: number;
+  task_id: string | null; member_id: string | null; expense_id: string | null; note: string | null; created_at: string;
 };
 export type Shift = {
   id: string; firm_id: string; member_id: string; started_at: string; ended_at: string | null; break_minutes: number;
@@ -366,6 +381,8 @@ export interface Database {
       form_submissions: Table<FormSubmission, "task_id" | "template_id">;
       member_documents: Table<MemberDocument, "firm_id" | "member_id" | "name">;
       kb_articles: Table<KbArticle, "firm_id" | "title" | "body">;
+      materials: Table<Material, "firm_id" | "name">;
+      material_moves: Table<MaterialMove, "firm_id" | "material_id" | "kind" | "qty">;
       data_requests: Table<DataRequest, "firm_id" | "member_id" | "kind">;
       task_finance: Table<TaskFinance, "task_id">;
       checklist_items: Table<ChecklistItem, "task_id" | "text">;
@@ -413,6 +430,8 @@ export interface Database {
       };
       search_all: { Args: { p_q: string; p_limit?: number }; Returns: { kind: "task" | "member" | "client" | "request"; id: string; title: string; subtitle: string }[] };
       colleagues: { Args: Record<string, never>; Returns: { id: string; full_name: string }[] };
+      use_material: { Args: { p_material: string; p_task: string; p_qty: number }; Returns: { stock: number; min_stock: number; low: boolean; first_low: boolean }[] };
+      adjust_material_stock: { Args: { p_material: string; p_qty: number; p_kind: "in" | "correction"; p_unit_cost_cents?: number | null; p_note?: string | null }; Returns: number };
       decide_swap: { Args: { p_swap: string; p_action: "accept" | "approve" | "reject" }; Returns: undefined };
       invite_info: {
         Args: { p_token: string };

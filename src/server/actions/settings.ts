@@ -96,3 +96,27 @@ export async function setNotifyPref(type: string, enabled: boolean) {
     check(await ctx.supabase.from("notification_prefs").insert({ member_id: ctx.member.id, type: tp, enabled: z.boolean().parse(enabled) }));
   });
 }
+
+const accountNo = z.number().int().min(1).max(99999999).nullable().optional();
+const accountingSchema = z.object({
+  consultantNo: z.number().int().min(1001).max(9999999).nullable(),
+  clientNo: z.number().int().min(1).max(99999).nullable(),
+  skr: z.enum(["03", "04"]),
+  vatRate: z.union([z.literal(0), z.literal(7), z.literal(19)]),
+  smallBusiness: z.boolean(),
+  accounts: z.object({ debitor: accountNo, cash: accountNo, expense: accountNo, material: accountNo }),
+});
+/** Buchhaltung: DATEV-Stammdaten, USt-Satz, Kleinunternehmer */
+export async function saveAccounting(raw: z.input<typeof accountingSchema>) {
+  return runAction(async () => {
+    const ctx = await assertBoss();
+    const i = accountingSchema.parse(raw);
+    const accounts = Object.fromEntries(Object.entries(i.accounts).filter(([, v]) => typeof v === "number"));
+    check(await ctx.supabase.from("firms").update({
+      datev_consultant_no: i.consultantNo, datev_client_no: i.clientNo, datev_skr: i.skr, datev_accounts: accounts,
+      vat_rate: i.smallBusiness ? 0 : i.vatRate, small_business: i.smallBusiness,
+    }).eq("id", ctx.firm.id));
+    revalidatePath("/boss/settings");
+    revalidatePath("/boss/money");
+  });
+}

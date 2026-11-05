@@ -12,7 +12,7 @@ export function useAction() {
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
-  function run<R extends Result>(fn: () => Promise<R>, opts: { onOk?: (r: Extract<R, { ok: true }>) => void; refresh?: boolean } = {}) {
+  function run<R extends Result>(fn: () => Promise<R>, opts: { onOk?: (r: Extract<R, { ok: true }>) => void; refresh?: boolean; messages?: Record<string, string> } = {}) {
     setError(null);
     start(async () => {
       try {
@@ -22,8 +22,9 @@ export function useAction() {
           opts.onOk?.(r as Extract<R, { ok: true }>);
           if (opts.refresh !== false) router.refresh();
         } else {
+          const custom = r.message ? opts.messages?.[r.message] : undefined;
           setError(
-            r.message === "last_boss"
+            custom ? custom : r.message === "last_boss"
               ? t("employees.lastBoss")
               : r.error === "expired"
                 ? t("trial.expiredError")

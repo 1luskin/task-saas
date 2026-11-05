@@ -65,6 +65,29 @@ export class PdfWriter {
     }
     this.y -= opts.gap ?? 0;
   }
+  /** Tabelle: Spaltenbreiten in Anteilen, Zahlen rechtsbündig; Kopfzeile fett */
+  table(cols: { w: number; right?: boolean }[], head: string[], rows: string[][], size = 9) {
+    const total = cols.reduce((a, c) => a + c.w, 0);
+    const xs: number[] = [];
+    let x = this.margin;
+    for (const c of cols) { xs.push(x); x += (c.w / total) * this.width; }
+    const widths = cols.map((c) => (c.w / total) * this.width - 6);
+    const rowH = size * 1.6;
+    const draw = (cells: string[], f: PDFFont, color = BLACK) => {
+      this.ensure(rowH);
+      cells.forEach((raw, i) => {
+        let txt = raw;
+        while (txt.length > 1 && f.widthOfTextAtSize(txt, size) > widths[i]!) txt = txt.slice(0, -2) + "…";
+        const w = f.widthOfTextAtSize(txt, size);
+        const cx = cols[i]!.right ? xs[i]! + widths[i]! - w : xs[i]!;
+        this.page.drawText(txt, { x: cx, y: this.y - size, size, font: f, color });
+      });
+      this.y -= rowH;
+    };
+    draw(head, this.bold, GREY);
+    for (const r of rows) draw(r, this.font);
+    this.y -= 6;
+  }
   line() {
     this.ensure(10);
     this.page.drawLine({ start: { x: this.margin, y: this.y - 4 }, end: { x: A4[0] - this.margin, y: this.y - 4 }, thickness: 0.5, color: rgb(0.8, 0.8, 0.8) });

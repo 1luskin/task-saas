@@ -159,3 +159,11 @@ export function isoToBerlinLocal(iso: string): string {
   const g = (t: string) => p.find((x) => x.type === t)?.value ?? "00";
   return `${g("year")}-${g("month")}-${g("day")}T${g("hour")}:${g("minute")}`;
 }
+
+/** ISO-Kalenderwoche (KW) */
+export function isoWeekNumber(iso: string): number {
+  const thursday = addDays(iso, 4 - isoWeekday(iso));
+  const jan1 = `${thursday.slice(0, 4)}-01-01`;
+  const diff = (Date.parse(`${thursday}T00:00:00Z`) - Date.parse(`${jan1}T00:00:00Z`)) / 864e5;
+  return Math.floor(diff / 7) + 1;
+}

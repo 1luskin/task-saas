@@ -14,6 +14,8 @@ import { isEnabled } from "@/lib/features";
 import { TaskFilters } from "@/components/tasks/filters";
 import { BulkTaskList } from "@/components/tasks/bulk-list";
 import { ActivityFeed } from "@/components/activity-feed";
+import { AnalyticsCharts } from "@/components/charts/analytics";
+import { ChartsSkeleton } from "@/components/skeletons";
 import { ViewTabs } from "@/components/tasks/view-tabs";
 import { EmptyState, Stat } from "@/components/ui";
 import { IconPlus } from "@/components/icons";
@@ -133,6 +135,9 @@ export default async function BossDashboard({ searchParams }: { searchParams: Pr
             />
           )}
         </div>
+        <Suspense fallback={<ChartsSkeleton n={2} />}>
+          <AnalyticsCharts ctx={ctx} variant="dashboard" />
+        </Suspense>
       </section>
 
       {/* Rechts: Kalender – immer sichtbar */}

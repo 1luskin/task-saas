@@ -88,6 +88,7 @@ export default async function EarningsPage() {
         </>
       )}
       <Link href="/staff/times" className="btn-secondary w-full">{t("times.mine")}</Link>
+      <a href={`/api/reports/member-pdf?month=${today.slice(0, 7)}`} className="btn-ghost w-full">{t("mreport.pdf")}</a>
     </div>
   );
 }

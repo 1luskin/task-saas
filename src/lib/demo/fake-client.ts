@@ -48,7 +48,8 @@ const DEFAULTS: Partial<Record<TableName, () => Row>> = {
   members: () => ({ email: null, phone: null, group_id: null, status: "active", pay_mode: "hourly", hourly_rate_cents: 0, locale: "de",
     notify_overdue: true, notify_done: true, archived_at: null, user_id: null, is_demo: false, hourly_basis: "tasks", vacation_days_per_year: 24 }),
   shifts: () => ({ ended_at: null, break_minutes: 0, break_started_at: null, rate_cents: 0, auto_closed: false, needs_review: false }),
-  expenses: () => ({ receipt_path: null, reimburse: false, status: "pending", decided_by: null, decided_at: null }),
+  expenses: () => ({ receipt_path: null, reimburse: false, status: "pending", decided_by: null, decided_at: null, source: "manual" }),
+  materials: () => ({ unit: "Stk", stock: 0, min_stock: 0, unit_cost_cents: 0, low_notified_at: null, archived_at: null }),
   invites: () => ({ token: Array.from(crypto.getRandomValues(new Uint8Array(18)), (b) => b.toString(16).padStart(2, "0")).join(""),
     role: "employee", group_id: null, created_by: null, member_id: null, expires_at: new Date(Date.now() + 14 * 864e5).toISOString(), max_uses: 50, used_count: 0, revoked: false }),
   checklist_items: () => ({ done: false, position: 0 }),
@@ -121,6 +122,8 @@ class Session {
       case "announcement_reads": return r.member_id === me || (boss && this.db.announcements.some((a) => a.id === r.announcement_id && a.firm_id === firm));
       case "form_templates": case "kb_articles": return r.firm_id === firm;
       case "form_submissions": return this.taskVisible(r.task_id);
+      case "materials": return r.firm_id === firm;
+      case "material_moves": return r.firm_id === firm && (boss || r.member_id === me || (r.task_id != null && this.taskVisible(r.task_id)));
       case "data_requests": return r.firm_id === firm && (boss || r.member_id === me);
     }
   }
@@ -151,6 +154,8 @@ class Session {
       case "announcement_reads": return r.member_id === me;
       case "daily_reports": return r.firm_id === this.firm && r.member_id === me;
       case "form_submissions": return this.taskVisible(r.task_id) && r.submitted_by === me;
+      case "materials": return this.boss && r.firm_id === this.firm;
+      case "material_moves": return false; // nur über RPC
       case "geo_points": {
         const last = this.db.consents.filter((c) => c.user_id === this.uid && c.kind === "geolocation").sort((a, b) => b.created_at.localeCompare(a.created_at))[0];
         return r.firm_id === this.firm && r.member_id === me && Boolean(last?.granted);
@@ -168,7 +173,7 @@ class Session {
     if (this.boss) {
       if (table === "shifts" && old.ended_at) return deny();
       if (table === "task_statuses" && old.is_system && (("kind" in next && next.kind !== old.kind) || ("is_system" in next && next.is_system !== old.is_system))) return deny("system status");
-      if (["firms", "groups", "members", "invites", "task_templates", "tasks", "task_finance", "checklist_items", "time_entries", "task_requests", "task_statuses", "expenses", "clients", "task_links", "inbound_requests", "checklist_templates", "shift_plans", "vacation_requests", "announcements", "member_documents", "form_templates", "kb_articles"].includes(table)) return null;
+      if (["firms", "groups", "members", "invites", "task_templates", "tasks", "task_finance", "checklist_items", "time_entries", "task_requests", "task_statuses", "expenses", "clients", "task_links", "inbound_requests", "checklist_templates", "shift_plans", "vacation_requests", "announcements", "member_documents", "form_templates", "kb_articles", "materials"].includes(table)) return null;
     }
     switch (table) {
       case "tasks":
@@ -520,6 +525,43 @@ export function createFakeClient(uid: string | null, admin = false) {
           ...vis("task_requests").filter((r) => has(r.title)).map((r) => ({ kind: "request", id: r.id, title: r.title, subtitle: r.status })),
         ].slice(0, 20);
         return { data: out, error: null };
+      }
+      if (fn === "use_material") {
+        const me = s.me;
+        const qty = Number(args.p_qty);
+        const mat = s.db.materials.find((m) => m.id === args.p_material && m.firm_id === s.firm && !m.archived_at);
+        if (!me || !mat || !s.taskVisible(args.p_task)) return { data: null, error: deny("not found") };
+        if (!(qty > 0 && qty <= 100000)) return { data: null, error: { message: "invalid qty", code: "22023" } };
+        if (mat.stock < qty) return { data: null, error: { message: "insufficient stock", code: "23514", hint: "insufficient_stock" } };
+        mat.stock = Math.round((mat.stock - qty) * 1000) / 1000;
+        const now = new Date().toISOString();
+        const cost = Math.round(qty * mat.unit_cost_cents);
+        let expenseId: string | null = null;
+        if (cost > 0) {
+          expenseId = uuid();
+          s.db.expenses.push({ id: expenseId, firm_id: mat.firm_id, task_id: String(args.p_task), member_id: String(me.id), amount_cents: cost,
+            description: `${mat.name} × ${qty} ${mat.unit}`.slice(0, 300), receipt_path: null, reimburse: false, status: "approved",
+            decided_by: String(me.id), decided_at: now, created_at: now, source: "material" });
+        }
+        s.db.material_moves.push({ id: uuid(), firm_id: mat.firm_id, material_id: mat.id, kind: "use", qty: -qty, unit_cost_cents: mat.unit_cost_cents,
+          task_id: String(args.p_task), member_id: String(me.id), expense_id: expenseId, note: null, created_at: now });
+        const low = mat.stock <= mat.min_stock;
+        const first = low && !mat.low_notified_at;
+        if (first) mat.low_notified_at = now;
+        return { data: [{ stock: mat.stock, min_stock: mat.min_stock, low, first_low: first }], error: null };
+      }
+      if (fn === "adjust_material_stock") {
+        if (!s.boss) return { data: null, error: deny() };
+        const mat = s.db.materials.find((m) => m.id === args.p_material && m.firm_id === s.firm);
+        const qty = Number(args.p_qty);
+        if (!mat) return { data: null, error: deny("not found") };
+        if (!qty || !["in", "correction"].includes(String(args.p_kind)) || (args.p_kind === "in" && qty < 0)) return { data: null, error: { message: "invalid", code: "22023" } };
+        mat.stock = Math.round((mat.stock + qty) * 1000) / 1000;
+        if (args.p_unit_cost_cents != null) mat.unit_cost_cents = Number(args.p_unit_cost_cents);
+        if (mat.stock > mat.min_stock) mat.low_notified_at = null;
+        s.db.material_moves.push({ id: uuid(), firm_id: mat.firm_id, material_id: mat.id, kind: args.p_kind as "in" | "correction", qty, unit_cost_cents: mat.unit_cost_cents,
+          task_id: null, member_id: s.me ? String(s.me.id) : null, expense_id: null, note: args.p_note ? String(args.p_note) : null, created_at: new Date().toISOString() });
+        return { data: mat.stock, error: null };
       }
       if (fn === "colleagues") {
         const me = s.me;

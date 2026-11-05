@@ -30,3 +30,11 @@ export function CardsSkeleton({ cards = 3 }: { cards?: number }) {
     </div>
   );
 }
+
+export function ChartsSkeleton({ n = 2 }: { n?: number }) {
+  return (
+    <div className="grid gap-4 md:grid-cols-2" aria-busy="true">
+      {Array.from({ length: n }, (_, i) => <div key={i} className="skeleton h-60" />)}
+    </div>
+  );
+}

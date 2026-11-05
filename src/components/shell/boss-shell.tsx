@@ -17,7 +17,7 @@ const IconContact = ({ className }: { className?: string }) => <IconContactRaw s
 import { LogoutButton } from "../logout-button";
 import { Avatar } from "../ui";
 import {
-  IconArchive, IconBook, IconCalendar, IconChart, IconEuro, IconInbox, IconMenu, IconRepeat, IconSettings, IconTasks, IconTeam, IconUsers,
+  IconArchive, IconBook, IconBox, IconCalendar, IconChart, IconEuro, IconInbox, IconMenu, IconRepeat, IconSettings, IconTasks, IconTeam, IconUsers,
 } from "../icons";
 
 export async function BossShell({
@@ -38,6 +38,7 @@ export async function BossShell({
     ...(on("templates") ? [{ href: "/boss/templates", label: t("nav.templates"), icon: IconRepeat }] : []),
     ...(on("reports") ? [{ href: "/boss/reports", label: t("nav.reports"), icon: IconChart }] : []),
     ...(on("knowledge") ? [{ href: "/boss/knowledge", label: t("nav.knowledge"), icon: IconBook }] : []),
+    ...(on("materials") ? [{ href: "/boss/materials", label: t("nav.materials"), icon: IconBox }] : []),
     { href: "/boss/settings", label: t("nav.settings"), icon: IconSettings },
   ];
   const secondary = [

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useI18n } from "@/i18n/client";
 import { IconDownload } from "@/components/icons";
 
-export function ExportForm({ month }: { month: string }) {
+export function ExportForm({ month, datev }: { month: string; datev?: "ready" | "setup" | null }) {
   const { t } = useI18n();
   const router = useRouter();
   const [m, setM] = useState(month);
@@ -24,6 +24,8 @@ export function ExportForm({ month }: { month: string }) {
         <IconDownload className="size-5" />
         {t("money.exportXlsx")}
       </a>
+      {datev === "ready" && <a href={`/api/export/datev?month=${m}`} className="btn-secondary"><IconDownload className="size-5" />{t("acc.export")}</a>}
+      {datev === "setup" && <a href="/boss/settings#datev" className="btn-ghost" title={t("acc.notReady")}>{t("acc.setup")}</a>}
     </div>
   );
 }
