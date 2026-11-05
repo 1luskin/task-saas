@@ -76,7 +76,7 @@ export async function BossShell({
         </nav>
         <TrialCard firm={ctx.firm} className="mx-1 mt-auto" />
         <div className="mt-3 flex items-center gap-2 px-2">
-          <Avatar name={userName} />
+          <Avatar name={userName} memberId={ctx.member.id} avatarPath={ctx.member.avatar_path} />
           <span className="flex-1 truncate text-sm">{userName}</span>
         </div>
         <LogoutButton className="mt-2 !min-h-9 justify-start text-sm" />

@@ -936,6 +936,10 @@ const de = {
     pdf: "Als PDF herunterladen",
     notFound: "Angebot nicht gefunden oder abgelaufen.",
   },
+  profile: {
+    photo: "Foto ändern",
+    removePhoto: "Foto entfernen",
+  },
   export: {
     sheetSummary: "Übersicht",
     sheetTasks: "Aufgaben",

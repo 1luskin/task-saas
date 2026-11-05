@@ -168,3 +168,25 @@ button,
 @utility hatch {
   background-image: repeating-linear-gradient(135deg, color-mix(in srgb, var(--color-muted) 22%, transparent) 0 2px, transparent 2px 9px);
 }
+
+/* Datei-Auswahl: genug Fläche zum Antippen, Knopf im App-Stil */
+input[type="file"] {
+  min-height: 2.75rem;
+  color: var(--color-muted);
+}
+input[type="file"]::file-selector-button {
+  min-height: 2.75rem;
+  margin-right: 0.75rem;
+  padding: 0 1rem;
+  border: 0;
+  border-radius: 12px;
+  background: var(--color-surface-3);
+  color: var(--color-ink);
+  font: inherit;
+  cursor: pointer;
+}
+
+/* Grid-Kinder dürfen schrumpfen (sonst sprengen lange Inhalte die Spalte → horizontales Scrollen am Handy) */
+:where(.grid) > * {
+  min-width: 0;
+}

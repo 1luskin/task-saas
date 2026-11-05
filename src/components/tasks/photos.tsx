@@ -69,7 +69,7 @@ export function Photos({
         <span className="font-medium">{t("task.photos")}</span>
         <div className="inline-flex rounded-[10px] bg-card p-0.5" role="radiogroup" aria-label={t("task.photos")}>
           {(["general", "before", "after"] as const).map((k) => (
-            <button key={k} type="button" role="radio" aria-checked={kind === k} onClick={() => setKind(k)} className={`min-h-9 rounded-[8px] px-3 text-sm ${kind === k ? "bg-surface-3 text-ink" : "text-muted"}`}>
+            <button key={k} type="button" role="radio" aria-checked={kind === k} onClick={() => setKind(k)} className={`min-h-11 rounded-[8px] px-3 text-sm ${kind === k ? "bg-surface-3 text-ink" : "text-muted"}`}>
               {k === "general" ? t("task.photos") : k === "before" ? t("cl.before") : t("cl.after")}
             </button>
           ))}

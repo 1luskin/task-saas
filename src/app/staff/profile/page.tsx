@@ -1,11 +1,11 @@
 import { requireStaffPage } from "@/lib/auth";
+import { AvatarUpload } from "@/components/avatar-upload";
 import { getI18n } from "@/i18n/server";
 import { formatDate } from "@/lib/dates";
 import { LanguageSwitch } from "@/components/language-switch";
 import { LogoutButton } from "@/components/logout-button";
 import { PushToggle } from "@/components/settings/push-toggle";
 import { InstallHint } from "@/components/settings/install-hint";
-import { Avatar } from "@/components/ui";
 import { StatusSwitch } from "./status-switch";
 import { RequestForm } from "./request-form";
 import { MyData } from "./my-data";
@@ -30,8 +30,8 @@ export default async function ProfilePage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-3">
-        <Avatar name={ctx.member.full_name} className="size-14 text-lg" />
+      <div className="flex flex-wrap items-center gap-3">
+        <AvatarUpload firmId={ctx.firm.id} memberId={ctx.member.id} name={ctx.member.full_name} avatarPath={ctx.member.avatar_path} />
         <div>
           <div className="text-xl font-semibold">{ctx.member.full_name}</div>
           <div className="text-muted">{ctx.member.email}</div>

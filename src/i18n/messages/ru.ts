@@ -938,6 +938,10 @@ const ru: Messages = {
     pdf: "Скачать PDF",
     notFound: "Предложение не найдено или истекло.",
   },
+  profile: {
+    photo: "Сменить фото",
+    removePhoto: "Удалить фото",
+  },
   export: {
     sheetSummary: "Итоги",
     sheetTasks: "Задачи",

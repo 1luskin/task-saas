@@ -4,11 +4,13 @@ import "./globals.css";
 import { APP_NAME } from "@/config/app";
 
 const golos = Golos_Text({ subsets: ["latin", "cyrillic"], weight: ["400", "500", "600", "700"], variable: "--font-golos", display: "swap" });
-const geologica = Geologica({ subsets: ["latin", "cyrillic"], weight: ["500", "600", "700"], variable: "--font-geologica", display: "swap" });
+const geologica = Geologica({ subsets: ["latin", "cyrillic"], weight: ["500", "600", "700"], variable: "--font-geologica", display: "optional" }); // Überschriften: kein Umbruch/Neuzeichnen nach dem Laden (LCP)
 import { getLocale } from "@/i18n/server";
 import { I18nProvider } from "@/i18n/client";
 import { ServiceWorkerRegister } from "@/components/pwa/sw-register";
-import { CookieBanner } from "@/components/legal/cookie-banner";
+import { CookieBanner, CONSENT_COOKIE } from "@/components/legal/cookie-banner";
+import { cookies } from "next/headers";
+import { LEGAL_VERSION } from "@/legal/content";
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
@@ -49,13 +51,15 @@ export const viewport: Viewport = {
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const locale = await getLocale();
+  // Banner serverseitig rendern, wenn noch keine Bestätigung (kein Aufblitzen nach dem Laden)
+  const consented = (await cookies()).get(CONSENT_COOKIE)?.value === LEGAL_VERSION;
   return (
     <html lang={locale} className={`${golos.variable} ${geologica.variable}`}>
       <body>
         <I18nProvider locale={locale}>
           {children}
           <ServiceWorkerRegister />
-          <CookieBanner />
+          <CookieBanner initialShow={!consented} />
         </I18nProvider>
       </body>
     </html>

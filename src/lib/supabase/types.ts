@@ -215,6 +215,7 @@ export type Member = {
   is_demo: boolean;
   hourly_basis: "tasks" | "shifts";
   vacation_days_per_year: number;
+  avatar_path: string | null;
   created_at: string;
   updated_at: string;
 };

@@ -95,7 +95,13 @@ export function initials(name: string | null | undefined): string {
   return ((parts[0]?.[0] ?? "") + (parts.length > 1 ? parts[parts.length - 1]![0] : "")).toUpperCase();
 }
 
-export function Avatar({ name, className }: { name: string | null | undefined; className?: string }) {
+/** Profilfoto (über /api/avatar, nur innerhalb der Firma) oder Initialen */
+export function Avatar({ name, className, memberId, avatarPath }: { name: string | null | undefined; className?: string; memberId?: string; avatarPath?: string | null }) {
+  if (memberId && avatarPath) {
+    // Version im Query-String → neues Foto sofort sichtbar, altes bleibt im Cache gültig
+    const v = avatarPath.split("/").pop()?.slice(0, 8) ?? "";
+    return <img src={`/api/avatar/${memberId}?v=${v}`} alt="" className={cx("size-8 shrink-0 rounded-full object-cover", className)} />;
+  }
   return (
     <span className={cx("inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-accent-soft text-xs font-semibold text-link", className)}>
       {initials(name)}

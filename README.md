@@ -2,10 +2,13 @@
 
 SaaS для небольших фирм в Германии (клининг, ремонт, стройка, склады): начальник раздаёт задачи на ПК,
 команда работает с телефона (PWA, офлайн). Учёт времени и смен, приёмка работы, заработок и прибыль,
-клиенты и ссылка заказчика, Excel/PDF, пробный период 14 дней, суперадминка. Языки DE + RU.
+клиенты и ссылка заказчика, команда (график смен, отпуска, доска объявлений, дневные отчёты, документы, база знаний,
+формы → PDF, импорт из Excel), аналитика (графики, отчёт сотрудника за месяц), DATEV-экспорт, склад материалов,
+предложения и счета (§14 UStG, GoBD, сторно, XRechnung), Excel/PDF, пробный период 14 дней, суперадминка. Языки DE + RU.
 
 > Рабочее имя продукта — константа `APP_NAME` в `src/config/app.ts` (меняется в одном месте).
-> Прогресс по ТЗ — `PROGRESS.md`, принятые решения — `DECISIONS.md`, что сделать руками перед запуском — `LAUNCH_CHECKLIST.md`.
+> Прогресс по ТЗ — `PROGRESS.md`, принятые решения — `DECISIONS.md`, что сделать руками перед запуском — `LAUNCH_CHECKLIST.md`,
+> итоговый отчёт (что сделано, что нет и почему) — `REPORT.md`.
 
 **Стек:** Next.js 16 (App Router, TypeScript strict) · Tailwind CSS v4 · Supabase (Postgres, Auth, Storage, регион Frankfurt) · Vercel (fra1) · Vitest · Playwright
 
@@ -31,11 +34,13 @@ npm run lint           # ESLint
 npm test               # Vitest (unit)
 npm run build && npm run check:bundle   # сборка + проверка, что секретов нет в клиентском бандле
 npm run test:e2e       # Playwright в демо-режиме (сам собирает и запускает сервер на :3123)
-PGHOST=/tmp PGPORT=5432 tests/sql/run.sh   # миграции + RLS-тесты на локальном Postgres 16
+PGHOST=/tmp PGPORT=5432 tests/sql/run.sh   # миграции + RLS-тесты на локальном Postgres 16 (свежая БД на каждый файл)
 ```
 
 `tests/sql/run.sh` создаёт базу, ставит заглушку схем `auth`/`storage` (`tests/sql/supabase-stub.sql`),
-применяет все миграции и прогоняет SQL-тесты прав (`tests/sql/0*.sql`; строки «muss scheitern» должны дать ошибку).
+применяет все миграции и прогоняет SQL-тесты прав (`tests/sql/[0-9]*.sql`; строки «muss scheitern» должны дать ошибку).
+`13-cross-firm.sql` автоматически обходит **все** таблицы схемы `public`: вторая фирма и anon не должны увидеть ни строки
+первой (новая таблица без RLS сразу проявится). E2E включает проверку доступности (axe, WCAG 2.1 AA) и зон нажатия.
 
 ---
 
@@ -80,8 +85,10 @@ PGHOST=/tmp PGPORT=5432 tests/sql/run.sh   # миграции + RLS-тесты �
 
 ## 5. Фоновые задачи
 
-- **Ежедневно** — Vercel Cron (`vercel.json`, 04:00 UTC) → `/api/cron/daily`: задачи из шаблонов, уведомления о просрочке,
-  окончательное удаление фирм через 30 дней после запроса, очистка журнала входов (90 дней).
+- **Ежедневно** — Vercel Cron (`vercel.json`, 04:00 UTC) → `/api/cron/daily`: задачи из шаблонов (со ссылкой на инструкцию;
+  в одобренный отпуск — без исполнителя), уведомления о просрочке, окончательное удаление фирм через 30 дней после запроса,
+  геометки по сроку хранения фирмы, журнал входов (90 дней), напоминание о документах сотрудников (≤ 30 дней до конца срока),
+  удаление счетов после 10 лет хранения (GoBD), письма (конец пробного периода, недельная сводка).
 - **Каждые 15 минут** — `/api/cron/frequent`: авто-приёмка работы через N дней и напоминание начальнику, авто-закрытие
   забытых смен. Vercel Hobby так часто не умеет, поэтому вызывает Supabase:
   ```sql
@@ -108,13 +115,17 @@ PGHOST=/tmp PGPORT=5432 tests/sql/run.sh   # миграции + RLS-тесты �
 ```
 supabase/migrations/        схема, RLS на каждой таблице и бакете, триггеры-охранники, RPC (нумерация по датам)
 src/proxy.ts                CSP с nonce, обновление сессии, редирект на /login
-src/app/                    страницы: / (лендинг), /login, /boss/*, /staff/*, /admin/*, /c/[token], /f/[slug], правовые
-src/app/api/                sync (офлайн-очередь), cron/daily, cron/frequent, export (xlsx/zip/json), reports (pdf)
+src/app/                    страницы: / (лендинг), /login, /boss/*, /staff/*, /admin/*, /c/[token] (заказчик),
+                            /o/[token] (предложение), /f/[slug] (публичная форма), правовые
+src/app/api/                sync (офлайн-очередь), cron/daily, cron/frequent, export (xlsx/zip/json, DATEV EXTF),
+                            reports (недельный и месячный PDF), invoices (PDF, XRechnung XML), offers, forms (PDF), avatar
+src/lib/datev.ts            Buchungsstapel EXTF v700 (CP1252), счета SKR03/04
+src/lib/invoice-calc.ts     суммы счёта (= SQL), src/lib/xrechnung.ts — XRechnung 3.0 CII; src/lib/pdf.ts — PDF-хелпер
 src/server/actions/         server actions: zod-валидация + роль + фирма + фича-флаг + пробный период
 src/lib/                    auth, finance/earnings, workflow (статусы), trial, features, rate-limit, shifts, email, demo
 src/i18n/                   словари DE/RU (новый язык — файл + запись в config.ts)
 src/legal/                  тексты Impressum/Datenschutz/AGB/AVV (плейсхолдеры)
-tests/unit|e2e|sql          Vitest, Playwright (демо), SQL-тесты RLS
+tests/unit|e2e|sql          Vitest, Playwright (демо, вкл. axe), SQL-тесты RLS/GoBD/изоляции
 design/                     макеты экранов (HTML-эскизы) и DESIGN.md
 ```
 

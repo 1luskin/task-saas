@@ -19,11 +19,11 @@ export function SwapRequest({ planId, colleagues }: { planId: string; colleagues
   if (!colleagues.length) return null;
   return (
     <form className="flex flex-wrap items-center gap-2" onSubmit={(e) => { e.preventDefault(); if (to) run(() => requestSwap(planId, to)); }}>
-      <Select aria-label={t("team.colleague")} className="!min-h-10 min-w-0 flex-1" value={to} onChange={(e) => setTo(e.target.value)}>
+      <Select aria-label={t("team.colleague")} className="!min-h-11 min-w-0 flex-1" value={to} onChange={(e) => setTo(e.target.value)}>
         <option value="">{t("team.swap")}</option>
         {colleagues.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
       </Select>
-      {to && <button className="btn-secondary !min-h-10 text-sm" disabled={pending}>{t("team.send")}</button>}
+      {to && <button className="btn-secondary !min-h-11 text-sm" disabled={pending}>{t("team.send")}</button>}
       <ErrorText error={error} />
     </form>
   );
@@ -62,7 +62,7 @@ export function DeleteVacation({ id }: { id: string }) {
   const { t } = useI18n();
   const { run, pending } = useAction();
   return (
-    <button className="btn-ghost !min-h-10 !px-2 text-muted" aria-label={t("common.delete")} disabled={pending} onClick={() => confirm(t("common.confirmDelete")) && run(() => deleteMyVacation(id))}>
+    <button className="btn-ghost !min-h-11 min-w-11 !px-2 text-muted" aria-label={t("common.delete")} disabled={pending} onClick={() => confirm(t("common.confirmDelete")) && run(() => deleteMyVacation(id))}>
       <IconTrash className="size-4" />
     </button>
   );
@@ -71,7 +71,7 @@ export function DeleteVacation({ id }: { id: string }) {
 export function MarkRead({ id }: { id: string }) {
   const { t } = useI18n();
   const { run, pending } = useAction();
-  return <button className="btn-secondary !min-h-10 text-sm" disabled={pending} onClick={() => run(() => markAnnouncementRead(id))}>{t("team.markRead")}</button>;
+  return <button className="btn-secondary !min-h-11 text-sm" disabled={pending} onClick={() => run(() => markAnnouncementRead(id))}>{t("team.markRead")}</button>;
 }
 
 export function DailyReportForm({ firmId, memberId, today, tasks }: { firmId: string; memberId: string; today: string; tasks: Opt[] }) {

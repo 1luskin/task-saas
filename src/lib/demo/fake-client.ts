@@ -47,7 +47,7 @@ const DEFAULTS: Partial<Record<TableName, () => Row>> = {
   task_files: () => ({ comment_id: null, uploaded_by: null }),
   task_statuses: () => ({ color: "slate", position: 0, is_system: false }),
   members: () => ({ email: null, phone: null, group_id: null, status: "active", pay_mode: "hourly", hourly_rate_cents: 0, locale: "de",
-    notify_overdue: true, notify_done: true, archived_at: null, user_id: null, is_demo: false, hourly_basis: "tasks", vacation_days_per_year: 24 }),
+    notify_overdue: true, notify_done: true, archived_at: null, user_id: null, is_demo: false, hourly_basis: "tasks", vacation_days_per_year: 24, avatar_path: null }),
   shifts: () => ({ ended_at: null, break_minutes: 0, break_started_at: null, rate_cents: 0, auto_closed: false, needs_review: false }),
   expenses: () => ({ receipt_path: null, reimburse: false, status: "pending", decided_by: null, decided_at: null, source: "manual" }),
   invoices: () => ({ kind: "invoice", number: null, status: "draft", client_id: null, task_id: null, offer_id: null, cancels_id: null, issue_date: null,
@@ -210,7 +210,7 @@ class Session {
       case "checklist_items": return changed(["done", "updated_at"]) ? deny() : null;
       case "members":
         if (old.user_id !== this.uid) return deny();
-        return changed(["full_name", "phone", "status", "locale", "notify_overdue", "notify_done", "updated_at"]) ? deny() : null;
+        return changed(["full_name", "phone", "status", "locale", "notify_overdue", "notify_done", "avatar_path", "updated_at"]) ? deny() : null;
       case "time_entries":
         if (old.member_id !== this.me?.id || old.ended_at) return deny();
         return changed(["ended_at"]) ? deny() : null;
@@ -495,7 +495,7 @@ export function createFakeClient(uid: string | null, admin = false) {
   };
   return {
     from: (table: TableName) => new Query(s, table),
-    rpc: async (fn: string, args: Record<string, string>) => {
+    rpc: async (fn: string, args: Record<string, unknown> = {}) => {
       if (fn === "current_context") {
         const m = s.me;
         return { data: m ? [{ member_id: m.id, real_member_id: m.id, own_member_id: m.id, demo_member_id: null, acting: false }] : [], error: null };

@@ -40,7 +40,7 @@ export function createSeed(): DemoDb {
 
   const member = (o: Partial<Tables["members"]["Row"]> & Pick<Tables["members"]["Row"], "id" | "user_id" | "role" | "full_name">): Tables["members"]["Row"] => ({
     firm_id: DEMO.firm, email: null, phone: null, group_id: null, status: "active", pay_mode: "hourly",
-    hourly_rate_cents: 0, locale: "de", notify_overdue: true, notify_done: true, archived_at: null, is_demo: false, hourly_basis: "tasks", vacation_days_per_year: 24,
+    hourly_rate_cents: 0, locale: "de", notify_overdue: true, notify_done: true, archived_at: null, is_demo: false, hourly_basis: "tasks", vacation_days_per_year: 24, avatar_path: null,
     created_at: now, updated_at: now, ...o,
   });
 

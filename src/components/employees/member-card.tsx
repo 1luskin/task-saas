@@ -30,7 +30,7 @@ export function MemberCard({ member: m, groups, isSelf, tasksDoneMonth, reworksM
   return (
     <div className={cx("card-white overflow-hidden", unavailable && "border-danger/30")}>
       <button className="flex min-h-16 w-full items-center gap-3 p-4 text-left" onClick={() => setOpen(!open)}>
-        <Avatar name={m.full_name} className="size-10 text-sm" />
+        <Avatar name={m.full_name} memberId={m.id} avatarPath={m.avatar_path} className="size-10 text-sm" />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-1.5">
             <span className="font-medium">{m.full_name}</span>

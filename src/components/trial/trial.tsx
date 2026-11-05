@@ -19,7 +19,7 @@ export async function TrialCard({ firm, className }: { firm: Firm; className?: s
           {i.daysLeft === 0 ? t("trial.endsToday") : t("trial.daysLeft", { n: i.daysLeft, total: i.totalDays })}
         </div>
       )}
-      <div className="mt-2.5 h-1.5 rounded-full bg-surface-3" role="progressbar" aria-valuemin={0} aria-valuemax={i.totalDays} aria-valuenow={i.totalDays - i.daysLeft}>
+      <div className="mt-2.5 h-1.5 rounded-full bg-surface-3" role="progressbar" aria-label={t("trial.title")} aria-valuemin={0} aria-valuemax={i.totalDays} aria-valuenow={i.totalDays - i.daysLeft}>
         <div className={cx("h-1.5 rounded-full", i.expired ? "bg-danger" : "bg-accent-2")} style={{ width: `${Math.round(i.progress * 100)}%` }} />
       </div>
       <Link href="/boss/plans" className="mt-2.5 inline-block font-semibold text-link">{t("trial.plans")}</Link>

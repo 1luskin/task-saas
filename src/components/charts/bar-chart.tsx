@@ -131,7 +131,7 @@ export function BarChart({ title, series, data, money = false, horizontal = fals
               <g key={d.label}>
                 {segs}
                 <text x={cx} y={H - 6} textAnchor="middle" fontSize="11" fill={hover === i ? "var(--color-ink)" : "var(--color-muted)"}>{d.label}</text>
-                <rect x={padL + band * i} y={0} width={band} height={H} fill="transparent" tabIndex={0} aria-label={`${d.label}: ${series.map((s) => `${s.name} ${fmt(d.values[s.key] ?? 0)}`).join(", ")}`}
+                <rect x={padL + band * i} y={0} width={band} height={H} fill="transparent" tabIndex={0} role="img" aria-label={`${d.label}: ${series.map((s) => `${s.name} ${fmt(d.values[s.key] ?? 0)}`).join(", ")}`}
                   onPointerEnter={() => setHover(i)} onFocus={() => setHover(i)} onBlur={() => setHover(null)} className="outline-none" />
               </g>
             );

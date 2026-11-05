@@ -23,33 +23,33 @@ export async function DemoFirmBar({ ctx }: { ctx: Ctx }) {
 
   return (
     <div className="flex flex-wrap items-center gap-2 bg-review-soft px-4 py-2 text-sm text-review">
-      <span className="min-w-0 flex-1">{isWorkerView ? t("demoFirm.actingAs", { name: ctx.member.full_name }) : t("demoFirm.banner")}</span>
+      <span className="min-w-0 basis-full sm:basis-auto sm:flex-1">{isWorkerView ? t("demoFirm.actingAs", { name: ctx.member.full_name }) : t("demoFirm.banner")}</span>
       <span className="text-ink-2">{t("demoFirm.viewAs")}:</span>
       <form action={actAs.bind(null, null)}>
-        <button className={`chip min-h-8 ${!isWorkerView ? "bg-surface-3 text-ink" : "text-ink-2 hover:bg-white/5"}`}>{t("demoFirm.owner")}</button>
+        <button className={`chip min-h-10 ${!isWorkerView ? "bg-surface-3 text-ink" : "text-ink-2 hover:bg-white/5"}`}>{t("demoFirm.owner")}</button>
       </form>
       {(staff ?? []).length > 0 &&
         (isWorkerView ? (
-          <span className="chip min-h-8 bg-surface-3 text-ink">{t("demoFirm.worker")}</span>
+          <span className="chip min-h-10 bg-surface-3 text-ink">{t("demoFirm.worker")}</span>
         ) : (
           <form action={actAs.bind(null, staff![0]!.id)}>
-            <button className="chip min-h-8 text-ink-2 hover:bg-white/5" title={staff![0]!.full_name}>{t("demoFirm.worker")}</button>
+            <button className="chip min-h-10 text-ink-2 hover:bg-white/5" title={staff![0]!.full_name}>{t("demoFirm.worker")}</button>
           </form>
         ))}
       {customerToken ? (
-        <a href={`/c/${customerToken}`} target="_blank" rel="noreferrer" className="chip min-h-8 text-ink-2 hover:bg-white/5">{t("demoFirm.customer")}</a>
+        <a href={`/c/${customerToken}`} target="_blank" rel="noreferrer" className="chip min-h-10 text-ink-2 hover:bg-white/5">{t("demoFirm.customer")}</a>
       ) : (
-        <span className="chip min-h-8 text-muted" aria-disabled="true">{t("demoFirm.customer")}</span>
+        <span className="chip min-h-10 text-muted" aria-disabled="true">{t("demoFirm.customer")}</span>
       )}
       <form action={resetDemoFirm}>
-        <button className="chip min-h-8 text-ink-2 hover:bg-white/5">{t("demoFirm.reset")}</button>
+        <button className="chip min-h-10 text-ink-2 hover:bg-white/5">{t("demoFirm.reset")}</button>
       </form>
       {isDemo() && (
-        <Link href="/login" className="chip min-h-8 text-ink-2 underline underline-offset-2 hover:bg-white/5">{t("demo.switchRole")}</Link>
+        <Link href="/login" className="chip min-h-10 text-ink-2 underline underline-offset-2 hover:bg-white/5">{t("demo.switchRole")}</Link>
       )}
       {!isDemo() && ctx.ownMemberId && (
         <form action={switchToOwnFirm}>
-          <button className="chip min-h-8 bg-accent text-white">{t("demoFirm.toMyFirm")}</button>
+          <button className="chip min-h-10 bg-accent text-white">{t("demoFirm.toMyFirm")}</button>
         </form>
       )}
     </div>

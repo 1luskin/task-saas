@@ -6,24 +6,30 @@ import { LEGAL_VERSION } from "@/legal/content";
 import { recordConsent } from "@/server/actions/consent";
 
 const KEY = "app.cookieConsent";
+/** technisch notwendig: merkt sich nur, dass der Hinweis bestätigt wurde (Textversion) */
+export const CONSENT_COOKIE = "cookie_ok";
+const setConsentCookie = () => {
+  document.cookie = `${CONSENT_COOKIE}=${LEGAL_VERSION}; Max-Age=31536000; Path=/; SameSite=Lax${location.protocol === "https:" ? "; Secure" : ""}`;
+};
 
-/** Hinweis: nur technisch notwendige Cookies. Bestätigung mit Datum + Textversion. */
-export function CookieBanner() {
+/** Hinweis: nur technisch notwendige Cookies. Bestätigung mit Datum + Textversion. Vom Server vorgerendert. */
+export function CookieBanner({ initialShow }: { initialShow: boolean }) {
   const { t } = useI18n();
-  const [show, setShow] = useState(false);
+  const [show, setShow] = useState(initialShow);
   useEffect(() => {
-    let stored: { version?: string } | null = null;
+    if (!initialShow) return;
+    // ältere Bestätigung nur im localStorage → Cookie nachziehen, Hinweis ausblenden
     try {
-      stored = JSON.parse(localStorage.getItem(KEY) ?? "null");
+      const stored = JSON.parse(localStorage.getItem(KEY) ?? "null") as { version?: string } | null;
+      if (stored?.version === LEGAL_VERSION) {
+        setConsentCookie();
+        const id = requestAnimationFrame(() => setShow(false));
+        return () => cancelAnimationFrame(id);
+      }
     } catch {
-      stored = null;
+      /* privat */
     }
-    const needed = stored?.version !== LEGAL_VERSION;
-    if (needed) {
-      const id = requestAnimationFrame(() => setShow(true));
-      return () => cancelAnimationFrame(id);
-    }
-  }, []);
+  }, [initialShow]);
   if (!show) return null;
   return (
     <div role="region" aria-label="Cookies" className="pb-safe fixed inset-x-0 bottom-0 z-[60] p-3 sm:p-4">
@@ -37,6 +43,7 @@ export function CookieBanner() {
           onClick={() => {
             try {
               localStorage.setItem(KEY, JSON.stringify({ version: LEGAL_VERSION, at: new Date().toISOString(), necessaryOnly: true }));
+              setConsentCookie();
             } catch {
               /* privat */
             }

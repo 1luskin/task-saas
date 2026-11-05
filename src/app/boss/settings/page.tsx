@@ -1,4 +1,5 @@
 import { requireBossPage } from "@/lib/auth";
+import { AvatarUpload } from "@/components/avatar-upload";
 import { AccountingForm } from "@/components/settings/accounting-form";
 import { SellerForm } from "@/components/settings/seller-form";
 import { getI18n } from "@/i18n/server";
@@ -39,6 +40,9 @@ export default async function SettingsPage() {
       <PageTitle>{t("settings.title")}</PageTitle>
       <TrialCard firm={ctx.firm} />
       <section className="card-white p-4">
+        <AvatarUpload firmId={ctx.firm.id} memberId={ctx.member.id} name={ctx.member.full_name} avatarPath={ctx.member.avatar_path} />
+      </section>
+      <section className="card-white p-4">
         <h2 className="mb-3 font-semibold">{t("settings.firm")}</h2>
         <FirmForm name={ctx.firm.name} />
       </section>
@@ -47,7 +51,7 @@ export default async function SettingsPage() {
       </section>
       <section className="card-white space-y-4 p-4">
         <TaskFieldsForm initial={ctx.firm.task_fields} />
-        <p className="text-sm text-muted">{t("settings2.rates")} <Link href="/boss/employees" className="text-link">→ {t("nav.employees")}</Link></p>
+        <p className="text-sm text-muted">{t("settings2.rates")} <Link href="/boss/employees" className="text-link underline underline-offset-2">→ {t("nav.employees")}</Link></p>
       </section>
       {features.find((f) => f.key === "public_form")?.enabled && (
         <section className="card-white p-4">

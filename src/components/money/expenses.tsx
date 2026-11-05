@@ -72,7 +72,7 @@ export function Expenses({ taskId, firmId, rows, isBoss, myMemberId, canAdd }: {
     <div className="space-y-2">
       <div className="flex items-center justify-between">
         <h2 className="font-semibold">{t("expense.title")}</h2>
-        {canAdd && !open && <button className="btn-secondary !min-h-10 text-sm" onClick={() => setOpen(true)}>{t("expense.add")}</button>}
+        {canAdd && !open && <button className="btn-secondary !min-h-11 text-sm" onClick={() => setOpen(true)}>{t("expense.add")}</button>}
       </div>
       {rows.map((r) => (
         <div key={r.id} className="flex flex-wrap items-center gap-2 rounded-[12px] bg-card px-3 py-2">

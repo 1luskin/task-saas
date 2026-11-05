@@ -175,3 +175,15 @@ export async function sendInviteEmail(token: string, email: string) {
     await sendEmail({ to, subject: t("mail.inviteTitle", { firm: ctx.firm.name }), ...m });
   });
 }
+
+/** Eigenes Profilfoto setzen/entfernen (Datei vorher im Browser verkleinert und hochgeladen) */
+export async function setMyAvatar(path: string | null) {
+  return runAction(async () => {
+    const ctx = await assertMember();
+    if (path !== null && (!path.startsWith(`${ctx.firm.id}/${ctx.member.id}/`) || path.includes("..") || path.length > 200)) throw new ActionError("forbidden");
+    const old = ctx.member.avatar_path;
+    check(await ctx.supabase.from("members").update({ avatar_path: path }).eq("id", ctx.member.id));
+    if (old && old !== path) await ctx.supabase.storage.from("avatars").remove([old]);
+    revalidatePath("/", "layout");
+  });
+}

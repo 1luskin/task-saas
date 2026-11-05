@@ -3,6 +3,7 @@ import { LEGAL_VERSION } from "../../src/legal/content";
 
 /** Cookie-Hinweis vorab bestätigen (sonst überdeckt er Knöpfe am unteren Rand) */
 export async function acceptCookies(ctx: BrowserContext) {
+  await ctx.addCookies([{ name: "cookie_ok", value: LEGAL_VERSION, url: "http://localhost:3123" }]);
   await ctx.addInitScript((v) => {
     try {
       localStorage.setItem("app.cookieConsent", JSON.stringify({ version: v, at: new Date().toISOString(), necessaryOnly: true }));

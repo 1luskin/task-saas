@@ -56,11 +56,15 @@ let flushing = false;
 /** Hochladen, sobald Netz da ist. Fehler → Eintrag bleibt für den nächsten Versuch. */
 export async function flushOfflineFiles(): Promise<number> {
   if (flushing || !navigator.onLine) return 0;
+  const items = await listOfflineFiles();
+  if (!items.length) return 0;
   flushing = true;
   let done = 0;
   try {
-    const supabase = createClient();
-    for (const item of await listOfflineFiles()) {
+    // Storage-Client erst bei Bedarf (Demo ohne Supabase: nur Einträge ohne Dateien gehen durch)
+    let sb: ReturnType<typeof createClient> | null = null;
+    const supabase = { storage: { from: (b: string) => (sb ??= createClient()).storage.from(b) } };
+    for (const item of items) {
       try {
         if (item.kind === "photo") {
           const path = `${item.firmId}/${item.taskId}/${item.id}.jpg`;

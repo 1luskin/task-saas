@@ -197,7 +197,7 @@ export function Calendar({
               <span
                 className={cx(
                   "mx-auto flex size-7 items-center justify-center rounded-full text-sm tabular-nums lg:mx-0",
-                  isToday ? "bg-accent-2 font-semibold text-bg" : inMonth ? "text-ink" : "text-muted/60",
+                  isToday ? "bg-accent-2 font-semibold text-bg" : inMonth ? "text-ink" : "text-muted",
                 )}
               >
                 {Number(d.slice(8, 10))}
