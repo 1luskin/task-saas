@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { NewDocButton } from "@/components/invoices/offer-editor";
 import { requireBossPage } from "@/lib/auth";
 import { getI18n } from "@/i18n/server";
 import { loadTaskDetail } from "@/server/task-detail";
@@ -30,6 +31,8 @@ export default async function BossTaskPage({ params }: { params: Promise<{ id: s
       ])
     : [{ data: [] }, { data: [] }];
   const link = activeLink(links ?? []);
+  const invoicesOn = await isEnabled(ctx, "invoices");
+  const { data: taskInvoices } = invoicesOn ? await ctx.supabase.from("invoices").select("id, number, status, kind").eq("task_id", task.id).order("created_at") : { data: [] };
   return (
     <TaskDetail
       d={d}
@@ -46,6 +49,12 @@ export default async function BossTaskPage({ params }: { params: Promise<{ id: s
             {task.client_id && (
               <div className="text-sm text-muted">
                 {t("clients.client")}: <Link className="text-link" href={`/boss/clients/${task.client_id}`}>{clients?.find((c) => c.id === task.client_id)?.name ?? "—"}</Link>
+              </div>
+            )}
+            {invoicesOn && (
+              <div className="flex flex-wrap items-center gap-2 text-sm">
+                {(taskInvoices ?? []).map((i) => <Link key={i.id} className="chip bg-surface-3 text-ink-2" href={`/boss/invoices/${i.id}`}>{i.number ?? t("inv.draft")}</Link>)}
+                {task.status === "done" && !(taskInvoices ?? []).some((i) => i.kind === "invoice" && i.status !== "cancelled") && <NewDocButton kind="invoice" taskId={task.id} label={t("inv.fromTask")} className="btn-secondary !min-h-10 text-sm" />}
               </div>
             )}
             <ClientLinkPanel taskId={task.id} title={task.title} appUrl={serverEnv().NEXT_PUBLIC_APP_URL.replace(/\/$/, "")} link={link ? { id: link.id, token: link.token, expires_at: link.expires_at } : null} />

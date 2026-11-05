@@ -10,6 +10,9 @@ export interface Mail {
   subject: string;
   html: string;
   text: string;
+  /** Anhänge (Brevo: base64, max. ~10 MB gesamt) */
+  attachments?: { name: string; content: Uint8Array }[];
+  replyTo?: string;
 }
 
 export async function sendEmail(mail: Mail): Promise<boolean> {
@@ -29,6 +32,8 @@ export async function sendEmail(mail: Mail): Promise<boolean> {
         subject: mail.subject,
         htmlContent: mail.html,
         textContent: mail.text,
+        ...(mail.attachments?.length ? { attachment: mail.attachments.map((a) => ({ name: a.name, content: Buffer.from(a.content).toString("base64") })) } : {}),
+        ...(mail.replyTo ? { replyTo: { email: mail.replyTo } } : {}),
       }),
     });
     if (!res.ok) console.error("[email] Versand fehlgeschlagen", res.status);

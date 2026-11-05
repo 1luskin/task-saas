@@ -1,4 +1,5 @@
 import "server-only";
+import { formatDocNo, invoiceTotals } from "@/lib/invoice-calc";
 import { createSeed, type DemoDb } from "./seed";
 import { staffCanTransition } from "@/lib/workflow";
 import type { TaskStatus } from "@/lib/supabase/types";
@@ -49,6 +50,16 @@ const DEFAULTS: Partial<Record<TableName, () => Row>> = {
     notify_overdue: true, notify_done: true, archived_at: null, user_id: null, is_demo: false, hourly_basis: "tasks", vacation_days_per_year: 24 }),
   shifts: () => ({ ended_at: null, break_minutes: 0, break_started_at: null, rate_cents: 0, auto_closed: false, needs_review: false }),
   expenses: () => ({ receipt_path: null, reimburse: false, status: "pending", decided_by: null, decided_at: null, source: "manual" }),
+  invoices: () => ({ kind: "invoice", number: null, status: "draft", client_id: null, task_id: null, offer_id: null, cancels_id: null, issue_date: null,
+    service_date: null, service_date_to: null, due_date: null, buyer_name: "", buyer_street: null, buyer_zip: null, buyer_city: null, buyer_country: "DE",
+    buyer_vat_id: null, buyer_email: null, buyer_reference: null, seller: {}, small_business: false, note: null, net_cents: 0, vat_cents: 0, gross_cents: 0,
+    sent_at: null, paid_at: null, retain_until: null, created_by: null }),
+  invoice_items: () => ({ position: 0, unit: "Stk", vat_rate: 19 }),
+  offers: () => ({ number: null, status: "draft", client_id: null, task_id: null, intro: null, buyer_name: "", buyer_email: null, buyer_address: null, valid_until: null,
+    token: Array.from(crypto.getRandomValues(new Uint8Array(24)), (b) => b.toString(16).padStart(2, "0")).join(""), net_cents: 0, vat_cents: 0, gross_cents: 0,
+    small_business: false, sent_at: null, decided_at: null, accepted_name: null, created_by: null }),
+  offer_items: () => ({ position: 0, unit: "Stk", vat_rate: 19 }),
+  clients: () => ({ email: null, phone: null, address: null, notes: null, hide_price: false, street: null, zip: null, city: null, country: "DE", vat_id: null }),
   materials: () => ({ unit: "Stk", stock: 0, min_stock: 0, unit_cost_cents: 0, low_notified_at: null, archived_at: null }),
   invites: () => ({ token: Array.from(crypto.getRandomValues(new Uint8Array(18)), (b) => b.toString(16).padStart(2, "0")).join(""),
     role: "employee", group_id: null, created_by: null, member_id: null, expires_at: new Date(Date.now() + 14 * 864e5).toISOString(), max_uses: 50, used_count: 0, revoked: false }),
@@ -60,7 +71,6 @@ const DEFAULTS: Partial<Record<TableName, () => Row>> = {
   time_entries: () => ({ ended_at: null, rate_cents: 0 }),
   task_comments: () => ({ author_id: null }),
   task_photos: () => ({ uploaded_by: null, kind: "general" }),
-  clients: () => ({ email: null, phone: null, address: null, notes: null, hide_price: false }),
   task_links: () => ({ token: Array.from(crypto.getRandomValues(new Uint8Array(32)), (b) => b.toString(16).padStart(2, "0")).join(""), expires_at: new Date(Date.now() + 60 * 864e5).toISOString(), revoked: false, created_by: null }),
   inbound_requests: () => ({ address: null, status: "new", task_id: null, client_id: null }),
   consents: () => ({ member_id: null }),
@@ -123,6 +133,9 @@ class Session {
       case "form_templates": case "kb_articles": return r.firm_id === firm;
       case "form_submissions": return this.taskVisible(r.task_id);
       case "materials": return r.firm_id === firm;
+      case "invoices": case "offers": return r.firm_id === firm && boss;
+      case "invoice_items": return boss && this.db.invoices.some((i) => i.id === r.invoice_id && i.firm_id === firm);
+      case "offer_items": return boss && this.db.offers.some((o) => o.id === r.offer_id && o.firm_id === firm);
       case "material_moves": return r.firm_id === firm && (boss || r.member_id === me || (r.task_id != null && this.taskVisible(r.task_id)));
       case "data_requests": return r.firm_id === firm && (boss || r.member_id === me);
     }
@@ -156,6 +169,10 @@ class Session {
       case "form_submissions": return this.taskVisible(r.task_id) && r.submitted_by === me;
       case "materials": return this.boss && r.firm_id === this.firm;
       case "material_moves": return false; // nur über RPC
+      case "invoices": return this.boss && r.firm_id === this.firm && r.status === "draft" && r.number == null && r.kind === "invoice";
+      case "invoice_items": return this.boss && this.db.invoices.some((i) => i.id === r.invoice_id && i.firm_id === this.firm && i.status === "draft");
+      case "offers": return this.boss && r.firm_id === this.firm;
+      case "offer_items": return this.boss && this.db.offers.some((o) => o.id === r.offer_id && o.firm_id === this.firm && o.status === "draft");
       case "geo_points": {
         const last = this.db.consents.filter((c) => c.user_id === this.uid && c.kind === "geolocation").sort((a, b) => b.created_at.localeCompare(a.created_at))[0];
         return r.firm_id === this.firm && r.member_id === me && Boolean(last?.granted);
@@ -170,10 +187,18 @@ class Session {
   checkUpdate(table: TableName, old: Row, next: Row): Err | null {
     if (this.admin) return null;
     const changed = (allowed: string[]) => Object.keys(next).some((k) => !allowed.includes(k) && JSON.stringify(next[k]) !== JSON.stringify(old[k]));
+    if (table === "invoices" && old.status !== "draft") {
+      // GoBD wie private.guard_invoice: nur Zahlungsstatus sent ↔ paid
+      if (Object.keys(next).some((k) => !["status", "paid_at", "updated_at"].includes(k) && JSON.stringify(next[k]) !== JSON.stringify(old[k]))) return deny("invoice locked (GoBD)");
+      if ("status" in next && next.status !== old.status && !((old.status === "sent" && next.status === "paid") || (old.status === "paid" && next.status === "sent"))) return deny("invoice locked (GoBD)");
+      if (this.boss) return null;
+    }
+    if (table === "invoice_items" && this.db.invoices.find((i) => i.id === old.invoice_id)?.status !== "draft") return deny("invoice locked (GoBD)");
+    if (table === "offer_items" && this.db.offers.find((o) => o.id === old.offer_id)?.status !== "draft") return deny();
     if (this.boss) {
       if (table === "shifts" && old.ended_at) return deny();
       if (table === "task_statuses" && old.is_system && (("kind" in next && next.kind !== old.kind) || ("is_system" in next && next.is_system !== old.is_system))) return deny("system status");
-      if (["firms", "groups", "members", "invites", "task_templates", "tasks", "task_finance", "checklist_items", "time_entries", "task_requests", "task_statuses", "expenses", "clients", "task_links", "inbound_requests", "checklist_templates", "shift_plans", "vacation_requests", "announcements", "member_documents", "form_templates", "kb_articles", "materials"].includes(table)) return null;
+      if (["firms", "groups", "members", "invites", "task_templates", "tasks", "task_finance", "checklist_items", "time_entries", "task_requests", "task_statuses", "expenses", "clients", "task_links", "inbound_requests", "checklist_templates", "shift_plans", "vacation_requests", "announcements", "member_documents", "form_templates", "kb_articles", "materials", "invoices", "invoice_items", "offers", "offer_items"].includes(table)) return null;
     }
     switch (table) {
       case "tasks":
@@ -208,6 +233,9 @@ class Session {
       case "expenses": return this.boss || (r.member_id === me && r.status === "pending");
       case "clients": case "checklist_templates": case "shift_plans": case "announcements": case "member_documents": case "form_templates": case "kb_articles": return this.boss;
       case "vacation_requests": return this.boss || (r.member_id === me && r.status === "pending");
+      case "invoices": return this.boss && r.status === "draft";
+      case "invoice_items": return this.boss && this.db.invoices.find((i) => i.id === r.invoice_id)?.status === "draft";
+      case "offer_items": return this.boss && this.db.offers.find((o) => o.id === r.offer_id)?.status === "draft";
       case "notification_prefs": return r.member_id === me;
       case "task_files": return this.boss || r.uploaded_by === me;
       case "task_links": case "inbound_requests": return false;
@@ -226,6 +254,7 @@ function applyTriggers(s: Session, table: TableName, row: Row, old: Row | null):
     if (!t) return { message: "task not found", code: "23503" };
     row.firm_id = t.firm_id;
   }
+  if (table === "invoices" && old && old.status !== "draft") row.paid_at = row.status === "paid" ? (old.paid_at ?? new Date().toISOString()) : null;
   if (table === "tasks") {
     if (row.assignee_id && (!old || row.assignee_id !== old.assignee_id)) {
       const m = db.members.find((x) => x.id === row.assignee_id);
@@ -525,6 +554,80 @@ export function createFakeClient(uid: string | null, admin = false) {
           ...vis("task_requests").filter((r) => has(r.title)).map((r) => ({ kind: "request", id: r.id, title: r.title, subtitle: r.status })),
         ].slice(0, 20);
         return { data: out, error: null };
+      }
+      if (fn === "issue_invoice" || fn === "cancel_invoice") {
+        if (!s.boss) return { data: null, error: deny() };
+        const inv = s.db.invoices.find((i) => i.id === args.p_invoice && i.firm_id === s.firm);
+        const firm = s.db.firms.find((f) => f.id === s.firm);
+        if (!inv || !firm) return { data: null, error: deny("not found") };
+        const today = new Date().toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" });
+        const year = Number(today.slice(0, 4));
+        const nextNo = () => formatDocNo(firm.invoice_prefix, year, 1 + s.db.invoices.filter((i) => i.firm_id === firm.id && i.number?.startsWith(`${firm.invoice_prefix}-${year}-`)).length);
+        const err = (hint: string) => ({ data: null, error: { message: hint, code: "23514", hint } });
+        const retain = `${year + 11}-01-01`;
+        if (fn === "issue_invoice") {
+          if (inv.status !== "draft") return { data: null, error: { message: "invoice locked (GoBD)", code: "42501", hint: "invoice_locked" } };
+          if (!firm.address_street || !firm.address_zip || !firm.address_city || (!firm.tax_number && !firm.vat_id)) return err("seller_incomplete");
+          if (!inv.buyer_name.trim() || !inv.buyer_city || !inv.buyer_zip || !inv.buyer_street) return err("buyer_incomplete");
+          if (!inv.service_date) return err("service_date");
+          const items = s.db.invoice_items.filter((i) => i.invoice_id === inv.id);
+          const tot = invoiceTotals(items.map((i) => ({ ...i, qty: Number(i.qty) })), firm.small_business);
+          if (!items.length || tot.net <= 0) return err("no_items");
+          const issue = inv.issue_date ?? today;
+          Object.assign(inv, {
+            number: nextNo(), issue_date: issue, due_date: inv.due_date ?? new Date(Date.parse(`${issue}T12:00:00Z`) + firm.payment_terms_days * 864e5).toISOString().slice(0, 10),
+            small_business: firm.small_business, net_cents: tot.net, vat_cents: tot.vat, gross_cents: tot.gross, status: "sent", sent_at: new Date().toISOString(), retain_until: retain,
+            seller: { name: firm.legal_name || firm.name, street: firm.address_street, zip: firm.address_zip, city: firm.address_city, country: firm.address_country,
+              tax_number: firm.tax_number, vat_id: firm.vat_id, iban: firm.iban, bic: firm.bic, bank: firm.bank_name, email: firm.invoice_email, phone: firm.invoice_phone },
+          });
+          return { data: inv.number, error: null };
+        }
+        if (inv.kind !== "invoice" || !["sent", "paid"].includes(inv.status)) return err("cannot_cancel");
+        const sid = uuid();
+        const now = new Date().toISOString();
+        s.db.invoices.push({ ...clone(inv as unknown as Row), id: sid, kind: "storno", number: nextNo(), status: "sent", cancels_id: inv.id, issue_date: today, due_date: today,
+          note: String(args.p_reason ?? "") || "Stornierung", net_cents: -inv.net_cents, vat_cents: -inv.vat_cents, gross_cents: -inv.gross_cents, sent_at: now, paid_at: null,
+          retain_until: retain, created_by: s.me ? String(s.me.id) : null, created_at: now, updated_at: now } as unknown as typeof inv);
+        for (const it of s.db.invoice_items.filter((i) => i.invoice_id === inv.id)) s.db.invoice_items.push({ ...it, id: uuid(), invoice_id: sid, qty: -Number(it.qty) });
+        inv.status = "cancelled";
+        return { data: sid, error: null };
+      }
+      if (fn === "send_offer") {
+        if (!s.boss) return { data: null, error: deny() };
+        const off = s.db.offers.find((o) => o.id === args.p_offer && o.firm_id === s.firm);
+        const firm = s.db.firms.find((f) => f.id === s.firm);
+        if (!off || !firm) return { data: null, error: deny("not found") };
+        if (off.status !== "draft") return { data: off.number, error: null };
+        if (!off.buyer_name.trim()) return { data: null, error: { message: "buyer_incomplete", code: "23514", hint: "buyer_incomplete" } };
+        const tot = invoiceTotals(s.db.offer_items.filter((i) => i.offer_id === off.id).map((i) => ({ ...i, qty: Number(i.qty) })), firm.small_business);
+        if (tot.net <= 0) return { data: null, error: { message: "no_items", code: "23514", hint: "no_items" } };
+        const year = new Date().getFullYear();
+        Object.assign(off, { number: formatDocNo("AN", year, 1 + s.db.offers.filter((o) => o.firm_id === firm.id && o.number?.startsWith(`AN-${year}-`)).length),
+          status: "sent", sent_at: new Date().toISOString(), small_business: firm.small_business, net_cents: tot.net, vat_cents: tot.vat, gross_cents: tot.gross,
+          valid_until: off.valid_until ?? new Date(Date.now() + 30 * 864e5).toISOString().slice(0, 10) });
+        return { data: off.number, error: null };
+      }
+      if (fn === "decide_offer") {
+        if (!s.admin) return { data: null, error: deny("permission denied") };
+        const off = s.db.offers.find((o) => o.token === args.p_token);
+        const today = new Date().toISOString().slice(0, 10);
+        if (!off || off.status !== "sent" || (off.valid_until && off.valid_until < today)) return { data: null, error: { message: "offer not open", code: "23514", hint: "offer_closed" } };
+        const now = new Date().toISOString();
+        const name = String(args.p_name ?? "").trim().slice(0, 120);
+        if (!args.p_accept) { Object.assign(off, { status: "declined", decided_at: now, accepted_name: name || null }); return { data: null, error: null }; }
+        if (!name) return { data: null, error: { message: "name required", code: "23514", hint: "name_required" } };
+        let clientId = off.client_id;
+        if (!clientId) {
+          clientId = uuid();
+          s.db.clients.push({ ...(DEFAULTS.clients!() as object), id: clientId, firm_id: off.firm_id, name: off.buyer_name, email: off.buyer_email, address: off.buyer_address, created_at: now } as never);
+        }
+        const items = s.db.offer_items.filter((i) => i.offer_id === off.id).sort((a, b) => a.position - b.position);
+        const taskId = uuid();
+        s.db.tasks.push({ ...(DEFAULTS.tasks!() as object), id: taskId, firm_id: off.firm_id, title: off.title.slice(0, 200), client_id: clientId, address: off.buyer_address,
+          description: [off.intro, items.map((i) => `• ${i.description} (${i.qty} ${i.unit})`).join("\n")].filter(Boolean).join("\n\n"), created_at: now, updated_at: now } as never);
+        s.db.task_finance.push({ task_id: taskId, firm_id: off.firm_id, client_price_cents: off.net_cents, updated_at: now });
+        Object.assign(off, { status: "accepted", decided_at: now, accepted_name: name, client_id: clientId, task_id: taskId });
+        return { data: taskId, error: null };
       }
       if (fn === "use_material") {
         const me = s.me;

@@ -65,27 +65,27 @@ export class PdfWriter {
     }
     this.y -= opts.gap ?? 0;
   }
-  /** Tabelle: Spaltenbreiten in Anteilen, Zahlen rechtsbündig; Kopfzeile fett */
-  table(cols: { w: number; right?: boolean }[], head: string[], rows: string[][], size = 9) {
+  /** Tabelle: Spaltenbreiten in Anteilen, Zahlen rechtsbündig, Text wird umbrochen (nichts abgeschnitten); Kopfzeile grau-fett */
+  table(cols: { w: number; right?: boolean }[], head: string[], rows: string[][], size = 9, opts: { boldLast?: boolean } = {}) {
     const total = cols.reduce((a, c) => a + c.w, 0);
     const xs: number[] = [];
     let x = this.margin;
     for (const c of cols) { xs.push(x); x += (c.w / total) * this.width; }
     const widths = cols.map((c) => (c.w / total) * this.width - 6);
-    const rowH = size * 1.6;
+    const lineH = size * 1.35;
     const draw = (cells: string[], f: PDFFont, color = BLACK) => {
-      this.ensure(rowH);
-      cells.forEach((raw, i) => {
-        let txt = raw;
-        while (txt.length > 1 && f.widthOfTextAtSize(txt, size) > widths[i]!) txt = txt.slice(0, -2) + "…";
+      const wrapped = cells.map((c, i) => wrapText(c, f, size, widths[i]!));
+      const h = Math.max(1, ...wrapped.map((w) => w.length)) * lineH + size * 0.35;
+      this.ensure(h);
+      wrapped.forEach((lines, i) => lines.forEach((txt, li) => {
         const w = f.widthOfTextAtSize(txt, size);
         const cx = cols[i]!.right ? xs[i]! + widths[i]! - w : xs[i]!;
-        this.page.drawText(txt, { x: cx, y: this.y - size, size, font: f, color });
-      });
-      this.y -= rowH;
+        this.page.drawText(txt, { x: cx, y: this.y - size - li * lineH, size, font: f, color });
+      }));
+      this.y -= h;
     };
-    draw(head, this.bold, GREY);
-    for (const r of rows) draw(r, this.font);
+    if (head.some(Boolean)) draw(head, this.bold, GREY);
+    rows.forEach((r, i) => draw(r, opts.boldLast && i === rows.length - 1 ? this.bold : this.font));
     this.y -= 6;
   }
   line() {

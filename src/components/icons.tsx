@@ -2,7 +2,7 @@
 import {
   Archive, Calendar, ChartColumn, Check, ChevronLeft, ChevronRight, Clock, Camera, Download, Euro, Inbox, ListChecks,
   MapPin, Menu, Play, Plus, Repeat, Settings, Sun, Trash2, User, Users, Wallet, WifiOff, Pin, Search, ClipboardCheck,
-  Coffee, Square, Eye, ShieldCheck, Smartphone, Phone, Mail, BookOpen, UsersRound, Package, type LucideIcon,
+  Coffee, Square, Eye, ShieldCheck, Smartphone, Phone, Mail, BookOpen, UsersRound, Package, ReceiptText, type LucideIcon,
 } from "lucide-react";
 
 type IconProps = { className?: string; "aria-label"?: string };
@@ -50,3 +50,4 @@ export const IconMail = mk(Mail);
 export const IconBook = mk(BookOpen);
 export const IconTeam = mk(UsersRound);
 export const IconBox = mk(Package);
+export const IconReceipt = mk(ReceiptText);

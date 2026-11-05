@@ -17,7 +17,7 @@ const IconContact = ({ className }: { className?: string }) => <IconContactRaw s
 import { LogoutButton } from "../logout-button";
 import { Avatar } from "../ui";
 import {
-  IconArchive, IconBook, IconBox, IconCalendar, IconChart, IconEuro, IconInbox, IconMenu, IconRepeat, IconSettings, IconTasks, IconTeam, IconUsers,
+  IconArchive, IconBook, IconBox, IconReceipt, IconCalendar, IconChart, IconEuro, IconInbox, IconMenu, IconRepeat, IconSettings, IconTasks, IconTeam, IconUsers,
 } from "../icons";
 
 export async function BossShell({
@@ -35,6 +35,7 @@ export async function BossShell({
     ...(on("clients") ? [{ href: "/boss/clients", label: t("nav.clientsNav"), icon: IconContact }] : []),
     ...(on("team") ? [{ href: "/boss/team", label: t("nav.team"), icon: IconTeam }] : []),
     { href: "/boss/money", label: t("nav.money"), icon: IconEuro },
+    ...(on("invoices") ? [{ href: "/boss/invoices", label: t("nav.invoices"), icon: IconReceipt }] : []),
     ...(on("templates") ? [{ href: "/boss/templates", label: t("nav.templates"), icon: IconRepeat }] : []),
     ...(on("reports") ? [{ href: "/boss/reports", label: t("nav.reports"), icon: IconChart }] : []),
     ...(on("knowledge") ? [{ href: "/boss/knowledge", label: t("nav.knowledge"), icon: IconBook }] : []),

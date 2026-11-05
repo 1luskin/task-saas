@@ -46,6 +46,20 @@ export type Firm = {
   datev_accounts: DatevAccounts;
   vat_rate: 0 | 7 | 19;
   small_business: boolean;
+  legal_name: string | null;
+  address_street: string | null;
+  address_zip: string | null;
+  address_city: string | null;
+  address_country: string;
+  tax_number: string | null;
+  vat_id: string | null;
+  iban: string | null;
+  bic: string | null;
+  bank_name: string | null;
+  invoice_email: string | null;
+  invoice_phone: string | null;
+  invoice_prefix: string;
+  payment_terms_days: number;
   created_at: string;
 };
 export type DatevAccounts = Partial<Record<"debitor" | "cash" | "expense" | "material", number>>;
@@ -102,7 +116,31 @@ export type Adjustment = {
 export type Client = {
   id: string; firm_id: string; name: string; email: string | null; phone: string | null; address: string | null;
   notes: string | null; hide_price: boolean; created_at: string;
+  street: string | null; zip: string | null; city: string | null; country: string; vat_id: string | null;
 };
+export type VatRate = 0 | 7 | 19;
+export type SellerSnapshot = {
+  name?: string; street?: string | null; zip?: string | null; city?: string | null; country?: string; tax_number?: string | null; vat_id?: string | null;
+  iban?: string | null; bic?: string | null; bank?: string | null; email?: string | null; phone?: string | null;
+};
+export type Invoice = {
+  id: string; firm_id: string | null; kind: "invoice" | "storno"; number: string | null; status: "draft" | "sent" | "paid" | "cancelled";
+  client_id: string | null; task_id: string | null; offer_id: string | null; cancels_id: string | null;
+  issue_date: string | null; service_date: string | null; service_date_to: string | null; due_date: string | null;
+  buyer_name: string; buyer_street: string | null; buyer_zip: string | null; buyer_city: string | null; buyer_country: string;
+  buyer_vat_id: string | null; buyer_email: string | null; buyer_reference: string | null;
+  seller: SellerSnapshot; small_business: boolean; note: string | null;
+  net_cents: number; vat_cents: number; gross_cents: number; sent_at: string | null; paid_at: string | null; retain_until: string | null;
+  created_by: string | null; created_at: string; updated_at: string;
+};
+export type InvoiceItem = { id: string; invoice_id: string; position: number; description: string; qty: number; unit: string; unit_price_cents: number; vat_rate: VatRate };
+export type Offer = {
+  id: string; firm_id: string; number: string | null; status: "draft" | "sent" | "accepted" | "declined"; client_id: string | null; task_id: string | null;
+  title: string; intro: string | null; buyer_name: string; buyer_email: string | null; buyer_address: string | null; valid_until: string | null;
+  token: string; net_cents: number; vat_cents: number; gross_cents: number; small_business: boolean; sent_at: string | null; decided_at: string | null;
+  accepted_name: string | null; created_by: string | null; created_at: string; updated_at: string;
+};
+export type OfferItem = { id: string; offer_id: string; position: number; description: string; qty: number; unit: string; unit_price_cents: number; vat_rate: VatRate };
 export type TaskLink = { id: string; firm_id: string; task_id: string; token: string; expires_at: string; revoked: boolean; created_by: string | null; created_at: string };
 export type InboundRequest = {
   id: string; firm_id: string; name: string; contact: string; address: string | null; message: string;
@@ -382,6 +420,10 @@ export interface Database {
       member_documents: Table<MemberDocument, "firm_id" | "member_id" | "name">;
       kb_articles: Table<KbArticle, "firm_id" | "title" | "body">;
       materials: Table<Material, "firm_id" | "name">;
+      invoices: Table<Invoice, "firm_id">;
+      invoice_items: Table<InvoiceItem, "invoice_id" | "description" | "qty" | "unit_price_cents">;
+      offers: Table<Offer, "firm_id" | "title">;
+      offer_items: Table<OfferItem, "offer_id" | "description" | "qty" | "unit_price_cents">;
       material_moves: Table<MaterialMove, "firm_id" | "material_id" | "kind" | "qty">;
       data_requests: Table<DataRequest, "firm_id" | "member_id" | "kind">;
       task_finance: Table<TaskFinance, "task_id">;
@@ -430,6 +472,11 @@ export interface Database {
       };
       search_all: { Args: { p_q: string; p_limit?: number }; Returns: { kind: "task" | "member" | "client" | "request"; id: string; title: string; subtitle: string }[] };
       colleagues: { Args: Record<string, never>; Returns: { id: string; full_name: string }[] };
+      issue_invoice: { Args: { p_invoice: string }; Returns: string };
+      cancel_invoice: { Args: { p_invoice: string; p_reason?: string | null }; Returns: string };
+      send_offer: { Args: { p_offer: string }; Returns: string };
+      decide_offer: { Args: { p_token: string; p_accept: boolean; p_name: string }; Returns: string | null };
+      purge_expired_invoices: { Args: Record<string, never>; Returns: number };
       use_material: { Args: { p_material: string; p_task: string; p_qty: number }; Returns: { stock: number; min_stock: number; low: boolean; first_low: boolean }[] };
       adjust_material_stock: { Args: { p_material: string; p_qty: number; p_kind: "in" | "correction"; p_unit_cost_cents?: number | null; p_note?: string | null }; Returns: number };
       decide_swap: { Args: { p_swap: string; p_action: "accept" | "approve" | "reject" }; Returns: undefined };

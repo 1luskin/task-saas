@@ -97,6 +97,9 @@ export function createSeed(): DemoDb {
     firms: [{ id: DEMO.firm, name: "Glanz & Bau Service GmbH", timezone: "Europe/Berlin", auto_accept_days: 3,
       trial_ends_at: new Date(Date.now() + 9 * 864e5).toISOString(), plan: "trial", is_demo: false, contact_email: "chefin@demo.de",
       deletion_requested_at: null, deletion_scheduled_for: null, logo_path: null, shift_autoclose_hours: 12, public_slug: "glanz-bau", trial_mail_sent_at: null, weekly_mail_last: null, geofence_radius_m: null, geo_retention_days: 90, datev_consultant_no: 1001, datev_client_no: 1, datev_skr: "03", datev_accounts: {}, vat_rate: 19, small_business: false,
+      legal_name: "Glanz & Bau Service GmbH", address_street: "Musterstraße 1", address_zip: "10115", address_city: "Berlin", address_country: "DE",
+      tax_number: "30/123/45678", vat_id: null, iban: "DE02120300000000202051", bic: "BYLADEM1001", bank_name: "Demo-Bank", invoice_email: "rechnung@demo.invalid",
+      invoice_phone: "+49 30 1234500", invoice_prefix: "RE", payment_terms_days: 14,
       task_fields: { description: true, address: true, due_time: true, checklist: true, client_price: true, fixed_pay: true, photos: true }, created_at: ago(5 * 24) }],
     user_settings: [],
     login_events: [],
@@ -110,7 +113,7 @@ export function createSeed(): DemoDb {
       ["templates", true], ["requests", true], ["reports", true], ["excel_export", true], ["custom_statuses", true], ["demo_firm", true],
       ["kanban", true], ["clients", true], ["expenses", true], ["shifts", true], ["geolocation", false], ["invoices", false], ["public_form", false], ["team", true], ["knowledge", true], ["materials", true], ["datev", true],
     ] as const).map(([key, on]) => ({ key, default_enabled: on, description: null, updated_at: now })),
-    firm_features: [],
+    firm_features: [{ firm_id: DEMO.firm, key: "invoices", enabled: true, set_by: "boss", updated_at: now }],
     admin_audit: [],
     shifts: [
       { id: id(1301), firm_id: DEMO.firm, member_id: e1.member, started_at: ago(1.5), ended_at: null, break_minutes: 0, break_started_at: null, rate_cents: 0, auto_closed: false, needs_review: false, created_at: ago(1.5) },
@@ -130,9 +133,30 @@ export function createSeed(): DemoDb {
       { id: id(3201), firm_id: DEMO.firm, material_id: id(3101), kind: "in", qty: 5, unit_cost_cents: 1190, task_id: null, member_id: DEMO.boss, expense_id: null, note: "Lieferung Baumarkt", created_at: ago(200) },
     ],
     time_edits: [],
+    invoices: [
+      { id: id(3301), firm_id: DEMO.firm, kind: "invoice", number: null, status: "draft", client_id: id(1601), task_id: id(407), offer_id: null, cancels_id: null,
+        issue_date: null, service_date: day(0), service_date_to: null, due_date: null, buyer_name: "Hausverwaltung Schmidt", buyer_street: "Karl-Marx-Allee 12",
+        buyer_zip: "10243", buyer_city: "Berlin", buyer_country: "DE", buyer_vat_id: null, buyer_email: "kontakt@hv-schmidt.invalid", buyer_reference: null,
+        seller: {}, small_business: false, note: null, net_cents: 0, vat_cents: 0, gross_cents: 0, sent_at: null, paid_at: null, retain_until: null,
+        created_by: DEMO.boss, created_at: ago(1), updated_at: ago(1) },
+    ],
+    invoice_items: [
+      { id: id(3401), invoice_id: id(3301), position: 0, description: "Treppenhaus reinigen – Haus B", qty: 1, unit: "Pausch.", unit_price_cents: 18000, vat_rate: 19 },
+    ],
+    offers: [
+      { id: id(3501), firm_id: DEMO.firm, number: `AN-${new Date().getFullYear()}-0001`, status: "sent", client_id: null, task_id: null, title: "Grundreinigung Büro 3. OG",
+        intro: "Vielen Dank für Ihre Anfrage. Gerne bieten wir an:", buyer_name: "Kanzlei Weiß", buyer_email: "kanzlei@demo.invalid",
+        buyer_address: "Friedrichstraße 100, 10117 Berlin", valid_until: day(30), token: "0ffe7".repeat(9) + "abc", net_cents: 42000, vat_cents: 7980, gross_cents: 49980,
+        small_business: false, sent_at: ago(10), decided_at: null, accepted_name: null, created_by: DEMO.boss, created_at: ago(12), updated_at: ago(10) },
+    ],
+    offer_items: [
+      { id: id(3601), offer_id: id(3501), position: 0, description: "Grundreinigung Büroflächen (ca. 120 m²)", qty: 1, unit: "Pausch.", unit_price_cents: 36000, vat_rate: 19 },
+      { id: id(3602), offer_id: id(3501), position: 1, description: "Fensterreinigung innen/außen", qty: 12, unit: "Stk", unit_price_cents: 500, vat_rate: 19 },
+    ],
+
     clients: [
-      { id: id(1601), firm_id: DEMO.firm, name: "Hausverwaltung Schmidt", email: "kontakt@hv-schmidt.invalid", phone: "+49 30 1234567", address: "Karl-Marx-Allee 12, 10243 Berlin", notes: null, hide_price: false, created_at: now },
-      { id: id(1602), firm_id: DEMO.firm, name: "Praxis Dr. Klein", email: "praxis@klein.invalid", phone: null, address: "Schönhauser Allee 40, 10435 Berlin", notes: null, hide_price: true, created_at: now },
+      { id: id(1601), firm_id: DEMO.firm, name: "Hausverwaltung Schmidt", email: "kontakt@hv-schmidt.invalid", phone: "+49 30 1234567", address: "Karl-Marx-Allee 12, 10243 Berlin", notes: null, hide_price: false, street: "Karl-Marx-Allee 12", zip: "10243", city: "Berlin", country: "DE", vat_id: null, created_at: now },
+      { id: id(1602), firm_id: DEMO.firm, name: "Praxis Dr. Klein", email: "praxis@klein.invalid", phone: null, address: "Schönhauser Allee 40, 10435 Berlin", notes: null, hide_price: true, street: "Schönhauser Allee 40", zip: "10435", city: "Berlin", country: "DE", vat_id: null, created_at: now },
     ],
     task_links: [
       { id: id(1701), firm_id: DEMO.firm, task_id: id(405), token: DEMO_LINK_TOKEN, expires_at: new Date(Date.now() + 60 * 864e5).toISOString(), revoked: false, created_by: DEMO.boss, created_at: now },

@@ -2,6 +2,8 @@ import "server-only";
 import type { Ctx } from "@/lib/auth";
 import { addDays, monthPeriod, periodToRange, toISODate } from "@/lib/dates";
 import { loadFinance } from "@/lib/finance";
+import { isEnabled } from "@/lib/features";
+import { invoiceTotals } from "@/lib/invoice-calc";
 import { BU_VST, DEFAULT_ACCOUNTS, type Booking } from "@/lib/datev";
 
 /**
@@ -28,8 +30,27 @@ export async function datevBookings(ctx: Ctx, month: string): Promise<{ bookings
 
   const bookings: Booking[] = [];
   const vat = f.small_business ? 0 : f.vat_rate;
-  const revenueAccount = f.small_business ? acc.revenueSmall : vat === 19 ? acc.revenue19 : vat === 7 ? acc.revenue7 : acc.revenue0;
-  for (const t of fin.doneTasks) {
+  const revAcc = (small: boolean, rate: number) => (small ? acc.revenueSmall : rate === 19 ? acc.revenue19 : rate === 7 ? acc.revenue7 : acc.revenue0);
+  const revenueAccount = revAcc(f.small_business, vat);
+  // Mit Rechnungen: Erlöse aus ausgestellten Rechnungen/Stornos (Rechnungsdatum im Monat), je Steuersatz
+  const invoicesOn = await isEnabled(ctx, "invoices");
+  if (invoicesOn) {
+    const { data: invs } = await ctx.supabase.from("invoices").select("*").eq("firm_id", f.id).neq("status", "draft").gte("issue_date", period.from).lt("issue_date", period.to);
+    const ids = (invs ?? []).map((i) => i.id);
+    const { data: items } = ids.length ? await ctx.supabase.from("invoice_items").select("*").in("invoice_id", ids) : { data: [] };
+    for (const inv of invs ?? []) {
+      const tot = invoiceTotals((items ?? []).filter((x) => x.invoice_id === inv.id).map((x) => ({ ...x, qty: Number(x.qty) })), inv.small_business);
+      for (const g of tot.groups) {
+        const gross = g.net + g.vat;
+        if (gross === 0) continue;
+        bookings.push({
+          amountCents: Math.abs(gross), side: gross > 0 ? "S" : "H", account: acc.debitor, contraAccount: revAcc(inv.small_business, g.rate),
+          date: inv.issue_date!, docNo: inv.number ?? inv.id.slice(0, 8), text: `${inv.kind === "storno" ? "Storno " : ""}${inv.buyer_name}`,
+        });
+      }
+    }
+  }
+  for (const t of invoicesOn ? [] : fin.doneTasks) {
     const net = fin.clientPrice.get(t.id) ?? 0;
     if (net <= 0 || !t.accepted_at) continue;
     bookings.push({

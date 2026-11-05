@@ -86,3 +86,37 @@ describe("Demo: Team", () => {
     expect(demoDb().shift_plans.find((p) => p.id === sw.plan_id)!.member_id).toBe(DEMO.employees[1]!.member);
   });
 });
+
+describe("Demo: Rechnungen (GoBD, Nummern) und Material", () => {
+  it("Ausstellen vergibt lückenlose Nummern, danach unveränderlich; Storno mit eigener Nummer", async () => {
+    resetDemoDb();
+    const b = boss();
+    const year = new Date().getFullYear();
+    const draft = demoDb().invoices[0]!;
+    expect((await b.rpc("issue_invoice", { p_invoice: draft.id })).data).toBe(`RE-${year}-0001`);
+    const issued = demoDb().invoices.find((i) => i.id === draft.id)!;
+    expect([issued.net_cents, issued.vat_cents, issued.gross_cents, issued.status]).toEqual([18000, 3420, 21420, "sent"]);
+    expect((await b.from("invoices").update({ buyer_name: "X" }).eq("id", draft.id)).error).not.toBeNull();
+    expect((await b.from("invoice_items").update({ qty: 9 }).eq("invoice_id", draft.id)).error).not.toBeNull();
+    expect((await b.from("invoices").update({ status: "paid" }).eq("id", draft.id)).error).toBeNull();
+    expect(demoDb().invoices.find((i) => i.id === draft.id)!.paid_at).not.toBeNull();
+    const st = await b.rpc("cancel_invoice", { p_invoice: draft.id, p_reason: "Fehler" });
+    const storno = demoDb().invoices.find((i) => i.id === st.data)!;
+    expect([storno.number, storno.kind, storno.gross_cents]).toEqual([`RE-${year}-0002`, "storno", -21420]);
+    expect(demoDb().invoices.find((i) => i.id === draft.id)!.status).toBe("cancelled");
+    expect((await b.rpc("cancel_invoice", { p_invoice: storno.id })).error?.hint).toBe("cannot_cancel");
+  });
+  it("Mitarbeiter: keine Rechnungen; Materialentnahme nur bis Bestand, erzeugt Ausgabe", async () => {
+    resetDemoDb();
+    const emp = dmitri();
+    expect((await emp.from("invoices").select("*")).data).toEqual([]);
+    expect((await emp.rpc("issue_invoice", { p_invoice: demoDb().invoices[0]!.id })).error).not.toBeNull();
+    const mat = demoDb().materials.find((m) => m.name.startsWith("Allzweck"))!;
+    const task = "00000000-0000-4000-8000-000000000401";
+    const ok = await emp.rpc("use_material", { p_material: mat.id, p_task: task, p_qty: 2 });
+    expect(ok.error).toBeNull();
+    expect(demoDb().materials.find((m) => m.id === mat.id)!.stock).toBe(4);
+    expect(demoDb().expenses.some((e) => e.source === "material" && e.task_id === task && e.amount_cents === 4900 && e.status === "approved")).toBe(true);
+    expect((await emp.rpc("use_material", { p_material: mat.id, p_task: task, p_qty: 99 })).error?.hint).toBe("insufficient_stock");
+  });
+});

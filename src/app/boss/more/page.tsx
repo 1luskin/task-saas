@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { getI18n } from "@/i18n/server";
 import { LogoutButton } from "@/components/logout-button";
-import { IconArchive, IconBook, IconBox, IconChart, IconTeam, IconChevronRight, IconInbox, IconRepeat, IconSettings, IconUsers } from "@/components/icons";
+import { IconArchive, IconBook, IconBox, IconReceipt, IconChart, IconTeam, IconChevronRight, IconInbox, IconRepeat, IconSettings, IconUsers } from "@/components/icons";
 
 export default async function MorePage() {
   const { t } = await getI18n();
@@ -13,6 +13,7 @@ export default async function MorePage() {
     { href: "/boss/reports", label: t("nav.reports"), icon: IconChart },
     { href: "/boss/knowledge", label: t("nav.knowledge"), icon: IconBook },
     { href: "/boss/materials", label: t("nav.materials"), icon: IconBox },
+    { href: "/boss/invoices", label: t("nav.invoices"), icon: IconReceipt },
     { href: "/boss/archive", label: t("nav.archive"), icon: IconArchive },
     { href: "/boss/settings", label: t("nav.settings"), icon: IconSettings },
   ];
