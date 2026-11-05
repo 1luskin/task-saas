@@ -44,3 +44,17 @@ describe("Berliner Ortszeit ↔ UTC", () => {
     expect(isoToBerlinLocal("2026-07-01T06:30:00.000Z")).toBe("2026-07-01T08:30");
   });
 });
+
+import { remainingVacation, workdaysBetween } from "@/lib/vacation";
+describe("Urlaub", () => {
+  it("zählt nur Mo–Fr; Resturlaub = Kontingent − genehmigte Tage des Jahres", () => {
+    expect(workdaysBetween("2026-11-02", "2026-11-08")).toBe(5); // Mo–So
+    expect(workdaysBetween("2026-11-07", "2026-11-08")).toBe(0); // Wochenende
+    const reqs = [
+      { date_from: "2026-03-02", days: 5, status: "approved" },
+      { date_from: "2026-07-01", days: 3, status: "pending" },
+      { date_from: "2025-12-29", days: 4, status: "approved" },
+    ];
+    expect(remainingVacation(24, reqs, 2026)).toBe(19);
+  });
+});

@@ -33,22 +33,29 @@ const DEFAULTS: Partial<Record<TableName, () => Row>> = {
   tasks: () => ({ description: null, address: null, assignee_id: null, due_date: null, due_time: null, status: "new", priority: "normal",
     fixed_pay_cents: null, template_id: null, created_by: null, completed_at: null, overdue_notified_at: null,
     submitted_at: null, accepted_at: null, accepted_by: null, rating: null, rework_count: 0, review_reminded_at: null, custom_status_id: null,
-    client_id: null, accepted_via: null, pinned: false, reminder_sent_at: null, lat: null, lng: null }),
+    client_id: null, accepted_via: null, pinned: false, reminder_sent_at: null, lat: null, lng: null, kb_article_id: null }),
+  shift_swaps: () => ({ status: "pending", decided_at: null }),
+  vacation_requests: () => ({ note: null, status: "pending", decided_by: null, decided_at: null }),
+  announcements: () => ({ group_id: null, created_by: null }),
+  daily_reports: () => ({ task_id: null, problems: null, photo_paths: [] }),
+  form_templates: () => ({ fields: [] }),
+  form_submissions: () => ({ values: {}, submitted_by: null }),
+  member_documents: () => ({ expires_on: null, file_path: null, reminded_at: null }),
   geo_points: () => ({ task_id: null, shift_id: null, accuracy_m: null }),
   checklist_templates: () => ({ items: [] }),
   task_files: () => ({ comment_id: null, uploaded_by: null }),
   task_statuses: () => ({ color: "slate", position: 0, is_system: false }),
   members: () => ({ email: null, phone: null, group_id: null, status: "active", pay_mode: "hourly", hourly_rate_cents: 0, locale: "de",
-    notify_overdue: true, notify_done: true, archived_at: null, user_id: null, is_demo: false, hourly_basis: "tasks" }),
+    notify_overdue: true, notify_done: true, archived_at: null, user_id: null, is_demo: false, hourly_basis: "tasks", vacation_days_per_year: 24 }),
   shifts: () => ({ ended_at: null, break_minutes: 0, break_started_at: null, rate_cents: 0, auto_closed: false, needs_review: false }),
   expenses: () => ({ receipt_path: null, reimburse: false, status: "pending", decided_by: null, decided_at: null }),
   invites: () => ({ token: Array.from(crypto.getRandomValues(new Uint8Array(18)), (b) => b.toString(16).padStart(2, "0")).join(""),
-    role: "employee", group_id: null, created_by: null, expires_at: new Date(Date.now() + 14 * 864e5).toISOString(), max_uses: 50, used_count: 0, revoked: false }),
+    role: "employee", group_id: null, created_by: null, member_id: null, expires_at: new Date(Date.now() + 14 * 864e5).toISOString(), max_uses: 50, used_count: 0, revoked: false }),
   checklist_items: () => ({ done: false, position: 0 }),
   task_finance: () => ({ client_price_cents: 0 }),
   task_requests: () => ({ description: null, address: null, due_date: null, status: "pending", task_id: null, decided_by: null, decided_at: null }),
   task_templates: () => ({ description: null, address: null, assignee_id: null, priority: "normal", weekdays: [], month_day: null,
-    client_price_cents: null, fixed_pay_cents: null, checklist: [], active: true, last_run_on: null }),
+    client_price_cents: null, fixed_pay_cents: null, checklist: [], active: true, last_run_on: null, kb_article_id: null }),
   time_entries: () => ({ ended_at: null, rate_cents: 0 }),
   task_comments: () => ({ author_id: null }),
   task_photos: () => ({ uploaded_by: null, kind: "general" }),
@@ -60,7 +67,7 @@ const DEFAULTS: Partial<Record<TableName, () => Row>> = {
   admin_audit: () => ({ details: {} }),
   data_requests: () => ({ status: "open", note: null, resolved_at: null }),
 };
-const CHILD_OF_TASK: TableName[] = ["checklist_items", "task_comments", "task_photos", "task_finance", "time_entries", "expenses", "task_links", "task_files"];
+const CHILD_OF_TASK: TableName[] = ["checklist_items", "task_comments", "task_photos", "task_finance", "time_entries", "expenses", "task_links", "task_files", "form_submissions"];
 const KEY: Partial<Record<TableName, string>> = { task_finance: "task_id", feature_flags: "key", plans: "id" };
 
 class Session {
@@ -108,6 +115,12 @@ class Session {
       case "task_files": return this.taskVisible(r.task_id);
       case "notification_prefs": return r.member_id === me;
       case "geo_points": return r.firm_id === firm && (boss || r.member_id === me);
+      case "shift_plans": case "vacation_requests": case "daily_reports": case "member_documents": return r.firm_id === firm && (boss || r.member_id === me);
+      case "shift_swaps": return r.firm_id === firm && (boss || r.from_member === me || r.to_member === me);
+      case "announcements": return r.firm_id === firm && (boss || !r.group_id || r.group_id === this.me?.group_id);
+      case "announcement_reads": return r.member_id === me || (boss && this.db.announcements.some((a) => a.id === r.announcement_id && a.firm_id === firm));
+      case "form_templates": case "kb_articles": return r.firm_id === firm;
+      case "form_submissions": return this.taskVisible(r.task_id);
       case "data_requests": return r.firm_id === firm && (boss || r.member_id === me);
     }
   }
@@ -132,6 +145,12 @@ class Session {
       case "inbound_requests": case "activity": return false;
       case "checklist_templates": return this.boss && r.firm_id === this.firm;
       case "notification_prefs": return r.member_id === me;
+      case "shift_plans": case "member_documents": case "announcements": case "form_templates": case "kb_articles": return this.boss && r.firm_id === this.firm;
+      case "shift_swaps": return r.firm_id === this.firm && r.from_member === me && r.status === "pending" && this.db.shift_plans.some((p) => p.id === r.plan_id && p.member_id === me);
+      case "vacation_requests": return r.firm_id === this.firm && (this.boss || (r.member_id === me && r.status === "pending"));
+      case "announcement_reads": return r.member_id === me;
+      case "daily_reports": return r.firm_id === this.firm && r.member_id === me;
+      case "form_submissions": return this.taskVisible(r.task_id) && r.submitted_by === me;
       case "geo_points": {
         const last = this.db.consents.filter((c) => c.user_id === this.uid && c.kind === "geolocation").sort((a, b) => b.created_at.localeCompare(a.created_at))[0];
         return r.firm_id === this.firm && r.member_id === me && Boolean(last?.granted);
@@ -149,7 +168,7 @@ class Session {
     if (this.boss) {
       if (table === "shifts" && old.ended_at) return deny();
       if (table === "task_statuses" && old.is_system && (("kind" in next && next.kind !== old.kind) || ("is_system" in next && next.is_system !== old.is_system))) return deny("system status");
-      if (["firms", "groups", "members", "invites", "task_templates", "tasks", "task_finance", "checklist_items", "time_entries", "task_requests", "task_statuses", "expenses", "clients", "task_links", "inbound_requests", "checklist_templates"].includes(table)) return null;
+      if (["firms", "groups", "members", "invites", "task_templates", "tasks", "task_finance", "checklist_items", "time_entries", "task_requests", "task_statuses", "expenses", "clients", "task_links", "inbound_requests", "checklist_templates", "shift_plans", "vacation_requests", "announcements", "member_documents", "form_templates", "kb_articles"].includes(table)) return null;
     }
     switch (table) {
       case "tasks":
@@ -182,7 +201,8 @@ class Session {
       case "task_requests": return this.boss || (r.created_by === me && r.status === "pending");
       case "task_statuses": return this.boss && !r.is_system;
       case "expenses": return this.boss || (r.member_id === me && r.status === "pending");
-      case "clients": case "checklist_templates": return this.boss;
+      case "clients": case "checklist_templates": case "shift_plans": case "announcements": case "member_documents": case "form_templates": case "kb_articles": return this.boss;
+      case "vacation_requests": return this.boss || (r.member_id === me && r.status === "pending");
       case "notification_prefs": return r.member_id === me;
       case "task_files": return this.boss || r.uploaded_by === me;
       case "task_links": case "inbound_requests": return false;
@@ -207,6 +227,9 @@ function applyTriggers(s: Session, table: TableName, row: Row, old: Row | null):
       if (!m || m.firm_id !== row.firm_id || m.archived_at) return { message: "invalid assignee", code: "23514" };
       if (m.status !== "active") return { message: "assignee unavailable", code: "23514", hint: "member_unavailable" };
     }
+    if (row.assignee_id && row.due_date && (!old || row.assignee_id !== old.assignee_id || row.due_date !== old.due_date)
+        && db.vacation_requests.some((v) => v.member_id === row.assignee_id && v.status === "approved" && String(row.due_date) >= v.date_from && String(row.due_date) <= v.date_to))
+      return { message: "assignee unavailable", code: "23514", hint: "member_unavailable" };
     if (row.custom_status_id) {
       const st = db.task_statuses.find((x) => x.id === row.custom_status_id);
       if (!st || st.firm_id !== row.firm_id) return { message: "invalid status", code: "23514" };
@@ -497,6 +520,27 @@ export function createFakeClient(uid: string | null, admin = false) {
           ...vis("task_requests").filter((r) => has(r.title)).map((r) => ({ kind: "request", id: r.id, title: r.title, subtitle: r.status })),
         ].slice(0, 20);
         return { data: out, error: null };
+      }
+      if (fn === "colleagues") {
+        const me = s.me;
+        const data = s.db.members.filter((m) => m.firm_id === me?.firm_id && !m.archived_at && m.id !== me?.id).map((m) => ({ id: m.id, full_name: m.full_name }));
+        return { data, error: null };
+      }
+      if (fn === "decide_swap") {
+        const sw = s.db.shift_swaps.find((x) => x.id === args.p_swap && x.firm_id === s.firm);
+        const me = s.me?.id;
+        if (!sw) return { data: null, error: deny("not found") };
+        if (args.p_action === "accept" && sw.status === "pending" && sw.to_member === me) sw.status = "accepted";
+        else if (args.p_action === "approve" && sw.status === "accepted" && s.boss) {
+          const plan = s.db.shift_plans.find((p) => p.id === sw.plan_id);
+          if (plan) plan.member_id = sw.to_member;
+          sw.status = "approved";
+          sw.decided_at = new Date().toISOString();
+        } else if (args.p_action === "reject" && (sw.status === "pending" || sw.status === "accepted") && (s.boss || sw.to_member === me || sw.from_member === me)) {
+          sw.status = "rejected";
+          sw.decided_at = new Date().toISOString();
+        } else return { data: null, error: deny() };
+        return { data: null, error: null };
       }
       if (fn === "published_reviews") {
         const list = s.db.reviews

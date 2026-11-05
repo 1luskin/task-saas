@@ -13,6 +13,7 @@ export const LIMITS = {
   upload: { max: 60, window: 3600 },
   publicLink: { max: 60, window: 600 },
   publicForm: { max: 5, window: 3600 },
+  import: { max: 10, window: 3600 },
 } as const;
 export type LimitName = keyof typeof LIMITS;
 

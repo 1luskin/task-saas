@@ -10,8 +10,9 @@ import { ErrorText, useAction } from "@/components/use-action";
 import { IconPlus } from "@/components/icons";
 
 type M = { id: string; full_name: string; status: string };
+type A = { id: string; title: string };
 
-function TemplateForm({ tpl, members, onDone }: { tpl: TaskTemplate | null; members: M[]; onDone: () => void }) {
+function TemplateForm({ tpl, members, articles, onDone }: { tpl: TaskTemplate | null; members: M[]; articles: A[]; onDone: () => void }) {
   const { t, messages } = useI18n();
   const { run, pending, error } = useAction();
   const [v, setV] = useState({
@@ -26,6 +27,7 @@ function TemplateForm({ tpl, members, onDone }: { tpl: TaskTemplate | null; memb
     client_price: centsToInput(tpl?.client_price_cents),
     fixed_pay: centsToInput(tpl?.fixed_pay_cents),
     checklist: (tpl?.checklist ?? []).join("\n"),
+    kb_article_id: tpl?.kb_article_id ?? "",
   });
   return (
     <form
@@ -37,6 +39,7 @@ function TemplateForm({ tpl, members, onDone }: { tpl: TaskTemplate | null; memb
             saveTemplate(tpl?.id ?? null, {
               ...v,
               assignee_id: v.assignee_id || null,
+              kb_article_id: v.kb_article_id || null,
               month_day: v.recurrence === "monthly" ? Number(v.month_day) : null,
               checklist: v.checklist.split("\n").map((s) => s.trim()).filter(Boolean),
               active: tpl?.active ?? true,
@@ -94,6 +97,14 @@ function TemplateForm({ tpl, members, onDone }: { tpl: TaskTemplate | null; memb
       </div>
       <Field label={t("task.address")}><Input value={v.address} onChange={(e) => setV({ ...v, address: e.target.value })} /></Field>
       <Field label={t("task.checklist")} hint={t("task.checklistHint")}><Textarea value={v.checklist} onChange={(e) => setV({ ...v, checklist: e.target.value })} /></Field>
+      {articles.length > 0 && (
+        <Field label={t("kb.linked")}>
+          <Select value={v.kb_article_id} onChange={(e) => setV({ ...v, kb_article_id: e.target.value })}>
+            <option value="">—</option>
+            {articles.map((a) => <option key={a.id} value={a.id}>{a.title}</option>)}
+          </Select>
+        </Field>
+      )}
       <ErrorText error={error} />
       <div className="flex gap-2">
         <button className="btn-primary" disabled={pending}>{t("common.save")}</button>
@@ -103,7 +114,7 @@ function TemplateForm({ tpl, members, onDone }: { tpl: TaskTemplate | null; memb
   );
 }
 
-export function TemplatesClient({ templates, members }: { templates: TaskTemplate[]; members: M[] }) {
+export function TemplatesClient({ templates, members, articles = [] }: { templates: TaskTemplate[]; members: M[]; articles?: A[] }) {
   const { t, messages, locale } = useI18n();
   const { run } = useAction();
   const [editing, setEditing] = useState<string | "new" | null>(null);
@@ -118,14 +129,14 @@ export function TemplatesClient({ templates, members }: { templates: TaskTemplat
   return (
     <div className="space-y-3">
       {editing === "new" ? (
-        <div className="card-white p-4"><TemplateForm tpl={null} members={members} onDone={() => setEditing(null)} /></div>
+        <div className="card-white p-4"><TemplateForm tpl={null} members={members} articles={articles} onDone={() => setEditing(null)} /></div>
       ) : (
         <button className="btn-primary" onClick={() => setEditing("new")}><IconPlus className="size-5" />{t("templates.new")}</button>
       )}
       {templates.length === 0 && editing !== "new" && <p className="text-muted">{t("templates.none")}</p>}
       {templates.map((tpl) =>
         editing === tpl.id ? (
-          <div key={tpl.id} className="card-white p-4"><TemplateForm tpl={tpl} members={members} onDone={() => setEditing(null)} /></div>
+          <div key={tpl.id} className="card-white p-4"><TemplateForm tpl={tpl} members={members} articles={articles} onDone={() => setEditing(null)} /></div>
         ) : (
           <div key={tpl.id} className={cx("card-white p-4", !tpl.active && "opacity-60")}>
             <div className="flex flex-wrap items-start justify-between gap-2">

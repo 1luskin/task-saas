@@ -8,7 +8,8 @@ import { ExpiredBanner } from "../trial/trial";
 import type { Ctx } from "@/lib/auth";
 import { logoUrl } from "@/lib/logo";
 import { SearchBox } from "../search-box";
-import { IconSun, IconTasks, IconUser, IconWallet } from "../icons";
+import { IconSun, IconTasks, IconTeam, IconUser, IconWallet } from "../icons";
+import { isEnabled } from "@/lib/features";
 
 export async function StaffShell({ ctx, children }: { ctx: Ctx; children: React.ReactNode }) {
   const firmName = ctx.firm.name;
@@ -16,6 +17,7 @@ export async function StaffShell({ ctx, children }: { ctx: Ctx; children: React.
   const tabs = [
     { href: "/staff/today", label: t("nav.today"), icon: IconSun },
     { href: "/staff/tasks", label: t("nav.tasks"), icon: IconTasks },
+    ...((await isEnabled(ctx, "team")) ? [{ href: "/staff/team", label: t("nav.team"), icon: IconTeam }] : []),
     { href: "/staff/earnings", label: t("nav.earnings"), icon: IconWallet },
     { href: "/staff/profile", label: t("nav.profile"), icon: IconUser },
   ];

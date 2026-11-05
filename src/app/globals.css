@@ -160,3 +160,8 @@ button,
 @utility chip {
   @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium;
 }
+
+/* Abwesenheit (Urlaub) – schraffiert */
+@utility hatch {
+  background-image: repeating-linear-gradient(135deg, color-mix(in srgb, var(--color-muted) 22%, transparent) 0 2px, transparent 2px 9px);
+}

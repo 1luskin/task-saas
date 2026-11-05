@@ -21,6 +21,7 @@ const templateInput = z
     fixed_pay: moneyInput,
     checklist: z.array(z.string().trim().min(1).max(300)).max(100).default([]),
     active: z.boolean().default(true),
+    kb_article_id: optUuid,
   })
   .refine((v) => v.recurrence !== "weekly" || v.weekdays.length > 0, { message: "weekdays required" })
   .refine((v) => v.recurrence !== "monthly" || v.month_day !== null, { message: "month_day required" });
@@ -47,6 +48,7 @@ export async function saveTemplate(id: string | null, raw: TemplateInput) {
       fixed_pay_cents: input.fixed_pay,
       checklist: input.checklist,
       active: input.active,
+      kb_article_id: input.kb_article_id ?? null,
     };
     if (id) check(await ctx.supabase.from("task_templates").update(row).eq("id", uuid.parse(id)));
     else check(await ctx.supabase.from("task_templates").insert(row));

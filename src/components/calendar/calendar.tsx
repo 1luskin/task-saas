@@ -27,9 +27,12 @@ const CHIP: Record<CalTask["status"], string> = {
   done: "bg-ok-soft text-ok line-through decoration-ok/40",
 };
 
+export interface CalAbsence { name: string; from: string; to: string }
+
 export function Calendar({
-  tasks: initialTasks, view, anchor, taskHref, compact = false, draggable = false,
-}: { tasks: CalTask[]; view: "month" | "week" | "day"; anchor: string; taskHref: string; compact?: boolean; draggable?: boolean }) {
+  tasks: initialTasks, view, anchor, taskHref, compact = false, draggable = false, absences = [],
+}: { tasks: CalTask[]; view: "month" | "week" | "day"; anchor: string; taskHref: string; compact?: boolean; draggable?: boolean; absences?: CalAbsence[] }) {
+  const awayOn = (d: string) => absences.filter((a) => a.from <= d && a.to >= d);
   const [tasks, setTasks] = useState(initialTasks);
   const [drag, setDrag] = useState<{ id: string; x: number; y: number; moved: boolean; sx: number; sy: number } | null>(null);
   const [overDay, setOverDay] = useState<string | null>(null);
@@ -142,6 +145,9 @@ export function Calendar({
 
       {view === "day" && (
         <ul className="space-y-1.5 p-3">
+          {awayOn(anchor).map((a) => (
+            <li key={a.name} className="hatch rounded-[12px] bg-card px-3 py-2 text-sm text-muted">{t("calendar.away", { name: a.name })}</li>
+          ))}
           {(byDay.get(anchor) ?? []).map((task) => (
             <li key={task.id}>
               <Link href={`${taskHref}${task.id}`} className="flex min-h-12 items-center gap-2 rounded-[12px] bg-card px-3 py-2 hover:bg-surface-3">
@@ -170,6 +176,7 @@ export function Calendar({
           const inMonth = view === "week" || d.slice(0, 7) === anchor.slice(0, 7);
           const isToday = d === today;
           const isSel = d === selected;
+          const away = awayOn(d);
           return (
             <button
               key={d}
@@ -183,6 +190,7 @@ export function Calendar({
                 view === "week" ? "min-h-56" : compact ? "min-h-[88px]" : "min-h-28",
                 !inMonth && "bg-card/50",
                 isSel && "bg-accent-soft/60",
+                away.length > 0 && "hatch",
                 overDay === d && "ring-2 ring-inset ring-accent-2",
               )}
             >
@@ -194,6 +202,11 @@ export function Calendar({
               >
                 {Number(d.slice(8, 10))}
               </span>
+              {away.length > 0 && (
+                <span className="hidden truncate px-1 text-[10px] text-muted sm:block" title={away.map((a) => t("calendar.away", { name: a.name })).join(", ")}>
+                  {away.map((a) => initials(a.name)).join(" ")} · {t("calendar.vacation")}
+                </span>
+              )}
               {/* Handy: nur Punkte */}
               <span className="flex flex-wrap justify-center gap-0.5 sm:hidden">
                 {list.slice(0, 4).map((task) => (
@@ -229,6 +242,7 @@ export function Calendar({
       {selected && (
         <div className="border-t border-line/70 p-3">
           <div className="mb-2 text-sm font-semibold">{t("calendar.tasksOn", { date: formatDate(selected, locale) })}</div>
+          {awayOn(selected).length > 0 && <p className="mb-2 text-sm text-muted">{awayOn(selected).map((a) => t("calendar.away", { name: a.name })).join(" · ")}</p>}
           {selTasks.length === 0 ? (
             <p className="text-sm text-muted">{t("calendar.noTasksDay")}</p>
           ) : (

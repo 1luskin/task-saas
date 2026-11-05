@@ -104,6 +104,20 @@ export type GeoPoint = {
   id: string; firm_id: string; member_id: string; kind: "task_start" | "task_finish" | "shift_start" | "shift_end";
   task_id: string | null; shift_id: string | null; lat: number; lng: number; accuracy_m: number | null; created_at: string;
 };
+export type ShiftPlan = { id: string; firm_id: string; member_id: string; date: string; start_time: string; end_time: string; note: string | null; created_at: string };
+export type ShiftSwap = { id: string; firm_id: string; plan_id: string; from_member: string; to_member: string; status: "pending" | "accepted" | "approved" | "rejected"; created_at: string; decided_at: string | null };
+export type VacationRequest = {
+  id: string; firm_id: string; member_id: string; date_from: string; date_to: string; days: number; note: string | null;
+  status: "pending" | "approved" | "rejected"; decided_by: string | null; decided_at: string | null; created_at: string;
+};
+export type Announcement = { id: string; firm_id: string; group_id: string | null; title: string; body: string; created_by: string | null; created_at: string };
+export type AnnouncementRead = { announcement_id: string; member_id: string; read_at: string };
+export type DailyReport = { id: string; firm_id: string; member_id: string; date: string; task_id: string | null; done_text: string; problems: string | null; photo_paths: string[]; created_at: string };
+export type FormField = { id: string; type: "text" | "number" | "checkbox" | "select" | "photo"; label: string; options?: string[] };
+export type FormTemplate = { id: string; firm_id: string; name: string; fields: FormField[]; created_at: string };
+export type FormSubmission = { id: string; firm_id: string; task_id: string; template_id: string; values: Record<string, unknown>; submitted_by: string | null; created_at: string };
+export type MemberDocument = { id: string; firm_id: string; member_id: string; name: string; expires_on: string | null; file_path: string | null; reminded_at: string | null; created_at: string };
+export type KbArticle = { id: string; firm_id: string; title: string; body: string; updated_at: string };
 export type Consent = {
   id: string;
   user_id: string | null;
@@ -147,6 +161,7 @@ export type Member = {
   archived_at: string | null;
   is_demo: boolean;
   hourly_basis: "tasks" | "shifts";
+  vacation_days_per_year: number;
   created_at: string;
   updated_at: string;
 };
@@ -178,6 +193,7 @@ export type Invite = {
   max_uses: number;
   used_count: number;
   revoked: boolean;
+  member_id: string | null;
   created_at: string;
 };
 export type TaskTemplate = {
@@ -196,6 +212,7 @@ export type TaskTemplate = {
   checklist: string[];
   active: boolean;
   last_run_on: string | null;
+  kb_article_id: string | null;
   created_at: string;
 };
 export type Task = {
@@ -227,6 +244,7 @@ export type Task = {
   reminder_sent_at: string | null;
   lat: number | null;
   lng: number | null;
+  kb_article_id: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -338,6 +356,16 @@ export interface Database {
       activity: Table<Activity, "firm_id" | "kind">;
       notification_prefs: Table<NotificationPref, "member_id" | "type" | "enabled">;
       geo_points: Table<GeoPoint, "firm_id" | "member_id" | "kind" | "lat" | "lng">;
+      shift_plans: Table<ShiftPlan, "firm_id" | "member_id" | "date" | "start_time" | "end_time">;
+      shift_swaps: Table<ShiftSwap, "firm_id" | "plan_id" | "from_member" | "to_member">;
+      vacation_requests: Table<VacationRequest, "firm_id" | "member_id" | "date_from" | "date_to" | "days">;
+      announcements: Table<Announcement, "firm_id" | "title" | "body">;
+      announcement_reads: Table<AnnouncementRead, "announcement_id" | "member_id">;
+      daily_reports: Table<DailyReport, "firm_id" | "member_id" | "date" | "done_text">;
+      form_templates: Table<FormTemplate, "firm_id" | "name">;
+      form_submissions: Table<FormSubmission, "task_id" | "template_id">;
+      member_documents: Table<MemberDocument, "firm_id" | "member_id" | "name">;
+      kb_articles: Table<KbArticle, "firm_id" | "title" | "body">;
       data_requests: Table<DataRequest, "firm_id" | "member_id" | "kind">;
       task_finance: Table<TaskFinance, "task_id">;
       checklist_items: Table<ChecklistItem, "task_id" | "text">;
@@ -384,6 +412,8 @@ export interface Database {
         Returns: undefined;
       };
       search_all: { Args: { p_q: string; p_limit?: number }; Returns: { kind: "task" | "member" | "client" | "request"; id: string; title: string; subtitle: string }[] };
+      colleagues: { Args: Record<string, never>; Returns: { id: string; full_name: string }[] };
+      decide_swap: { Args: { p_swap: string; p_action: "accept" | "approve" | "reject" }; Returns: undefined };
       invite_info: {
         Args: { p_token: string };
         Returns: { firm_name: string; role: Role; valid: boolean }[];

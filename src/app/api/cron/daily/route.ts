@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
 import { serverEnv } from "@/lib/env";
-import { daysInMonth, isOverdue, isoWeekday, todayISO } from "@/lib/dates";
+import { addDays, daysInMonth, isOverdue, isoWeekday, todayISO } from "@/lib/dates";
 import { sendPushToMembers } from "@/lib/push";
-import { notifyNewTask } from "@/server/notify";
+import { notifyBosses, notifyNewTask } from "@/server/notify";
 import { runEmailJobs } from "@/server/jobs/emails";
 import type { TaskTemplate } from "@/lib/supabase/types";
 
@@ -71,6 +71,11 @@ export async function GET(req: Request) {
       const { data: m } = await admin.from("members").select("status, pay_mode, archived_at").eq("id", assignee).maybeSingle();
       if (!m || m.status !== "active" || m.archived_at) assignee = null; // Urlaub/krank → Chef weist neu zu
       else if (m.pay_mode === "hourly") fixedPay = null;
+      if (assignee) {
+        // genehmigter Urlaub heute → nicht zuweisen
+        const { data: off } = await admin.from("vacation_requests").select("id").eq("member_id", assignee).eq("status", "approved").lte("date_from", today).gte("date_to", today).limit(1);
+        if (off?.length) assignee = null;
+      }
     }
     const { data: task, error } = await admin
       .from("tasks")
@@ -84,6 +89,7 @@ export async function GET(req: Request) {
         priority: tpl.priority,
         fixed_pay_cents: fixedPay,
         template_id: tpl.id,
+        kb_article_id: tpl.kb_article_id ?? null,
       })
       .select()
       .single();
@@ -144,8 +150,22 @@ export async function GET(req: Request) {
   // 4. Aufbewahrung: Login-Protokoll 90 Tage
   await admin.from("login_events").delete().lt("created_at", new Date(Date.now() - 90 * 864e5).toISOString());
 
+  // 4b. Dokumente der Mitarbeiter laufen in ≤ 30 Tagen ab → einmalig Chef + Mitarbeiter erinnern
+  const { data: docs } = await admin
+    .from("member_documents")
+    .select("id, firm_id, member_id, name, expires_on")
+    .is("reminded_at", null)
+    .not("expires_on", "is", null)
+    .lte("expires_on", addDays(today, 30));
+  for (const d of docs ?? []) {
+    const body = `${d.name} · ${d.expires_on!.split("-").reverse().join(".")}`;
+    await notifyBosses(d.firm_id, (t) => ({ title: t("team.docPush"), body, url: "/boss/team?tab=docs", tag: `doc-${d.id}` }), "doc_expiry");
+    await sendPushToMembers([d.member_id], (t) => ({ title: t("team.docPush"), body, url: "/staff/team", tag: `doc-${d.id}` }), "doc_expiry");
+    await admin.from("member_documents").update({ reminded_at: new Date().toISOString() }).eq("id", d.id);
+  }
+
   // 5. E-Mails: Testzeitraum endet bald, Wochenbericht (montags)
   const emails = await runEmailJobs();
 
-  return NextResponse.json({ ok: true, created, overdue: overdue.length, deletedFirms: doomed?.length ?? 0, emails });
+  return NextResponse.json({ ok: true, created, overdue: overdue.length, deletedFirms: doomed?.length ?? 0, docReminders: docs?.length ?? 0, emails });
 }

@@ -2,6 +2,7 @@ import "server-only";
 import type { Ctx } from "@/lib/auth";
 import { taskPay } from "@/lib/earnings";
 import { minutesBetween } from "@/lib/dates";
+import { isEnabled } from "@/lib/features";
 
 export async function loadTaskDetail(ctx: Ctx, id: string) {
   if (!/^[0-9a-f-]{36}$/.test(id)) return null;
@@ -48,6 +49,17 @@ export async function loadTaskDetail(ctx: Ctx, id: string) {
     urls = photoRows.map((_, i) => data?.[i]?.signedUrl ?? null);
   }
 
+  // Anleitungen & Formulare (Feature "knowledge")
+  const kbOn = await isEnabled(ctx, "knowledge");
+  const [{ data: article }, { data: formTemplates }, { data: submissions }, { data: articles }] = kbOn
+    ? await Promise.all([
+        task.kb_article_id ? ctx.supabase.from("kb_articles").select("*").eq("id", task.kb_article_id).maybeSingle() : Promise.resolve({ data: null }),
+        ctx.supabase.from("form_templates").select("*").eq("firm_id", task.firm_id).order("name"),
+        ctx.supabase.from("form_submissions").select("*").eq("task_id", id).order("created_at", { ascending: false }),
+        isBoss ? ctx.supabase.from("kb_articles").select("id,title").eq("firm_id", task.firm_id).order("title") : Promise.resolve({ data: [] }),
+      ])
+    : [{ data: null }, { data: [] }, { data: [] }, { data: [] }];
+
   const allEntries = entries.data ?? [];
   const myEntries = allEntries.filter((e) => e.member_id === ctx.member.id);
   const runningMine = myEntries.find((e) => !e.ended_at)?.started_at ?? null;
@@ -72,6 +84,11 @@ export async function loadTaskDetail(ctx: Ctx, id: string) {
     })),
     geo: (geoRows ?? []).map((g) => ({ lat: g.lat, lng: g.lng, kind: g.kind, created_at: g.created_at, who: geoWho.get(g.member_id) ?? "" })),
     files: (fileRows ?? []).map((f) => ({ id: f.id, name: f.file_name, size: f.size_bytes, url: fileUrls.get(f.id) ?? null, uploaded_by: f.uploaded_by })),
+    kbOn,
+    article: article ?? null,
+    articles: (articles ?? []) as { id: string; title: string }[],
+    formTemplates: formTemplates ?? [],
+    submissions: (submissions ?? []).map((x) => ({ id: x.id, template_id: x.template_id, created_at: x.created_at, submitted_by: x.submitted_by })),
     expensesApprovedCents: expRows.filter((e) => e.status === "approved").reduce((s, e) => s + e.amount_cents, 0),
   };
 }

@@ -40,7 +40,7 @@ export function createSeed(): DemoDb {
 
   const member = (o: Partial<Tables["members"]["Row"]> & Pick<Tables["members"]["Row"], "id" | "user_id" | "role" | "full_name">): Tables["members"]["Row"] => ({
     firm_id: DEMO.firm, email: null, phone: null, group_id: null, status: "active", pay_mode: "hourly",
-    hourly_rate_cents: 0, locale: "de", notify_overdue: true, notify_done: true, archived_at: null, is_demo: false, hourly_basis: "tasks",
+    hourly_rate_cents: 0, locale: "de", notify_overdue: true, notify_done: true, archived_at: null, is_demo: false, hourly_basis: "tasks", vacation_days_per_year: 24,
     created_at: now, updated_at: now, ...o,
   });
 
@@ -48,11 +48,11 @@ export function createSeed(): DemoDb {
     id: id(400 + n), firm_id: DEMO.firm, description: null, address: null, assignee_id: null, due_date: null, due_time: null,
     status: "new", priority: "normal", fixed_pay_cents: null, template_id: null, created_by: DEMO.boss,
     completed_at: null, overdue_notified_at: null, submitted_at: null, accepted_at: null, accepted_by: null, rating: null,
-    rework_count: 0, review_reminded_at: null, custom_status_id: null, client_id: null, accepted_via: null, pinned: false, reminder_sent_at: null, lat: null, lng: null, created_at: at(-7, 8), updated_at: now, ...o,
+    rework_count: 0, review_reminded_at: null, custom_status_id: null, client_id: null, accepted_via: null, pinned: false, reminder_sent_at: null, lat: null, lng: null, kb_article_id: null, created_at: at(-7, 8), updated_at: now, ...o,
   });
 
   const tasks: Tables["tasks"]["Row"][] = [
-    task(1, { lat: 52.5176, lng: 13.437, title: "Treppenhaus reinigen – Haus A", client_id: id(1601), assignee_id: e1.member, due_date: day(0), due_time: "09:00", status: "in_progress",
+    task(1, { lat: 52.5176, lng: 13.437, kb_article_id: id(2601), title: "Treppenhaus reinigen – Haus A", client_id: id(1601), assignee_id: e1.member, due_date: day(0), due_time: "09:00", status: "in_progress",
       address: "Karl-Marx-Allee 12, 10243 Berlin", description: "Alle Etagen wischen, Geländer abwischen, Fenster im EG." }),
     task(2, { lat: 52.5153, lng: 13.3888, title: "Büro Fenster 2. OG", pinned: true, assignee_id: e1.member, due_date: day(0), due_time: "13:00", priority: "urgent",
       address: "Friedrichstr. 88, 10117 Berlin", description: "Kunde kommt um 16 Uhr – unbedingt vorher fertig." }),
@@ -108,7 +108,7 @@ export function createSeed(): DemoDb {
     reviews: [],
     feature_flags: ([
       ["templates", true], ["requests", true], ["reports", true], ["excel_export", true], ["custom_statuses", true], ["demo_firm", true],
-      ["kanban", true], ["clients", true], ["expenses", true], ["shifts", true], ["geolocation", false], ["invoices", false], ["public_form", false],
+      ["kanban", true], ["clients", true], ["expenses", true], ["shifts", true], ["geolocation", false], ["invoices", false], ["public_form", false], ["team", true], ["knowledge", true],
     ] as const).map(([key, on]) => ({ key, default_enabled: on, description: null, updated_at: now })),
     firm_features: [],
     admin_audit: [],
@@ -135,6 +135,38 @@ export function createSeed(): DemoDb {
     ],
     task_files: [],
     notification_prefs: [],
+    shift_plans: [0, 1, 2, 3, 4].flatMap((d) => [
+      { id: id(2300 + d), firm_id: DEMO.firm, member_id: e1.member, date: day(d), start_time: "07:00:00", end_time: "15:00:00", note: null, created_at: now },
+      { id: id(2310 + d), firm_id: DEMO.firm, member_id: e2.member, date: day(d), start_time: "08:00:00", end_time: "16:30:00", note: d === 2 ? "Baustelle Sonnenallee" : null, created_at: now },
+    ]),
+    shift_swaps: [{ id: id(2401), firm_id: DEMO.firm, plan_id: id(2303), from_member: e1.member, to_member: e2.member, status: "accepted", created_at: ago(6), decided_at: null }],
+    vacation_requests: [
+      { id: id(2501), firm_id: DEMO.firm, member_id: e3.member, date_from: day(-2), date_to: day(6), days: 7, note: null, status: "approved", decided_by: DEMO.boss, decided_at: ago(200), created_at: ago(240) },
+      { id: id(2502), firm_id: DEMO.firm, member_id: e1.member, date_from: day(20), date_to: day(24), days: 5, note: "Familienbesuch", status: "pending", decided_by: null, decided_at: null, created_at: ago(30) },
+    ],
+    announcements: [
+      { id: id(2701), firm_id: DEMO.firm, group_id: null, title: "Neue Arbeitskleidung", body: "Ab Montag liegen die neuen Jacken im Lager. Bitte bis Freitag abholen.", created_by: DEMO.boss, created_at: ago(26) },
+    ],
+    announcement_reads: [{ announcement_id: id(2701), member_id: e2.member, read_at: ago(20) }],
+    daily_reports: [
+      { id: id(2801), firm_id: DEMO.firm, member_id: e2.member, date: day(-1), task_id: id(405), done_text: "Alte Fugen entfernt, Bad vorbereitet.", problems: "Fugenmörtel fehlt – 2 Säcke gekauft.", photo_paths: [], created_at: ago(20) },
+    ],
+    form_templates: [
+      { id: id(2901), firm_id: DEMO.firm, name: "Abnahmeprotokoll", fields: [
+        { id: "f1", type: "checkbox", label: "Arbeitsbereich sauber hinterlassen" },
+        { id: "f2", type: "select", label: "Zustand", options: ["Sehr gut", "Gut", "Mängel"] },
+        { id: "f3", type: "number", label: "Verbrauchte Stunden" },
+        { id: "f4", type: "text", label: "Bemerkungen" },
+      ], created_at: now },
+    ],
+    form_submissions: [],
+    member_documents: [
+      { id: id(3001), firm_id: DEMO.firm, member_id: e2.member, name: "Führerschein Klasse B", expires_on: day(21), file_path: null, reminded_at: null, created_at: now },
+      { id: id(3002), firm_id: DEMO.firm, member_id: e1.member, name: "Erste-Hilfe-Kurs", expires_on: day(200), file_path: null, reminded_at: null, created_at: now },
+    ],
+    kb_articles: [
+      { id: id(2601), firm_id: DEMO.firm, title: "Treppenhausreinigung – Standard", body: "1. Von oben nach unten arbeiten.\n2. Geländer mit Desinfektionsmittel.\n3. Briefkästen nicht nass wischen.\n4. Fotos vorher/nachher machen.", updated_at: now },
+    ],
     geo_points: [
       { id: id(2101), firm_id: DEMO.firm, member_id: e1.member, kind: "task_start", task_id: id(401), shift_id: null, lat: 52.5178, lng: 13.4366, accuracy_m: 12, created_at: ago(0.75) },
       { id: id(2102), firm_id: DEMO.firm, member_id: e1.member, kind: "shift_start", task_id: null, shift_id: id(1301), lat: 52.5172, lng: 13.4381, accuracy_m: 20, created_at: ago(1.5) },
@@ -174,14 +206,14 @@ export function createSeed(): DemoDb {
         group_id: gClean, pay_mode: "fixed", status: "vacation", locale: "ru" }),
     ],
     invites: [{ id: id(701), firm_id: DEMO.firm, token: "de0de0de0de0de0de0de0de0de0de0de0de0", role: "employee", group_id: gClean,
-      created_by: DEMO.boss, expires_at: at(14, 0), max_uses: 50, used_count: 3, revoked: false, created_at: now }],
+      created_by: DEMO.boss, expires_at: at(14, 0), max_uses: 50, used_count: 3, revoked: false, member_id: null, created_at: now }],
     task_templates: [
       { id: id(801), firm_id: DEMO.firm, title: "Treppenhaus reinigen – Haus A", description: null, address: "Karl-Marx-Allee 12, 10243 Berlin",
         assignee_id: e1.member, priority: "normal", recurrence: "weekly", weekdays: [1, 4], month_day: null, client_price_cents: 12000,
-        fixed_pay_cents: null, checklist: ["Erdgeschoss", "1.–3. OG", "4.–5. OG", "Geländer"], active: true, last_run_on: day(-1), created_at: now },
+        fixed_pay_cents: null, checklist: ["Erdgeschoss", "1.–3. OG", "4.–5. OG", "Geländer"], active: true, last_run_on: day(-1), kb_article_id: id(2601), created_at: now },
       { id: id(802), firm_id: DEMO.firm, title: "Monatsinventur Lager", description: null, address: null, assignee_id: e2.member,
         priority: "normal", recurrence: "monthly", weekdays: [], month_day: 1, client_price_cents: 15000, fixed_pay_cents: 6000,
-        checklist: [], active: true, last_run_on: null, created_at: now },
+        checklist: [], active: true, last_run_on: null, kb_article_id: null, created_at: now },
     ],
     tasks,
     task_finance: tasks.map((t, i) => ({ task_id: t.id, firm_id: DEMO.firm, client_price_cents: finance[i + 1] ?? 0, updated_at: now })),

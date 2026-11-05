@@ -66,3 +66,23 @@ describe("Demo: Ausgaben", () => {
     expect(ok.error).toBeNull();
   });
 });
+
+describe("Demo: Team", () => {
+  it("genehmigter Urlaub blockiert Zuweisung; Mitarbeiter genehmigt sich keinen Urlaub", async () => {
+    const olga = DEMO.employees[2]!.member;
+    const today = new Date().toISOString().slice(0, 10);
+    const r = await boss().from("tasks").insert({ firm_id: DEMO.firm, title: "X", assignee_id: olga, due_date: today });
+    expect(r.error?.hint).toBe("member_unavailable");
+    const id = demoDb().vacation_requests.find((v) => v.status === "pending")!.id;
+    const self = await dmitri().from("vacation_requests").update({ status: "approved" }).eq("id", id);
+    expect(self.error).not.toBeNull();
+  });
+  it("Schichttausch: Kollege akzeptiert, nur Chef genehmigt", async () => {
+    const sw = demoDb().shift_swaps[0]!;
+    const no = await dmitri().rpc("decide_swap", { p_swap: sw.id, p_action: "approve" });
+    expect(no.error).not.toBeNull();
+    const ok = await boss().rpc("decide_swap", { p_swap: sw.id, p_action: "approve" });
+    expect(ok.error).toBeNull();
+    expect(demoDb().shift_plans.find((p) => p.id === sw.plan_id)!.member_id).toBe(DEMO.employees[1]!.member);
+  });
+});

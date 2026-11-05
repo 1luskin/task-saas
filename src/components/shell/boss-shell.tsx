@@ -17,7 +17,7 @@ const IconContact = ({ className }: { className?: string }) => <IconContactRaw s
 import { LogoutButton } from "../logout-button";
 import { Avatar } from "../ui";
 import {
-  IconArchive, IconCalendar, IconChart, IconEuro, IconInbox, IconMenu, IconRepeat, IconSettings, IconTasks, IconUsers,
+  IconArchive, IconBook, IconCalendar, IconChart, IconEuro, IconInbox, IconMenu, IconRepeat, IconSettings, IconTasks, IconTeam, IconUsers,
 } from "../icons";
 
 export async function BossShell({
@@ -33,9 +33,11 @@ export async function BossShell({
     { href: "/boss/calendar", label: t("nav.calendar"), icon: IconCalendar },
     { href: "/boss/employees", label: t("nav.employees"), icon: IconUsers },
     ...(on("clients") ? [{ href: "/boss/clients", label: t("nav.clientsNav"), icon: IconContact }] : []),
+    ...(on("team") ? [{ href: "/boss/team", label: t("nav.team"), icon: IconTeam }] : []),
     { href: "/boss/money", label: t("nav.money"), icon: IconEuro },
     ...(on("templates") ? [{ href: "/boss/templates", label: t("nav.templates"), icon: IconRepeat }] : []),
     ...(on("reports") ? [{ href: "/boss/reports", label: t("nav.reports"), icon: IconChart }] : []),
+    ...(on("knowledge") ? [{ href: "/boss/knowledge", label: t("nav.knowledge"), icon: IconBook }] : []),
     { href: "/boss/settings", label: t("nav.settings"), icon: IconSettings },
   ];
   const secondary = [

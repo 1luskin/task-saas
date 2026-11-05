@@ -6,7 +6,7 @@ import { ActionError } from "./action";
 /** Bekannte Feature-Flags (DB: feature_flags). Neue Flags: hier + Migration. */
 export const FEATURES = [
   "templates", "requests", "reports", "excel_export", "custom_statuses", "demo_firm",
-  "kanban", "clients", "expenses", "shifts", "geolocation", "invoices", "public_form",
+  "kanban", "clients", "expenses", "shifts", "geolocation", "invoices", "public_form", "team", "knowledge",
 ] as const;
 export type FeatureKey = (typeof FEATURES)[number];
 

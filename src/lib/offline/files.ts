@@ -6,10 +6,12 @@
 import { createClient } from "@/lib/supabase/client";
 import { registerPhoto } from "@/server/actions/tasks";
 import { createExpense } from "@/server/actions/money";
+import { createDailyReport } from "@/server/actions/team";
 
 export type OfflineFile =
   | { id: string; kind: "photo"; taskId: string; firmId: string; blob: Blob; photoKind: "general" | "before" | "after"; createdAt: string }
-  | { id: string; kind: "expense"; taskId: string; firmId: string; blob: Blob | null; ext: "jpg" | "pdf" | null; amount: string; description: string; reimburse: boolean; createdAt: string };
+  | { id: string; kind: "expense"; taskId: string; firmId: string; blob: Blob | null; ext: "jpg" | "pdf" | null; amount: string; description: string; reimburse: boolean; createdAt: string }
+  | { id: string; kind: "report"; firmId: string; memberId: string; date: string; taskId: string | null; done: string; problems: string; blobs: Blob[]; createdAt: string };
 
 const DB = "app-offline";
 const STORE = "files";
@@ -67,6 +69,16 @@ export async function flushOfflineFiles(): Promise<number> {
           const r = await registerPhoto(item.taskId, path, item.photoKind);
           if (!r.ok && r.error !== "error") { await removeOfflineFile(item.id); continue; } // fachlich abgelehnt → verwerfen
           if (!r.ok) throw new Error(r.error);
+        } else if (item.kind === "report") {
+          const photoPaths: string[] = [];
+          for (const [i, b] of item.blobs.entries()) {
+            const path = `${item.firmId}/${item.memberId}/${item.id}-${i}.jpg`;
+            const up = await supabase.storage.from("report-photos").upload(path, b, { contentType: "image/jpeg", upsert: true });
+            if (up.error) throw up.error;
+            photoPaths.push(path);
+          }
+          const r = await createDailyReport({ id: item.id, date: item.date, taskId: item.taskId, done: item.done, problems: item.problems, photoPaths });
+          if (!r.ok && r.error === "error") throw new Error(r.error);
         } else {
           let receiptPath: string | null = null;
           if (item.blob && item.ext) {

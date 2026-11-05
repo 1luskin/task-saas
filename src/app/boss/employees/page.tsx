@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { requireBossPage } from "@/lib/auth";
 import { getI18n } from "@/i18n/server";
 import { monthPeriod, todayISO } from "@/lib/dates";
@@ -23,7 +24,7 @@ export default async function EmployeesPage() {
 
   return (
     <div className="space-y-6">
-      <PageTitle>{t("employees.title")}</PageTitle>
+      <PageTitle actions={<Link className="btn-secondary" href="/boss/employees/import">{t("team.import")}</Link>}>{t("employees.title")}</PageTitle>
       <Hint id="employees" dismissed={ctx.settings.hints_dismissed}>{t("hints.employees")}</Hint>
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
         <div className="space-y-3">

@@ -66,3 +66,16 @@ export async function getCalendarTasks(ctx: Ctx, view: "month" | "week" | "day",
     .order("due_time", { nullsFirst: true });
   return toCalTasks(data ?? [], nameOf);
 }
+
+/** Genehmigte Urlaube im Kalenderbereich (Schraffur) */
+export async function getCalendarAbsences(ctx: Ctx, view: "month" | "week" | "day", anchor: string, nameOf: (id: string | null) => string | null) {
+  const { from, to } = calendarRange(view, anchor);
+  const { data } = await ctx.supabase
+    .from("vacation_requests")
+    .select("member_id,date_from,date_to")
+    .eq("firm_id", ctx.firm.id)
+    .eq("status", "approved")
+    .lte("date_from", to)
+    .gte("date_to", addDays(from, -7));
+  return (data ?? []).map((v) => ({ name: nameOf(v.member_id) ?? "—", from: v.date_from, to: v.date_to }));
+}

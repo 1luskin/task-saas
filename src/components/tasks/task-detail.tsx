@@ -15,6 +15,8 @@ import { Expenses } from "../money/expenses";
 import { ApplyChecklistTemplate } from "./checklist-templates";
 import { TaskFiles } from "./files";
 import { TaskMap } from "../geo/task-map";
+import { ArticlePicker, TaskForms } from "./task-forms";
+import { IconBook } from "../icons";
 
 type Detail = NonNullable<Awaited<ReturnType<typeof loadTaskDetail>>>;
 
@@ -129,6 +131,24 @@ export function TaskDetail({
         <Checklist taskId={task.id} status={task.status} items={d.checklist} editable={isBoss} />
         {isBoss && <div className="mt-2"><ApplyChecklistTemplate taskId={task.id} templates={checklistTemplates} /></div>}
       </div>
+
+      {d.kbOn && (d.article || isBoss) && (
+        <div className="card-white space-y-3 p-4 sm:p-6">
+          {d.article && (
+            <details open={!isBoss}>
+              <summary className="flex min-h-10 cursor-pointer items-center gap-2 font-semibold"><IconBook className="size-5 text-link" />{t("kb.linked")}: {d.article.title}</summary>
+              <p className="mt-2 whitespace-pre-wrap text-ink-2">{d.article.body}</p>
+            </details>
+          )}
+          {isBoss && <ArticlePicker taskId={task.id} value={task.kb_article_id} articles={d.articles} />}
+        </div>
+      )}
+
+      {d.kbOn && (d.formTemplates.length > 0 || d.submissions.length > 0) && (
+        <div className="card-white p-4 sm:p-6">
+          <TaskForms taskId={task.id} firmId={ctx.firm.id} templates={d.formTemplates} submissions={d.submissions} canFill={isBoss || canWork} />
+        </div>
+      )}
 
       {clientPanel}
 
