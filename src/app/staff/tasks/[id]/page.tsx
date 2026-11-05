@@ -11,5 +11,5 @@ export default async function StaffTaskPage({ params }: { params: Promise<{ id: 
   const { t, locale } = await getI18n();
   const d = await loadTaskDetail(ctx, id);
   if (!d) notFound();
-  return <TaskDetail d={d} ctx={ctx} t={t} locale={locale} backHref="/staff/today" expensesOn={await isEnabled(ctx, "expenses")} />;
+  return <TaskDetail d={d} ctx={ctx} t={t} locale={locale} backHref="/staff/today" expensesOn={await isEnabled(ctx, "expenses")} geoOn={await isEnabled(ctx, "geolocation")} />;
 }

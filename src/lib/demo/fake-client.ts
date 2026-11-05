@@ -33,7 +33,8 @@ const DEFAULTS: Partial<Record<TableName, () => Row>> = {
   tasks: () => ({ description: null, address: null, assignee_id: null, due_date: null, due_time: null, status: "new", priority: "normal",
     fixed_pay_cents: null, template_id: null, created_by: null, completed_at: null, overdue_notified_at: null,
     submitted_at: null, accepted_at: null, accepted_by: null, rating: null, rework_count: 0, review_reminded_at: null, custom_status_id: null,
-    client_id: null, accepted_via: null, pinned: false, reminder_sent_at: null }),
+    client_id: null, accepted_via: null, pinned: false, reminder_sent_at: null, lat: null, lng: null }),
+  geo_points: () => ({ task_id: null, shift_id: null, accuracy_m: null }),
   checklist_templates: () => ({ items: [] }),
   task_files: () => ({ comment_id: null, uploaded_by: null }),
   task_statuses: () => ({ color: "slate", position: 0, is_system: false }),
@@ -106,6 +107,7 @@ class Session {
       case "clients": case "task_links": case "inbound_requests": case "checklist_templates": case "activity": return r.firm_id === firm && boss;
       case "task_files": return this.taskVisible(r.task_id);
       case "notification_prefs": return r.member_id === me;
+      case "geo_points": return r.firm_id === firm && (boss || r.member_id === me);
       case "data_requests": return r.firm_id === firm && (boss || r.member_id === me);
     }
   }
@@ -130,6 +132,10 @@ class Session {
       case "inbound_requests": case "activity": return false;
       case "checklist_templates": return this.boss && r.firm_id === this.firm;
       case "notification_prefs": return r.member_id === me;
+      case "geo_points": {
+        const last = this.db.consents.filter((c) => c.user_id === this.uid && c.kind === "geolocation").sort((a, b) => b.created_at.localeCompare(a.created_at))[0];
+        return r.firm_id === this.firm && r.member_id === me && Boolean(last?.granted);
+      }
       case "task_files": return this.taskVisible(r.task_id) && r.uploaded_by === me;
       case "push_subscriptions": return r.user_id === this.uid && r.member_id === me;
       case "checklist_items": return this.boss && this.taskVisible(r.task_id);

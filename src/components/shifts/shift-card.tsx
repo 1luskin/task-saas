@@ -5,6 +5,8 @@ import { enqueue, useQueue, uuid } from "@/lib/offline/queue";
 import { formatDateTime, formatDuration } from "@/lib/dates";
 import { shiftNetMinutes } from "@/lib/shifts";
 import { tap } from "@/lib/haptics";
+import { useGeo } from "../geo/geo-context";
+import { withinGeofence } from "@/lib/geo";
 import type { Shift } from "@/lib/supabase/types";
 import { IconPause, IconPlay, IconStop } from "../icons";
 import { cx } from "../ui";
@@ -26,8 +28,10 @@ function overlay(server: S | null, queue: ReturnType<typeof useQueue>): S | null
   return s;
 }
 
-export function ShiftCard({ open }: { open: S | null }) {
+export function ShiftCard({ open, geofence }: { open: S | null; geofence?: { radius: number; targets: { lat: number | null; lng: number | null }[] } | null }) {
   const { t, locale } = useI18n();
+  const geo = useGeo();
+  const [geoError, setGeoError] = useState<string | null>(null);
   const queue = useQueue();
   const s = overlay(open, queue);
   const [now, setNow] = useState(() => Date.now());
@@ -39,10 +43,26 @@ export function ShiftCard({ open }: { open: S | null }) {
 
   if (!s) {
     return (
-      <button className="btn-primary btn-xl w-full" onClick={() => { tap(); enqueue({ op: "shift_start", shiftId: uuid() }); }}>
-        <IconPlay className="size-6" />
-        {t("shift.start")}
-      </button>
+      <div className="space-y-2">
+        <button
+          className="btn-primary btn-xl w-full"
+          onClick={async () => {
+            tap();
+            setGeoError(null);
+            const fix = (await geo.capture()) ?? undefined;
+            // Geozone vorab prüfen (der Server prüft zusätzlich)
+            if (geo.enabled && geofence && geofence.targets.some((x) => x.lat != null)) {
+              if (!fix) return setGeoError(t("geo.needLocation"));
+              if (!withinGeofence(fix, geofence.targets, geofence.radius)) return setGeoError(t("geo.outside"));
+            }
+            enqueue({ op: "shift_start", shiftId: uuid(), geo: fix });
+          }}
+        >
+          <IconPlay className="size-6" />
+          {t("shift.start")}
+        </button>
+        {geoError && <p className="text-sm text-danger" role="alert">{geoError}</p>}
+      </div>
     );
   }
   const paused = Boolean(s.break_started_at);
@@ -60,7 +80,7 @@ export function ShiftCard({ open }: { open: S | null }) {
           {paused ? <IconPlay className="size-6" /> : <IconPause className="size-6" />}
           {paused ? t("shift.resume") : t("shift.pause")}
         </button>
-        <button className="btn-danger btn-xl" onClick={() => { if (confirm(t("shift.endConfirm"))) { tap(); enqueue({ op: "shift_end", shiftId: s.id }); } }}>
+        <button className="btn-danger btn-xl" onClick={async () => { if (confirm(t("shift.endConfirm"))) { tap(); enqueue({ op: "shift_end", shiftId: s.id, geo: (await geo.capture()) ?? undefined }); } }}>
           <IconStop className="size-5" />
           {t("shift.end")}
         </button>

@@ -17,6 +17,7 @@ import { logoutAllDevices } from "@/server/actions/settings";
 import { formatDateTime } from "@/lib/dates";
 import Link from "next/link";
 import { PublicSlugForm } from "@/components/clients/inbound";
+import { GeoSettings } from "@/components/geo/geo-settings";
 import { serverEnv } from "@/lib/env";
 import { LegalFooter } from "@/components/legal/legal-footer";
 
@@ -54,6 +55,7 @@ export default async function SettingsPage() {
       <section className="card-white space-y-4 p-4">
         <FeaturesForm features={features} />
         <ShiftAutocloseForm hours={ctx.firm.shift_autoclose_hours} />
+        {features.find((f) => f.key === "geolocation")?.enabled && <GeoSettings radius={ctx.firm.geofence_radius_m} retention={ctx.firm.geo_retention_days} />}
       </section>
       <section className="card-white p-4">
         <StatusesEditor statuses={statuses ?? []} autoAcceptDays={ctx.firm.auto_accept_days} />

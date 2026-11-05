@@ -38,6 +38,7 @@ export default async function BossTaskPage({ params }: { params: Promise<{ id: s
       locale={locale}
       backHref="/boss"
       expensesOn={await isEnabled(ctx, "expenses")}
+      geoOn={await isEnabled(ctx, "geolocation")}
       checklistTemplates={(await ctx.supabase.from("checklist_templates").select("id, name").eq("firm_id", ctx.firm.id).order("name")).data ?? []}
       clientPanel={
         clientsOn ? (

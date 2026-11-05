@@ -35,6 +35,8 @@ export type Firm = {
   logo_path: string | null;
   public_slug: string | null;
   trial_mail_sent_at: string | null;
+  geofence_radius_m: number | null;
+  geo_retention_days: number;
   weekly_mail_last: string | null;
   task_fields: TaskFields;
   shift_autoclose_hours: number;
@@ -98,6 +100,10 @@ export type TaskFile = {
 };
 export type Activity = { id: string; firm_id: string; member_id: string | null; kind: string; task_id: string | null; payload: Record<string, unknown>; created_at: string };
 export type NotificationPref = { member_id: string; type: string; enabled: boolean; updated_at: string };
+export type GeoPoint = {
+  id: string; firm_id: string; member_id: string; kind: "task_start" | "task_finish" | "shift_start" | "shift_end";
+  task_id: string | null; shift_id: string | null; lat: number; lng: number; accuracy_m: number | null; created_at: string;
+};
 export type Consent = {
   id: string;
   user_id: string | null;
@@ -219,6 +225,8 @@ export type Task = {
   accepted_via: "boss" | "auto" | "client" | null;
   pinned: boolean;
   reminder_sent_at: string | null;
+  lat: number | null;
+  lng: number | null;
   created_at: string;
   updated_at: string;
 };
@@ -329,6 +337,7 @@ export interface Database {
       task_files: Table<TaskFile, "task_id" | "storage_path" | "file_name" | "mime_type" | "size_bytes">;
       activity: Table<Activity, "firm_id" | "kind">;
       notification_prefs: Table<NotificationPref, "member_id" | "type" | "enabled">;
+      geo_points: Table<GeoPoint, "firm_id" | "member_id" | "kind" | "lat" | "lng">;
       data_requests: Table<DataRequest, "firm_id" | "member_id" | "kind">;
       task_finance: Table<TaskFinance, "task_id">;
       checklist_items: Table<ChecklistItem, "task_id" | "text">;

@@ -8,6 +8,7 @@ import { formatMoney } from "@/lib/money";
 import { staffTaskExtras } from "@/server/staff";
 import { StaffTaskCard } from "@/components/tasks/staff-task-card";
 import { ShiftCard } from "@/components/shifts/shift-card";
+import { GeoConsent } from "@/components/geo/geo-consent";
 import { isEnabled } from "@/lib/features";
 import { EmptyState } from "@/components/ui";
 
@@ -44,7 +45,17 @@ export default async function TodayPage() {
         <h1 className="text-2xl font-semibold tracking-tight">{t("staff.hello", { name: ctx.member.full_name.split(" ")[0] ?? "" })}</h1>
       </div>
 
-      {shiftsOn && <ShiftCard open={openShift ?? null} />}
+      <div className="grid grid-cols-2 gap-2">
+        <Link href="/staff/route" className="btn-secondary">{t("geo.route")}</Link>
+        <Link href="/staff/scan" className="btn-secondary">{t("qr.scan")}</Link>
+      </div>
+      <GeoConsent />
+      {shiftsOn && (
+        <ShiftCard
+          open={openShift ?? null}
+          geofence={ctx.firm.geofence_radius_m ? { radius: ctx.firm.geofence_radius_m, targets: tasks.filter((x) => x.due_date === today && x.status !== "done").map((x) => ({ lat: x.lat, lng: x.lng })) } : null}
+        />
+      )}
 
       {ctx.member.status !== "active" && (
         <div className="card bg-danger-soft p-4 text-danger">{t(`memberStatus.${ctx.member.status}`)}</div>

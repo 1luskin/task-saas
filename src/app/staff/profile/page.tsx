@@ -9,6 +9,7 @@ import { Avatar } from "@/components/ui";
 import { StatusSwitch } from "./status-switch";
 import { RequestForm } from "./request-form";
 import { MyData } from "./my-data";
+import { RevokeGeoConsent } from "@/components/geo/geo-settings";
 import { isEnabled } from "@/lib/features";
 import { NotifyPrefs } from "@/components/settings/notify-prefs";
 import { NOTIFY_TYPES } from "@/lib/notify-types";
@@ -80,6 +81,7 @@ export default async function ProfilePage() {
       <section className="card-white space-y-3 p-4">
         <h2 className="font-semibold">{t("legal.dataTitle")}</h2>
         <MyData requested={(dataReqs ?? []).length > 0} />
+        <RevokeGeoConsent />
       </section>
 
       <div className="card-white p-2">

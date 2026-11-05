@@ -136,6 +136,11 @@ export async function GET(req: Request) {
     if (photos?.length) await admin.storage.from("task-photos").remove(photos.map((p) => p.storage_path));
     await admin.from("firms").delete().eq("id", f.id);
   }
+  // 4a. Standortpunkte nach Aufbewahrungsfrist der Firma (Standard 90 Tage) löschen
+  const { data: geoFirms } = await admin.from("firms").select("id, geo_retention_days");
+  for (const f of geoFirms ?? []) {
+    await admin.from("geo_points").delete().eq("firm_id", f.id).lt("created_at", new Date(Date.now() - f.geo_retention_days * 864e5).toISOString());
+  }
   // 4. Aufbewahrung: Login-Protokoll 90 Tage
   await admin.from("login_events").delete().lt("created_at", new Date(Date.now() - 90 * 864e5).toISOString());
 

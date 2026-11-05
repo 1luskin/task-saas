@@ -18,6 +18,12 @@ export async function loadTaskDetail(ctx: Ctx, id: string) {
     task.assignee_id ? ctx.supabase.from("members").select("*").eq("id", task.assignee_id).maybeSingle() : Promise.resolve({ data: null }),
     ctx.supabase.from("expenses").select("*").eq("task_id", id).order("created_at"),
   ]);
+  const { data: geoRows } = await ctx.supabase.from("geo_points").select("*").eq("task_id", id).order("created_at");
+  const geoWho = new Map<string, string>();
+  if (geoRows?.length) {
+    const { data: ms } = await ctx.supabase.from("members").select("id, full_name").in("id", [...new Set(geoRows.map((g) => g.member_id))]);
+    for (const m of ms ?? []) geoWho.set(m.id, m.full_name);
+  }
   const { data: fileRows } = await ctx.supabase.from("task_files").select("*").eq("task_id", id).order("created_at");
   const fileUrls = new Map<string, string>();
   if (fileRows?.length) {
@@ -64,6 +70,7 @@ export async function loadTaskDetail(ctx: Ctx, id: string) {
       receiptUrl: e.receipt_path ? receiptUrls.get(e.receipt_path) ?? null : null,
       memberName: expMembers?.find((m) => m.id === e.member_id)?.full_name ?? "",
     })),
+    geo: (geoRows ?? []).map((g) => ({ lat: g.lat, lng: g.lng, kind: g.kind, created_at: g.created_at, who: geoWho.get(g.member_id) ?? "" })),
     files: (fileRows ?? []).map((f) => ({ id: f.id, name: f.file_name, size: f.size_bytes, url: fileUrls.get(f.id) ?? null, uploaded_by: f.uploaded_by })),
     expensesApprovedCents: expRows.filter((e) => e.status === "approved").reduce((s, e) => s + e.amount_cents, 0),
   };

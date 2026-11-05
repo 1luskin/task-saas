@@ -27,7 +27,7 @@ export default async function ClientPage({ params }: { params: Promise<{ id: str
   return (
     <div className="space-y-4">
       <Link href="/boss/clients" className="inline-flex min-h-10 items-center gap-1 text-muted hover:text-ink"><IconChevronLeft className="size-5" />{t("common.back")}</Link>
-      <PageTitle>{client.name}</PageTitle>
+      <PageTitle actions={<a className="btn-secondary" href={`/api/qr/client/${client.id}`}>{t("qr.sticker")}</a>}>{client.name}</PageTitle>
       <div className="grid grid-cols-3 gap-3">
         <Stat label={t("clients.tasks")} value={s?.tasks ?? 0} />
         <Stat label={t("clients.revenue")} value={<span className="text-xl sm:text-2xl">{formatMoney(s?.revenue ?? 0, locale)}</span>} />

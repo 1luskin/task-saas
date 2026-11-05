@@ -2,6 +2,7 @@
 import type { TaskStatus } from "@/lib/supabase/types";
 import { useEffect, useState } from "react";
 import { tap } from "@/lib/haptics";
+import { useGeo } from "../geo/geo-context";
 import { useI18n } from "@/i18n/client";
 import { enqueue, overlayTask, useQueue, uuid } from "@/lib/offline/queue";
 import { formatDuration, minutesBetween } from "@/lib/dates";
@@ -23,6 +24,7 @@ export function TaskActions({
   size?: "xl" | "md";
 }) {
   const { t } = useI18n();
+  const geo = useGeo();
   const queue = useQueue();
   const ov = overlayTask({ id: taskId, status }, queue, runningSince);
   const running = ov.running;
@@ -57,14 +59,14 @@ export function TaskActions({
           <button
             className={cx(running ? "btn-secondary" : "btn-primary", h)}
             disabled={Boolean(running)}
-            onClick={() => { tap(); enqueue({ op: "start", taskId, entryId: uuid() }); }}
+            onClick={async () => { tap(); enqueue({ op: "start", taskId, entryId: uuid(), geo: (await geo.capture()) ?? undefined }); }}
           >
             <IconPlay className="size-6" />
             {t("task.start")}
           </button>
           <button
             className={cx(running ? "btn-primary" : "btn-secondary", h)}
-            onClick={() => { tap(); enqueue({ op: "finish", taskId }); }}
+            onClick={async () => { tap(); enqueue({ op: "finish", taskId, geo: (await geo.capture()) ?? undefined }); }}
           >
             <IconCheck className="size-6" />
             <span className="leading-tight">{size === "xl" ? t("task.finish") : t("task.finishReview")}</span>
